@@ -1,0 +1,6 @@
+*.cpp text eol=crlf
+*.h text eol=crlf
+*.inl text eol=crlf
+*.cu text eol=crlf
+*.plist text diff=xml eol=lf
+
