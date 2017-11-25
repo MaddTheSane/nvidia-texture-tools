@@ -175,7 +175,9 @@ typedef posh_i16_t  int16;
 typedef posh_u32_t  uint32;
 typedef posh_i32_t  int32;
 
+#ifndef _UINT64
 typedef posh_u64_t  uint64;
+#endif
 typedef posh_i64_t  int64;
 
 // Aliases

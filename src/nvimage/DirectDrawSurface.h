@@ -97,6 +97,8 @@ namespace nv
         D3DFMT_R32F = 114,
         D3DFMT_G32R32F = 115,
         D3DFMT_A32B32G32R32F = 116,
+
+        D3DFMT_NONE,
     };
 
     enum FOURCC
@@ -114,6 +116,7 @@ namespace nv
         FOURCC_A2XY = MAKEFOURCC('A', '2', 'X', 'Y'),
         FOURCC_DX10 = MAKEFOURCC('D', 'X', '1', '0'),
         FOURCC_UVER = MAKEFOURCC('U', 'V', 'E', 'R'),
+        FOURCC_NONE = MAKEFOURCC('\0', '\0', '\0', '\0'),
     };
 
 
@@ -359,6 +362,7 @@ namespace nv
         bool isSrgb() const;
         bool hasAlpha() const;
         uint d3d9Format() const;
+        const char *d3d9FormatString() const;
         uint pixelSize() const; // In bits!
         uint blockSize() const; // In bytes!
         bool isBlockFormat() const;

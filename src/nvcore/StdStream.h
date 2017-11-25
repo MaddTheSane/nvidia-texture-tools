@@ -1,8 +1,8 @@
 // This code is in the public domain -- Ignacio Castaño <castano@gmail.com>
 
 //#pragma once
-//#ifndef NV_CORE_STDSTREAM_H
-//#define NV_CORE_STDSTREAM_H
+#ifndef NV_CORE_STDSTREAM_H
+#define NV_CORE_STDSTREAM_H
 
 #include "nvcore.h"
 #include "Stream.h"
@@ -460,4 +460,4 @@ namespace nv
 } // nv namespace
 
 
-//#endif // NV_CORE_STDSTREAM_H
+#endif // NV_CORE_STDSTREAM_H

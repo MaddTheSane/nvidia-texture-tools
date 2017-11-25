@@ -427,6 +427,7 @@ namespace
 {
     struct FormatDescriptor
     {
+        const char *name;
         uint d3d9Format;
         uint dxgiFormat;
         RGBAPixelFormat pixelFormat;
@@ -434,31 +435,44 @@ namespace
 
     static const FormatDescriptor s_formats[] =
     {
-        { D3DFMT_R8G8B8,         DXGI_FORMAT_UNKNOWN,           { 24, 0xFF0000,   0xFF00,     0xFF,       0 } },
-        { D3DFMT_A8R8G8B8,       DXGI_FORMAT_B8G8R8A8_UNORM,    { 32, 0xFF0000,   0xFF00,     0xFF,       0xFF000000 } },
-        { D3DFMT_X8R8G8B8,       DXGI_FORMAT_B8G8R8X8_UNORM,    { 32, 0xFF0000,   0xFF00,     0xFF,       0 } },
-        { D3DFMT_R5G6B5,         DXGI_FORMAT_B5G6R5_UNORM,      { 16, 0xF800,     0x7E0,      0x1F,       0 } },
-        { D3DFMT_X1R5G5B5,       DXGI_FORMAT_UNKNOWN,           { 16, 0x7C00,     0x3E0,      0x1F,       0 } },
-        { D3DFMT_A1R5G5B5,       DXGI_FORMAT_B5G5R5A1_UNORM,    { 16, 0x7C00,     0x3E0,      0x1F,       0x8000 } },
-        { D3DFMT_A4R4G4B4,       DXGI_FORMAT_UNKNOWN,           { 16, 0xF00,      0xF0,       0xF,        0xF000 } },
-        { D3DFMT_R3G3B2,         DXGI_FORMAT_UNKNOWN,           { 8,  0xE0,       0x1C,       0x3,        0 } },
-        { D3DFMT_A8,             DXGI_FORMAT_A8_UNORM,          { 8,  0,          0,          0,          8 } },
-        { D3DFMT_A8R3G3B2,       DXGI_FORMAT_UNKNOWN,           { 16, 0xE0,       0x1C,       0x3,        0xFF00 } },
-        { D3DFMT_X4R4G4B4,       DXGI_FORMAT_UNKNOWN,           { 16, 0xF00,      0xF0,       0xF,        0 } },
-        { D3DFMT_A2B10G10R10,    DXGI_FORMAT_R10G10B10A2_UNORM, { 32, 0x3FF,      0xFFC00,    0x3FF00000, 0xC0000000 } },
-        { D3DFMT_A8B8G8R8,       DXGI_FORMAT_R8G8B8A8_UNORM,    { 32, 0xFF,       0xFF00,     0xFF0000,   0xFF000000 } },
-        { D3DFMT_X8B8G8R8,       DXGI_FORMAT_UNKNOWN,           { 32, 0xFF,       0xFF00,     0xFF0000,   0 } },
-        { D3DFMT_G16R16,         DXGI_FORMAT_R16G16_UNORM,      { 32, 0xFFFF,     0xFFFF0000, 0,          0 } },
-        { D3DFMT_A2R10G10B10,    DXGI_FORMAT_UNKNOWN,           { 32, 0x3FF00000, 0xFFC00,    0x3FF,      0xC0000000 } },
-        { D3DFMT_A2B10G10R10,    DXGI_FORMAT_UNKNOWN,           { 32, 0x3FF,      0xFFC00,    0x3FF00000, 0xC0000000 } },
+        { "RGB888", D3DFMT_R8G8B8,         DXGI_FORMAT_UNKNOWN,           { 24, 0xFF0000,   0xFF00,     0xFF,       0 } },
+        { "ARGB888", D3DFMT_A8R8G8B8,       DXGI_FORMAT_B8G8R8A8_UNORM,    { 32, 0xFF0000,   0xFF00,     0xFF,       0xFF000000 } },
+        { "XRGB8888", D3DFMT_X8R8G8B8,       DXGI_FORMAT_B8G8R8X8_UNORM,    { 32, 0xFF0000,   0xFF00,     0xFF,       0 } },
+        { "RGB565", D3DFMT_R5G6B5,         DXGI_FORMAT_B5G6R5_UNORM,      { 16, 0xF800,     0x7E0,      0x1F,       0 } },
+        { "XRGB1555", D3DFMT_X1R5G5B5,       DXGI_FORMAT_UNKNOWN,           { 16, 0x7C00,     0x3E0,      0x1F,       0 } },
+        { "ARGB1555", D3DFMT_A1R5G5B5,       DXGI_FORMAT_B5G5R5A1_UNORM,    { 16, 0x7C00,     0x3E0,      0x1F,       0x8000 } },
+        { "ARGB4444", D3DFMT_A4R4G4B4,       DXGI_FORMAT_UNKNOWN,           { 16, 0xF00,      0xF0,       0xF,        0xF000 } },
+        { "RGB332", D3DFMT_R3G3B2,         DXGI_FORMAT_UNKNOWN,           { 8,  0xE0,       0x1C,       0x3,        0 } },
+        { "A8", D3DFMT_A8,             DXGI_FORMAT_A8_UNORM,          { 8,  0,          0,          0,          8 } },
+        { "ARGB8332", D3DFMT_A8R3G3B2,       DXGI_FORMAT_UNKNOWN,           { 16, 0xE0,       0x1C,       0x3,        0xFF00 } },
+        { "XRGB4444", D3DFMT_X4R4G4B4,       DXGI_FORMAT_UNKNOWN,           { 16, 0xF00,      0xF0,       0xF,        0 } },
+        { "ABGR2101010", D3DFMT_A2B10G10R10,    DXGI_FORMAT_R10G10B10A2_UNORM, { 32, 0x3FF,      0xFFC00,    0x3FF00000, 0xC0000000 } },
+        { "ABGR8888", D3DFMT_A8B8G8R8,       DXGI_FORMAT_R8G8B8A8_UNORM,    { 32, 0xFF,       0xFF00,     0xFF0000,   0xFF000000 } },
+        { "XBGR8888", D3DFMT_X8B8G8R8,       DXGI_FORMAT_UNKNOWN,           { 32, 0xFF,       0xFF00,     0xFF0000,   0 } },
+        { "G16R16", D3DFMT_G16R16,         DXGI_FORMAT_R16G16_UNORM,      { 32, 0xFFFF,     0xFFFF0000, 0,          0 } },
+        { "ARGB2101010", D3DFMT_A2R10G10B10,    DXGI_FORMAT_UNKNOWN,           { 32, 0x3FF00000, 0xFFC00,    0x3FF,      0xC0000000 } },
+        { "ABGR2101010", D3DFMT_A2B10G10R10,    DXGI_FORMAT_UNKNOWN,           { 32, 0x3FF,      0xFFC00,    0x3FF00000, 0xC0000000 } },
 
-        { D3DFMT_L8,             DXGI_FORMAT_R8_UNORM ,         { 8,  0xFF,       0,          0,          0 } },
-        { D3DFMT_L16,            DXGI_FORMAT_R16_UNORM,         { 16, 0xFFFF,     0,          0,          0 } },
-        { D3DFMT_A8L8,           DXGI_FORMAT_R8G8_UNORM,        { 16, 0xFF,       0,          0,     0xFF00 } },
+        { "L8", D3DFMT_L8,             DXGI_FORMAT_R8_UNORM ,         { 8,  0xFF,       0,          0,          0 } },
+        { "L16", D3DFMT_L16,            DXGI_FORMAT_R16_UNORM,         { 16, 0xFFFF,     0,          0,          0 } },
+        { "AL88", D3DFMT_A8L8,           DXGI_FORMAT_R8G8_UNORM,        { 16, 0xFF,       0,          0,     0xFF00 } },
     };
 
     static const uint s_formatCount = NV_ARRAY_SIZE(s_formats);
 
+    static const char *findD3D9FormatString(uint bitcount, uint rmask, uint gmask, uint bmask, uint amask) {
+        for (int i = 0; i < s_formatCount; i++) {
+            if (s_formats[i].pixelFormat.bitcount == bitcount &&
+                s_formats[i].pixelFormat.rmask == rmask &&
+                s_formats[i].pixelFormat.gmask == gmask &&
+                s_formats[i].pixelFormat.bmask == bmask &&
+                s_formats[i].pixelFormat.amask == amask) {
+                return s_formats[i].name;
+            }
+        }
+        
+        return 0;
+    }
 } // namespace
 
 uint nv::findD3D9Format(uint bitcount, uint rmask, uint gmask, uint bmask, uint amask)
@@ -833,6 +847,42 @@ uint DDSHeader::d3d9Format() const
     else {
         return findD3D9Format(pf.bitcount, pf.rmask, pf.gmask, pf.bmask, pf.amask);
     }
+}
+
+const char *DDSHeader::d3d9FormatString() const {
+    if (pf.flags & DDPF_FOURCC) {
+        uint fourcc = pf.fourcc;
+        if (fourcc == FOURCC_DXT1) {
+            return "DXT1";
+        } else if (fourcc == FOURCC_DXT2) {
+            return "DXT2";
+            
+        } else if (fourcc == FOURCC_DXT3) {
+            return "DXT3";
+            
+        } else if (fourcc == FOURCC_DXT4) {
+            return "DXT4";
+            
+        } else if (fourcc == FOURCC_DXT5) {
+            return "DXT5";
+            
+        } else if (fourcc == FOURCC_RXGB) {
+            return "RXGB";
+            
+        } else if (fourcc == FOURCC_ATI1) {
+            return "ATI1";
+            
+        } else if (fourcc == FOURCC_ATI2) {
+            return "ATI2";
+            
+        } else if (fourcc == FOURCC_A2XY) {
+            return "A2XY";
+            
+        } else if (fourcc == FOURCC_DX10) {
+            return "DX10";
+        }
+    }
+    return findD3D9FormatString(pf.bitcount, pf.rmask, pf.gmask, pf.bmask, pf.amask);
 }
 
 uint DDSHeader::pixelSize() const
