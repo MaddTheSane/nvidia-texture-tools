@@ -1073,7 +1073,7 @@ void ArvoSVD(int rows, int cols, float * Q, float * diag, float * R)
 	{
 		for( iter = 1; iter <= MaxIterations; iter++ ) 
 		{
-			int jump;
+			int jump=0;
 
 			for( l = k; l >= 0; l-- )
 			{
