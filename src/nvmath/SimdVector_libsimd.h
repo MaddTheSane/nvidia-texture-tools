@@ -52,7 +52,7 @@ namespace nv {
 
         NV_SIMD_NATIVE explicit SimdVector(const float * v)
         {
-            vec = simd::make_float4( v );
+            vec = simd::make_float4( v[0], v[1], v[2], v[3] );
         }
 
         NV_SIMD_NATIVE SimdVector(float x, float y, float z, float w)
@@ -154,19 +154,19 @@ namespace nv {
 
     NV_SIMD_INLINE SimdVector truncate( SimdVector::Arg v )
     {
-        return SimdVector( simd::trunc( v ) );
+        return SimdVector( simd::trunc( v.vec ) );
     }
 
     NV_SIMD_NATIVE SimdVector compareEqual( SimdVector::Arg left, SimdVector::Arg right )
     {
         simd::int4 toRet = left.vec == right.vec;
         
-        return SimdVector( simd::make_float4( toRet ) );
+        return SimdVector( simd::make_float4( toRet[0], toRet[1], toRet[2], toRet[3] ) );
     }
 
     NV_SIMD_INLINE SimdVector select( SimdVector::Arg off, SimdVector::Arg on, SimdVector::Arg bits )
     {
-        simd::int4 predicate = simd::make_int4( bits );
+        simd::int4 predicate = simd::make_int4( bits.vec[0], bits.vec[1], bits.vec[2], bits.vec[3] );
         simd::float4 toRet = simd::select( off.vec, on.vec, predicate );
         
         return SimdVector( toRet );
