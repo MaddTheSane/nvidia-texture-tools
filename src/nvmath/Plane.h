@@ -5,7 +5,7 @@
 #define NV_MATH_PLANE_H
 
 #include "nvmath.h"
-#include "Vector.h"
+#include <simd/simd.h>
 
 #if NV_USE_ALTIVEC
 #undef vector
@@ -20,24 +20,24 @@ namespace nv
     public:
         Plane();
         Plane(float x, float y, float z, float w);
-        Plane(const Vector4 & v);
-        Plane(const Vector3 & v, float d);
-        Plane(const Vector3 & normal, const Vector3 & point);
-        Plane(const Vector3 & v0, const Vector3 & v1, const Vector3 & v2);
+        Plane(const simd::float4 & v);
+        Plane(const simd::float3 & v, float d);
+        Plane(const simd::float3 & normal, const simd::float3 & point);
+        Plane(const simd::float3 & v0, const simd::float3 & v1, const simd::float3 & v2);
 
         const Plane & operator=(const Plane & v);
 
-        Vector3 vector() const;
+        simd::float3 vector() const;
         float offset() const;
 
         void operator*=(float s);
 
-        Vector4 v;
+        simd::float4 v;
     };
 
     Plane transformPlane(const Matrix &, const Plane &);
 
-    Vector3 planeIntersection(const Plane & a, const Plane & b, const Plane & c);
+    simd::float3 planeIntersection(const Plane & a, const Plane & b, const Plane & c);
 
 
 } // nv namespace

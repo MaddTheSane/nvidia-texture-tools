@@ -4,20 +4,20 @@
 #define NV_MATH_SPHERICALHARMONIC_H
 
 #include "nvmath.h"
+#include <simd/simd.h>
 
 #include <string.h> // memcpy
 
 
 namespace nv
 {
-    class Vector3;
     class Matrix;
 
     NVMATH_API float legendrePolynomial( int l, int m, float x ) NV_CONST;
     NVMATH_API float shBasis( int l, int m, float theta, float phi ) NV_CONST;
-    NVMATH_API float shBasis( int l, int m, const Vector3 & v ) NV_CONST;
+    NVMATH_API float shBasis( int l, int m, const simd::float3 & v ) NV_CONST;
     NVMATH_API float hshBasis( int l, int m, float theta, float phi ) NV_CONST;
-    NVMATH_API float hshBasis( int l, int m, const Vector3 & v ) NV_CONST;
+    NVMATH_API float hshBasis( int l, int m, const simd::float3 & v ) NV_CONST;
 
     class Sh;
     float dot(const Sh & a, const Sh & b) NV_CONST;
@@ -186,7 +186,7 @@ namespace nv
         }*/
 
         /// Evaluate 
-        void eval(const Vector3 & dir)
+        void eval(const simd::float3 & dir)
         {
             for(int l = 0; l <= m_order; l++) {
                 for(int m = -l; m <= l; m++) {
@@ -197,7 +197,7 @@ namespace nv
 
 
         /// Evaluate the spherical harmonic function.
-        float sample(const Vector3 & dir) const
+        float sample(const simd::float3 & dir) const
         {
             Sh sh(order());
             sh.eval(dir);

@@ -2,7 +2,7 @@
 
 #include "SphericalHarmonic.h"
 
-#include "Vector.h"
+#include <simd/simd.h>
 
 using namespace nv;
 
@@ -197,7 +197,7 @@ float nv::shBasis( int l, int m, float theta, float phi )
  * y = sin(theta)*sin(phi)
  * z = cos(theta)
  */
-float nv::shBasis( int l, int m, Vector3::Arg v )
+float nv::shBasis( int l, int m, const simd::float3 & v )
 {
 	float theta = acosf(v.z);
 	float phi = atan2f(v.y, v.x);
@@ -234,7 +234,7 @@ float nv::hshBasis( int l, int m, float theta, float phi )
  * y = sin(theta)*sin(phi)
  * z = cos(theta)
  */
-float nv::hshBasis( int l, int m, Vector3::Arg v )
+float nv::hshBasis( int l, int m, const simd::float3 & v )
 {
 	float theta = acosf(v.z);
 	float phi = atan2f(v.y, v.x);

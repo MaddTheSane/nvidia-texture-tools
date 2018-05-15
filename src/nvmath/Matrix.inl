@@ -33,7 +33,7 @@ namespace nv
         }
     }
     
-    inline Matrix3::Matrix3(Vector3::Arg v0, Vector3::Arg v1, Vector3::Arg v2)
+    inline Matrix3::Matrix3(const simd::float3 & v0, const simd::float3 & v1, const simd::float3 & v2)
     {
         m_data[0] = v0.x; m_data[1] = v0.y; m_data[2] = v0.z;
         m_data[3] = v1.x; m_data[4] = v1.y; m_data[5] = v1.z;
@@ -66,15 +66,15 @@ namespace nv
         return m_data[col * 3 + row];
     }
 
-    inline Vector3 Matrix3::row(uint i) const
+    inline simd::float3 Matrix3::row(uint i) const
     {
         nvDebugCheck(i < 3);
-        return Vector3(get(i, 0), get(i, 1), get(i, 2));
+        return simd::make_float3(get(i, 0), get(i, 1), get(i, 2));
     }
-    inline Vector3 Matrix3::column(uint i) const
+    inline simd::float3 Matrix3::column(uint i) const
     {
         nvDebugCheck(i < 3);
-        return Vector3(get(0, i), get(1, i), get(2, i));
+        return simd::make_float3(get(0, i), get(1, i), get(2, i));
     }
 
     inline void Matrix3::operator*=(float s)
@@ -161,9 +161,9 @@ namespace nv
     }
 
     // Transform the given 3d vector with the given matrix.
-    inline Vector3 transform(const Matrix3 & m, const Vector3 & p)
+    inline simd::float3 transform(const Matrix3 & m, const simd::float3 & p)
     {
-        return Vector3(
+        return simd::make_float3(
             p.x * m(0,0) + p.y * m(0,1) + p.z * m(0,2),
             p.x * m(1,0) + p.y * m(1,1) + p.z * m(1,2),
             p.x * m(2,0) + p.y * m(2,1) + p.z * m(2,2));
@@ -176,7 +176,7 @@ namespace nv
         }
     }
 
-    inline void Matrix3::scale(Vector3::Arg s)
+    inline void Matrix3::scale(const simd::float3 & s)
     {
         m_data[0] *= s.x; m_data[1] *= s.x; m_data[2] *= s.x;
         m_data[3] *= s.y; m_data[4] *= s.y; m_data[5] *= s.y;
@@ -263,7 +263,7 @@ namespace nv
         }
     }
 
-    inline Matrix::Matrix(Vector4::Arg v0, Vector4::Arg v1, Vector4::Arg v2, Vector4::Arg v3)
+    inline Matrix::Matrix(const simd::float4 & v0, const simd::float4 & v1, const simd::float4 & v2, const simd::float4 & v3)
     {
         m_data[ 0] = v0.x; m_data[ 1] = v0.y; m_data[ 2] = v0.z; m_data[ 3] = v0.w;
         m_data[ 4] = v1.x; m_data[ 5] = v1.y; m_data[ 6] = v1.z; m_data[ 7] = v1.w;
@@ -311,16 +311,16 @@ namespace nv
         return m_data;
     }
 
-    inline Vector4 Matrix::row(uint i) const
+    inline simd::float4 Matrix::row(uint i) const
     {
         nvDebugCheck(i < 4);
-        return Vector4(get(i, 0), get(i, 1), get(i, 2), get(i, 3));
+        return simd::make_float4(get(i, 0), get(i, 1), get(i, 2), get(i, 3));
     }
 
-    inline Vector4 Matrix::column(uint i) const
+    inline simd::float4 Matrix::column(uint i) const
     {
         nvDebugCheck(i < 4);
-        return Vector4(get(0, i), get(1, i), get(2, i), get(3, i));
+        return simd::make_float4(get(0, i), get(1, i), get(2, i), get(3, i));
     }
 
     inline void Matrix::zero()
@@ -349,7 +349,7 @@ namespace nv
     }
 
     // Apply scale.
-    inline void Matrix::scale(Vector3::Arg s)
+    inline void Matrix::scale(const simd::float3 & s)
     {
         m_data[0] *= s.x; m_data[1] *= s.x; m_data[2] *= s.x; m_data[3] *= s.x;
         m_data[4] *= s.y; m_data[5] *= s.y; m_data[6] *= s.y; m_data[7] *= s.y;
@@ -357,7 +357,7 @@ namespace nv
     }
 
     // Apply translation.
-    inline void Matrix::translate(Vector3::Arg t)
+    inline void Matrix::translate(const simd::float3 & t)
     {
         m_data[12] = m_data[0] * t.x + m_data[4] * t.y + m_data[8]  * t.z + m_data[12];
         m_data[13] = m_data[1] * t.x + m_data[5] * t.y + m_data[9]  * t.z + m_data[13];
@@ -389,7 +389,7 @@ namespace nv
     }
 
     // Get scale matrix.
-    inline Matrix scale(Vector3::Arg s)
+    inline Matrix scale(const simd::float3 & s)
     {
         Matrix m(identity);
         m(0,0) = s.x;
@@ -407,7 +407,7 @@ namespace nv
     }
 
     // Get translation matrix.
-    inline Matrix translation(Vector3::Arg t)
+    inline Matrix translation(const simd::float3 & t)
     {
         Matrix m(identity);
         m(0,3) = t.x;
@@ -470,7 +470,7 @@ namespace nv
     }
 
     //Matrix rotation(float yaw, float pitch, float roll);
-    //Matrix skew(float angle, Vector3::Arg v1, Vector3::Arg v2);
+    //Matrix skew(float angle, const simd::float3 & v1, const simd::float3 & v2);
 
     // Get frustum matrix.
     inline Matrix frustum(float xmin, float xmax, float ymin, float ymax, float zNear, float zFar)
@@ -628,33 +628,33 @@ namespace nv
         }
 
         // translate by the negative offsets
-        r.translate(-Vector3(m.data(12), m.data(13), m.data(14)));
+        r.translate(-simd::make_float3(m.data(12), m.data(13), m.data(14)));
 
         return r;
     }
 
     // Transform the given 3d point with the given matrix.
-    inline Vector3 transformPoint(Matrix::Arg m, Vector3::Arg p)
+    inline simd::float3 transformPoint(Matrix::Arg m, const simd::float3 & p)
     {
-        return Vector3(
+        return simd::make_float3(
             p.x * m(0,0) + p.y * m(0,1) + p.z * m(0,2) + m(0,3),
             p.x * m(1,0) + p.y * m(1,1) + p.z * m(1,2) + m(1,3),
             p.x * m(2,0) + p.y * m(2,1) + p.z * m(2,2) + m(2,3));
     }
 
     // Transform the given 3d vector with the given matrix.
-    inline Vector3 transformVector(Matrix::Arg m, Vector3::Arg p)
+    inline simd::float3 transformVector(Matrix::Arg m, const simd::float3 & p)
     {
-        return Vector3(
+        return simd::make_float3(
             p.x * m(0,0) + p.y * m(0,1) + p.z * m(0,2),
             p.x * m(1,0) + p.y * m(1,1) + p.z * m(1,2),
             p.x * m(2,0) + p.y * m(2,1) + p.z * m(2,2));
     }
 
     // Transform the given 4d vector with the given matrix.
-    inline Vector4 transform(Matrix::Arg m, Vector4::Arg p)
+    inline simd::float4 transform(Matrix::Arg m, const simd::float4 & p)
     {
-        return Vector4(
+        return simd::make_float4(
             p.x * m(0,0) + p.y * m(0,1) + p.z * m(0,2) + p.w * m(0,3),
             p.x * m(1,0) + p.y * m(1,1) + p.z * m(1,2) + p.w * m(1,3),
             p.x * m(2,0) + p.y * m(2,1) + p.z * m(2,2) + p.w * m(2,3),

@@ -4,19 +4,21 @@
 #include "Plane.inl"
 #include "Matrix.inl"
 
+using namespace simd;
+
 namespace nv
 {
     Plane transformPlane(const Matrix & m, const Plane & p)
     {
-        Vector3 newVec = transformVector(m, p.vector());
+        float3 newVec = transformVector(m, p.vector());
 
-        Vector3 ptInPlane = p.offset() * p.vector();
+        float3 ptInPlane = p.offset() * p.vector();
         ptInPlane = transformPoint(m, ptInPlane);
 
         return Plane(newVec, ptInPlane);
     }
 
-    Vector3 planeIntersection(const Plane & a, const Plane & b, const Plane & c)
+    float3 planeIntersection(const Plane & a, const Plane & b, const Plane & c)
     {
         return dot(a.vector(), cross(b.vector(), c.vector())) * (
             a.offset() * cross(b.vector(), c.vector()) + 

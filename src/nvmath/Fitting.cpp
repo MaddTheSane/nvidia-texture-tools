@@ -1,7 +1,6 @@
 // This code is in the public domain -- Ignacio Castaño <castano@gmail.com>
 
 #include "Fitting.h"
-#include "Vector.inl"
 #include "Plane.inl"
 
 #include "nvcore/Array.inl"
@@ -12,19 +11,20 @@
 #include <string.h>
 
 using namespace nv;
+using namespace simd;
 
 // @@ Move to EigenSolver.h
 
 // @@ We should be able to do something cheaper...
-static Vector3 estimatePrincipalComponent(const float * __restrict matrix)
+static float3 estimatePrincipalComponent(const float * __restrict matrix)
 {
-	const Vector3 row0(matrix[0], matrix[1], matrix[2]);
-	const Vector3 row1(matrix[1], matrix[3], matrix[4]);
-	const Vector3 row2(matrix[2], matrix[4], matrix[5]);
+	const float3 row0 = make_float3(matrix[0], matrix[1], matrix[2]);
+	const float3 row1 = make_float3(matrix[1], matrix[3], matrix[4]);
+	const float3 row2 = make_float3(matrix[2], matrix[4], matrix[5]);
 
-	float r0 = lengthSquared(row0);
-	float r1 = lengthSquared(row1);
-	float r2 = lengthSquared(row2);
+    float r0 = length_squared(row0);
+    float r1 = length_squared(row1);
+    float r2 = length_squared(row2);
 
 	if (r0 > r1 && r0 > r2) return row0;
 	if (r1 > r2) return row1;
@@ -32,14 +32,14 @@ static Vector3 estimatePrincipalComponent(const float * __restrict matrix)
 }
 
 
-static inline Vector3 firstEigenVector_PowerMethod(const float *__restrict matrix)
+static inline float3 firstEigenVector_PowerMethod(const float *__restrict matrix)
 {
     if (matrix[0] == 0 && matrix[3] == 0 && matrix[5] == 0)
     {
-        return Vector3(0.0f);
+        return float3(0.0f);
     }
 
-    Vector3 v = estimatePrincipalComponent(matrix);
+    float3 v = estimatePrincipalComponent(matrix);
 
     const int NUM = 8;
     for (int i = 0; i < NUM; i++)
@@ -48,18 +48,18 @@ static inline Vector3 firstEigenVector_PowerMethod(const float *__restrict matri
         float y = v.x * matrix[1] + v.y * matrix[3] + v.z * matrix[4];
         float z = v.x * matrix[2] + v.y * matrix[4] + v.z * matrix[5];
 
-        float norm = max(max(x, y), z);
+        float norm = simd::max(simd::max(x, y), z);
 
-        v = Vector3(x, y, z) / norm;
+        v = make_float3(x, y, z) / norm;
     }
 
     return v;
 }
 
 
-Vector3 nv::Fit::computeCentroid(int n, const Vector3 *__restrict points)
+float3 nv::Fit::computeCentroid(int n, const float3 *__restrict points)
 {
-    Vector3 centroid(0.0f);
+    float3 centroid(0.0f);
 
     for (int i = 0; i < n; i++)
     {
@@ -70,9 +70,9 @@ Vector3 nv::Fit::computeCentroid(int n, const Vector3 *__restrict points)
     return centroid;
 }
 
-Vector3 nv::Fit::computeCentroid(int n, const Vector3 *__restrict points, const float *__restrict weights, Vector3::Arg metric)
+float3 nv::Fit::computeCentroid(int n, const float3 *__restrict points, const float *__restrict weights, const float3 & metric)
 {
-    Vector3 centroid(0.0f);
+    float3 centroid(0.0f);
     float total = 0.0f;
 
     for (int i = 0; i < n; i++)
@@ -85,9 +85,9 @@ Vector3 nv::Fit::computeCentroid(int n, const Vector3 *__restrict points, const 
     return centroid;
 }
 
-Vector4 nv::Fit::computeCentroid(int n, const Vector4 *__restrict points)
+float4 nv::Fit::computeCentroid(int n, const float4 *__restrict points)
 {
-    Vector4 centroid(0.0f);
+    float4 centroid(0.0f);
 
     for (int i = 0; i < n; i++)
     {
@@ -98,9 +98,9 @@ Vector4 nv::Fit::computeCentroid(int n, const Vector4 *__restrict points)
     return centroid;
 }
 
-Vector4 nv::Fit::computeCentroid(int n, const Vector4 *__restrict points, const float *__restrict weights, Vector4::Arg metric)
+float4 nv::Fit::computeCentroid(int n, const float4 *__restrict points, const float *__restrict weights, const float4 & metric)
 {
-    Vector4 centroid(0.0f);
+    float4 centroid(0.0f);
     float total = 0.0f;
 
     for (int i = 0; i < n; i++)
@@ -115,10 +115,10 @@ Vector4 nv::Fit::computeCentroid(int n, const Vector4 *__restrict points, const 
 
 
 
-Vector3 nv::Fit::computeCovariance(int n, const Vector3 *__restrict points, float *__restrict covariance)
+float3 nv::Fit::computeCovariance(int n, const float3 *__restrict points, float *__restrict covariance)
 {
     // compute the centroid
-    Vector3 centroid = computeCentroid(n, points);
+    float3 centroid = computeCentroid(n, points);
 
     // compute covariance matrix
     for (int i = 0; i < 6; i++)
@@ -128,7 +128,7 @@ Vector3 nv::Fit::computeCovariance(int n, const Vector3 *__restrict points, floa
 
     for (int i = 0; i < n; i++)
     {
-        Vector3 v = points[i] - centroid;
+        float3 v = points[i] - centroid;
 
         covariance[0] += v.x * v.x;
         covariance[1] += v.x * v.y;
@@ -141,10 +141,10 @@ Vector3 nv::Fit::computeCovariance(int n, const Vector3 *__restrict points, floa
     return centroid;
 }
 
-Vector3 nv::Fit::computeCovariance(int n, const Vector3 *__restrict points, const float *__restrict weights, Vector3::Arg metric, float *__restrict covariance)
+float3 nv::Fit::computeCovariance(int n, const float3 *__restrict points, const float *__restrict weights, const float3 & metric, float *__restrict covariance)
 {
     // compute the centroid
-    Vector3 centroid = computeCentroid(n, points, weights, metric);
+    float3 centroid = computeCentroid(n, points, weights, metric);
 
     // compute covariance matrix
     for (int i = 0; i < 6; i++)
@@ -154,8 +154,8 @@ Vector3 nv::Fit::computeCovariance(int n, const Vector3 *__restrict points, cons
 
     for (int i = 0; i < n; i++)
     {
-        Vector3 a = (points[i] - centroid) * metric;
-        Vector3 b = weights[i]*a;
+        float3 a = (points[i] - centroid) * metric;
+        float3 b = weights[i]*a;
 
         covariance[0] += a.x * b.x;
         covariance[1] += a.x * b.y;
@@ -168,10 +168,10 @@ Vector3 nv::Fit::computeCovariance(int n, const Vector3 *__restrict points, cons
     return centroid;
 }
 
-Vector4 nv::Fit::computeCovariance(int n, const Vector4 *__restrict points, float *__restrict covariance)
+float4 nv::Fit::computeCovariance(int n, const float4 *__restrict points, float *__restrict covariance)
 {
     // compute the centroid
-    Vector4 centroid = computeCentroid(n, points);
+    float4 centroid = computeCentroid(n, points);
 
     // compute covariance matrix
     for (int i = 0; i < 10; i++)
@@ -181,7 +181,7 @@ Vector4 nv::Fit::computeCovariance(int n, const Vector4 *__restrict points, floa
 
     for (int i = 0; i < n; i++)
     {
-        Vector4 v = points[i] - centroid;
+        float4 v = points[i] - centroid;
 
         covariance[0] += v.x * v.x;
         covariance[1] += v.x * v.y;
@@ -201,10 +201,10 @@ Vector4 nv::Fit::computeCovariance(int n, const Vector4 *__restrict points, floa
     return centroid;
 }
 
-Vector4 nv::Fit::computeCovariance(int n, const Vector4 *__restrict points, const float *__restrict weights, Vector4::Arg metric, float *__restrict covariance)
+float4 nv::Fit::computeCovariance(int n, const float4 *__restrict points, const float *__restrict weights, const float4 & metric, float *__restrict covariance)
 {
     // compute the centroid
-    Vector4 centroid = computeCentroid(n, points, weights, metric);
+    float4 centroid = computeCentroid(n, points, weights, metric);
 
     // compute covariance matrix
     for (int i = 0; i < 10; i++)
@@ -214,8 +214,8 @@ Vector4 nv::Fit::computeCovariance(int n, const Vector4 *__restrict points, cons
 
     for (int i = 0; i < n; i++)
     {
-        Vector4 a = (points[i] - centroid) * metric;
-        Vector4 b = weights[i]*a;
+        float4 a = (points[i] - centroid) * metric;
+        float4 b = weights[i]*a;
 
         covariance[0] += a.x * b.x;
         covariance[1] += a.x * b.y;
@@ -237,7 +237,7 @@ Vector4 nv::Fit::computeCovariance(int n, const Vector4 *__restrict points, cons
 
 
 
-Vector3 nv::Fit::computePrincipalComponent_PowerMethod(int n, const Vector3 *__restrict points)
+float3 nv::Fit::computePrincipalComponent_PowerMethod(int n, const float3 *__restrict points)
 {
     float matrix[6];
     computeCovariance(n, points, matrix);
@@ -245,7 +245,7 @@ Vector3 nv::Fit::computePrincipalComponent_PowerMethod(int n, const Vector3 *__r
     return firstEigenVector_PowerMethod(matrix);
 }
 
-Vector3 nv::Fit::computePrincipalComponent_PowerMethod(int n, const Vector3 *__restrict points, const float *__restrict weights, Vector3::Arg metric)
+float3 nv::Fit::computePrincipalComponent_PowerMethod(int n, const float3 *__restrict points, const float *__restrict weights, const float3 & metric)
 {
     float matrix[6];
     computeCovariance(n, points, weights, metric, matrix);
@@ -255,24 +255,24 @@ Vector3 nv::Fit::computePrincipalComponent_PowerMethod(int n, const Vector3 *__r
 
 
 
-static inline Vector3 firstEigenVector_EigenSolver3(const float *__restrict matrix)
+static inline float3 firstEigenVector_EigenSolver3(const float *__restrict matrix)
 {
     if (matrix[0] == 0 && matrix[3] == 0 && matrix[5] == 0)
     {
-        return Vector3(0.0f);
+        return float3(0.0f);
     }
 
     float eigenValues[3];
-    Vector3 eigenVectors[3];
+    float3 eigenVectors[3];
 	if (!nv::Fit::eigenSolveSymmetric3(matrix, eigenValues, eigenVectors))
 	{
-		return Vector3(0.0f);
+		return float3(0.0f);
 	}
 
 	return eigenVectors[0];
 }
 
-Vector3 nv::Fit::computePrincipalComponent_EigenSolver(int n, const Vector3 *__restrict points)
+float3 nv::Fit::computePrincipalComponent_EigenSolver(int n, const float3 *__restrict points)
 {
     float matrix[6];
     computeCovariance(n, points, matrix);
@@ -280,7 +280,7 @@ Vector3 nv::Fit::computePrincipalComponent_EigenSolver(int n, const Vector3 *__r
     return firstEigenVector_EigenSolver3(matrix);
 }
 
-Vector3 nv::Fit::computePrincipalComponent_EigenSolver(int n, const Vector3 *__restrict points, const float *__restrict weights, Vector3::Arg metric)
+float3 nv::Fit::computePrincipalComponent_EigenSolver(int n, const float3 *__restrict points, const float *__restrict weights, const float3 & metric)
 {
     float matrix[6];
     computeCovariance(n, points, weights, metric, matrix);
@@ -290,24 +290,24 @@ Vector3 nv::Fit::computePrincipalComponent_EigenSolver(int n, const Vector3 *__r
 
 
 
-static inline Vector4 firstEigenVector_EigenSolver4(const float *__restrict matrix)
+static inline float4 firstEigenVector_EigenSolver4(const float *__restrict matrix)
 {
     if (matrix[0] == 0 && matrix[4] == 0 && matrix[7] == 0&& matrix[9] == 0)
     {
-        return Vector4(0.0f);
+        return float4(0.0f);
     }
 
     float eigenValues[4];
-    Vector4 eigenVectors[4];
+    float4 eigenVectors[4];
 	if (!nv::Fit::eigenSolveSymmetric4(matrix, eigenValues, eigenVectors))
 	{
-		return Vector4(0.0f);
+		return float4(0.0f);
 	}
 
 	return eigenVectors[0];
 }
 
-Vector4 nv::Fit::computePrincipalComponent_EigenSolver(int n, const Vector4 *__restrict points)
+float4 nv::Fit::computePrincipalComponent_EigenSolver(int n, const float4 *__restrict points)
 {
     float matrix[10];
     computeCovariance(n, points, matrix);
@@ -315,7 +315,7 @@ Vector4 nv::Fit::computePrincipalComponent_EigenSolver(int n, const Vector4 *__r
     return firstEigenVector_EigenSolver4(matrix);
 }
 
-Vector4 nv::Fit::computePrincipalComponent_EigenSolver(int n, const Vector4 *__restrict points, const float *__restrict weights, Vector4::Arg metric)
+float4 nv::Fit::computePrincipalComponent_EigenSolver(int n, const float4 *__restrict points, const float *__restrict weights, const float4 & metric)
 {
     float matrix[10];
     computeCovariance(n, points, weights, metric, matrix);
@@ -327,7 +327,7 @@ Vector4 nv::Fit::computePrincipalComponent_EigenSolver(int n, const Vector4 *__r
 
 void ArvoSVD(int rows, int cols, float * Q, float * diag, float * R);
 
-Vector3 nv::Fit::computePrincipalComponent_SVD(int n, const Vector3 *__restrict points)
+float3 nv::Fit::computePrincipalComponent_SVD(int n, const float3 *__restrict points)
 {
 	// Store the points in an n x n matrix
     Array<float> Q; Q.resize(n*n, 0.0f);
@@ -345,10 +345,10 @@ Vector3 nv::Fit::computePrincipalComponent_SVD(int n, const Vector3 *__restrict 
 	ArvoSVD(n, n, &Q[0], &diag[0], &R[0]);
 
 	// Get the principal component
-	return Vector3(R[0], R[1], R[2]);
+	return make_float3(R[0], R[1], R[2]);
 }
 
-Vector4 nv::Fit::computePrincipalComponent_SVD(int n, const Vector4 *__restrict points)
+float4 nv::Fit::computePrincipalComponent_SVD(int n, const float4 *__restrict points)
 {
 	// Store the points in an n x n matrix
     Array<float> Q; Q.resize(n*n, 0.0f);
@@ -367,41 +367,41 @@ Vector4 nv::Fit::computePrincipalComponent_SVD(int n, const Vector4 *__restrict 
 	ArvoSVD(n, n, &Q[0], &diag[0], &R[0]);
 
 	// Get the principal component
-	return Vector4(R[0], R[1], R[2], R[3]);
+	return make_float4(R[0], R[1], R[2], R[3]);
 }
 
 
 
-Plane nv::Fit::bestPlane(int n, const Vector3 *__restrict points)
+Plane nv::Fit::bestPlane(int n, const float3 *__restrict points)
 {
     // compute the centroid and covariance
     float matrix[6];
-    Vector3 centroid = computeCovariance(n, points, matrix);
+    float3 centroid = computeCovariance(n, points, matrix);
 
     if (matrix[0] == 0 && matrix[3] == 0 && matrix[5] == 0)
     {
         // If no plane defined, then return a horizontal plane.
-        return Plane(Vector3(0, 0, 1), centroid);
+        return Plane(make_float3(0, 0, 1), centroid);
     }
 
     float eigenValues[3];
-    Vector3 eigenVectors[3];
+    float3 eigenVectors[3];
     if (!eigenSolveSymmetric3(matrix, eigenValues, eigenVectors)) {
         // If no plane defined, then return a horizontal plane.
-        return Plane(Vector3(0, 0, 1), centroid);
+        return Plane(make_float3(0, 0, 1), centroid);
     }
 
     return Plane(eigenVectors[2], centroid);
 }
 
-bool nv::Fit::isPlanar(int n, const Vector3 * points, float epsilon/*=NV_EPSILON*/)
+bool nv::Fit::isPlanar(int n, const float3 * points, float epsilon/*=NV_EPSILON*/)
 {
     // compute the centroid and covariance
     float matrix[6];
     computeCovariance(n, points, matrix);
 
     float eigenValues[3];
-    Vector3 eigenVectors[3];
+    float3 eigenVectors[3];
     if (!eigenSolveSymmetric3(matrix, eigenValues, eigenVectors)) {
         return false;
     }
@@ -418,7 +418,7 @@ bool nv::Fit::isPlanar(int n, const Vector3 * points, float epsilon/*=NV_EPSILON
 static void EigenSolver3_Tridiagonal(float mat[3][3], float * diag, float * subd);
 static bool EigenSolver3_QLAlgorithm(float mat[3][3], float * diag, float * subd);
 
-bool nv::Fit::eigenSolveSymmetric3(const float matrix[6], float eigenValues[3], Vector3 eigenVectors[3])
+bool nv::Fit::eigenSolveSymmetric3(const float matrix[6], float eigenValues[3], float3 eigenVectors[3])
 {
     nvDebugCheck(matrix != NULL && eigenValues != NULL && eigenVectors != NULL);
 
@@ -438,7 +438,7 @@ bool nv::Fit::eigenSolveSymmetric3(const float matrix[6], float eigenValues[3], 
     {
         for (int i = 0; i < 3; i++) {
             eigenValues[i] = 0;
-            eigenVectors[i] = Vector3(0);
+            eigenVectors[i] = float3(0);
         }
         return false;
     }
@@ -453,7 +453,7 @@ bool nv::Fit::eigenSolveSymmetric3(const float matrix[6], float eigenValues[3], 
     {
         for (int j = 0; j < 3; j++)
         {
-            eigenVectors[j].component[i] = (float) work[i][j];
+            eigenVectors[j][i] = (float) work[i][j];
         }
     }
 
@@ -604,7 +604,7 @@ static bool EigenSolver3_QLAlgorithm(float mat[3][3], float * diag, float * subd
 static void EigenSolver4_Tridiagonal(float mat[4][4], float * diag, float * subd);
 static bool EigenSolver4_QLAlgorithm(float mat[4][4], float * diag, float * subd);
 
-bool nv::Fit::eigenSolveSymmetric4(const float matrix[10], float eigenValues[4], Vector4 eigenVectors[4])
+bool nv::Fit::eigenSolveSymmetric4(const float matrix[10], float eigenValues[4], float4 eigenVectors[4])
 {
     nvDebugCheck(matrix != NULL && eigenValues != NULL && eigenVectors != NULL);
 
@@ -628,7 +628,7 @@ bool nv::Fit::eigenSolveSymmetric4(const float matrix[10], float eigenValues[4],
     {
         for (int i = 0; i < 4; i++) {
             eigenValues[i] = 0;
-            eigenVectors[i] = Vector4(0);
+            eigenVectors[i] = float4(0);
         }
         return false;
     }
@@ -643,7 +643,7 @@ bool nv::Fit::eigenSolveSymmetric4(const float matrix[10], float eigenValues[4],
     {
         for (int j = 0; j < 4; j++)
         {
-            eigenVectors[j].component[i] = (float) work[i][j];
+            eigenVectors[j][i] = (float) work[i][j];
         }
     }
 
@@ -692,7 +692,7 @@ static void EigenSolver4_Tridiagonal(float mat[4][4], float * diag, float * subd
 	float maxElement = FLT_MAX;
 	for (int i = 0; i < n; ++i)
 		for (int j = 0; j < n; ++j)
-			maxElement = max(maxElement, fabsf(mat[i][j]));
+            maxElement = simd::max(maxElement, fabsf(mat[i][j]));
 	float epsilon = relEpsilon * maxElement;
 
 	// Iterative algorithm, works for any size of matrix but might be slower than
@@ -819,12 +819,12 @@ static bool EigenSolver4_QLAlgorithm(float mat[4][4], float * diag, float * subd
 
 
 
-int nv::Fit::compute4Means(int n, const Vector3 *__restrict points, const float *__restrict weights, Vector3::Arg metric, Vector3 *__restrict cluster)
+int nv::Fit::compute4Means(int n, const float3 *__restrict points, const float *__restrict weights, const float3 & metric, float3 *__restrict cluster)
 {
     // Compute principal component.
     float matrix[6];
-    Vector3 centroid = computeCovariance(n, points, weights, metric, matrix);
-    Vector3 principal = firstEigenVector_PowerMethod(matrix);
+    float3 centroid = computeCovariance(n, points, weights, metric, matrix);
+    float3 principal = firstEigenVector_PowerMethod(matrix);
 
     // Pick initial solution.
     int mini, maxi;
@@ -855,7 +855,7 @@ int nv::Fit::compute4Means(int n, const Vector3 *__restrict points, const float 
     // Now we have to iteratively refine the clusters.
     while (true)
     {
-        Vector3 newCluster[4] = { Vector3(0.0f), Vector3(0.0f), Vector3(0.0f), Vector3(0.0f) };
+        float3 newCluster[4] = { float3(0.0f), float3(0.0f), float3(0.0f), float3(0.0f) };
         float total[4] = {0, 0, 0, 0};
 
         for (int i = 0; i < n; ++i)
@@ -865,7 +865,7 @@ int nv::Fit::compute4Means(int n, const Vector3 *__restrict points, const float 
             float mindist = FLT_MAX;
             for (int j = 0; j < 4; j++)
             {
-                float dist = lengthSquared((cluster[j] - points[i]) * metric);
+                float dist = length_squared((cluster[j] - points[i]) * metric);
                 if (dist < mindist)
                 {
                     mindist = dist;
@@ -883,8 +883,8 @@ int nv::Fit::compute4Means(int n, const Vector3 *__restrict points, const float 
                 newCluster[j] /= total[j];
         }
 
-        if (equal(cluster[0], newCluster[0]) && equal(cluster[1], newCluster[1]) && 
-            equal(cluster[2], newCluster[2]) && equal(cluster[3], newCluster[3]))
+        if (all(cluster[0] == newCluster[0]) && all(cluster[1] == newCluster[1]) &&
+            all(cluster[2] == newCluster[2]) && all(cluster[3] == newCluster[3]))
         {
             return (total[0] != 0) + (total[1] != 0) + (total[2] != 0) + (total[3] != 0);
         }
@@ -1011,7 +1011,7 @@ void ArvoSVD(int rows, int cols, float * Q, float * diag, float * R)
 				for( k = l; k < cols; k++ ) Q[i*cols+k] *= scale;
 			}
 		}
-		norm = max( norm, fabsf( diag[i] ) + fabsf( temp[i] ) );
+        norm = simd::max( norm, fabsf( diag[i] ) + fabsf( temp[i] ) );
 	}
 
 

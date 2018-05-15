@@ -4,7 +4,7 @@
 #ifndef NV_MATH_MATRIX_H
 #define NV_MATH_MATRIX_H
 
-#include "Vector.h"
+#include <simd/simd.h>
 
 // - Matrices are stored in memory in *column major* order.
 // - Points are to be though of as column vectors.
@@ -22,7 +22,7 @@ namespace nv
         explicit Matrix3(float f);
         explicit Matrix3(identity_t);
         Matrix3(const Matrix3 & m);
-        Matrix3(Vector3::Arg v0, Vector3::Arg v1, Vector3::Arg v2);
+        Matrix3(const simd::float3 & v0, const simd::float3 & v1, const simd::float3 & v2);
 
         float data(uint idx) const;
         float & data(uint idx);
@@ -30,8 +30,8 @@ namespace nv
         float operator()(uint row, uint col) const;
         float & operator()(uint row, uint col);
 
-        Vector3 row(uint i) const;
-        Vector3 column(uint i) const;
+        simd::float3 row(uint i) const;
+        simd::float3 column(uint i) const;
 
         void operator*=(float s);
         void operator/=(float s);
@@ -39,7 +39,7 @@ namespace nv
         void operator-=(const Matrix3 & m);
 
         void scale(float s);
-        void scale(Vector3::Arg s);
+        void scale(const simd::float3 & s);
         float determinant() const;
 
     private:
@@ -47,10 +47,10 @@ namespace nv
     };
 
     // Solve equation system using LU decomposition and back-substitution.
-    extern bool solveLU(const Matrix3 & m, const Vector3 & b, Vector3 * x);
+    extern bool solveLU(const Matrix3 & m, const simd::float3 & b, simd::float3 * x);
 
     // Solve equation system using Cramer's inverse.
-    extern bool solveCramer(const Matrix3 & A, const Vector3 & b, Vector3 * x);
+    extern bool solveCramer(const Matrix3 & A, const simd::float3 & b, simd::float3 * x);
 
 
     // 4x4 matrix.
@@ -64,7 +64,7 @@ namespace nv
         explicit Matrix(identity_t);
         Matrix(const Matrix3 & m);
         Matrix(const Matrix & m);
-        Matrix(Vector4::Arg v0, Vector4::Arg v1, Vector4::Arg v2, Vector4::Arg v3);
+        Matrix(const simd::float4 & v0, const simd::float4 & v1, const simd::float4 & v2, const simd::float4 & v3);
         //explicit Matrix(const float m[]);	// m is assumed to contain 16 elements
 
         float data(uint idx) const;
@@ -74,15 +74,15 @@ namespace nv
         float & operator()(uint row, uint col);
         const float * ptr() const;
 
-        Vector4 row(uint i) const;
-        Vector4 column(uint i) const;
+        simd::float4 row(uint i) const;
+        simd::float4 column(uint i) const;
 
         void zero();
         void identity();
 
         void scale(float s);
-        void scale(Vector3::Arg s);
-        void translate(Vector3::Arg t);
+        void scale(const simd::float3 & s);
+        void translate(const simd::float3 & t);
         void rotate(float theta, float v0, float v1, float v2);
         float determinant() const;
 
@@ -96,10 +96,10 @@ namespace nv
     };
 
     // Solve equation system using LU decomposition and back-substitution.
-    extern bool solveLU(const Matrix & A, const Vector4 & b, Vector4 * x);
+    extern bool solveLU(const Matrix & A, const simd::float4 & b, simd::float4 * x);
 
     // Solve equation system using Cramer's inverse.
-    extern bool solveCramer(const Matrix & A, const Vector4 & b, Vector4 * x);
+    extern bool solveCramer(const Matrix & A, const simd::float4 & b, simd::float4 * x);
 
     // Compute inverse using LU decomposition.
     extern Matrix inverseLU(const Matrix & m);
