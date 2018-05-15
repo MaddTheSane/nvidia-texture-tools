@@ -44,10 +44,10 @@ namespace nv
 	};
 
 	// @@ These two functions should be deprecated:
-	FloatImage * createNormalMap(const Image * img, FloatImage::WrapMode wm, Vector4::Arg heightWeights, NormalMapFilter filter = NormalMapFilter_Sobel3x3);
-	FloatImage * createNormalMap(const Image * img, FloatImage::WrapMode wm, Vector4::Arg heightWeights, Vector4::Arg filterWeights);
+	FloatImage * createNormalMap(const Image * img, FloatImage::WrapMode wm, const simd::float4 & heightWeights, NormalMapFilter filter = NormalMapFilter_Sobel3x3);
+	FloatImage * createNormalMap(const Image * img, FloatImage::WrapMode wm, const simd::float4 & heightWeights, const simd::float4 & filterWeights);
 
-	FloatImage * createNormalMap(const FloatImage * img, FloatImage::WrapMode wm, Vector4::Arg filterWeights);
+	FloatImage * createNormalMap(const FloatImage * img, FloatImage::WrapMode wm, const simd::float4 & filterWeights);
 
 	void normalizeNormalMap(FloatImage * img);
 

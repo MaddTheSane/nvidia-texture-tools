@@ -26,8 +26,8 @@ namespace nv
     // Clear the bounds.
     inline void Box::clearBounds()
     {
-        minCorner.set(FLT_MAX, FLT_MAX, FLT_MAX);
-        maxCorner.set(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+        minCorner = simd::make_float3(FLT_MAX, FLT_MAX, FLT_MAX);
+        maxCorner = simd::make_float3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
     }
 
     // min < max
@@ -39,7 +39,7 @@ namespace nv
     // Build a cube centered on center and with edge = 2*dist
     inline void Box::cube(const Vector3 & center, float dist)
     {
-        setCenterExtents(center, Vector3(dist));
+        setCenterExtents(center, simd::make_float3(dist));
     }
 
     // Build a box, given center and extents.
@@ -75,21 +75,21 @@ namespace nv
     // Add a point to this box.
     inline void Box::addPointToBounds(const Vector3 & p)
     {
-        minCorner = min(minCorner, p);
-        maxCorner = max(maxCorner, p);
+        minCorner = simd::min(minCorner, p);
+        maxCorner = simd::max(maxCorner, p);
     }
 
     // Add a box to this box.
     inline void Box::addBoxToBounds(const Box & b)
     {
-        minCorner = min(minCorner, b.minCorner);
-        maxCorner = max(maxCorner, b.maxCorner);
+        minCorner = simd::min(minCorner, b.minCorner);
+        maxCorner = simd::max(maxCorner, b.maxCorner);
     }
 
     // Add sphere to this box.
     inline void Box::addSphereToBounds(const Vector3 & p, float r) {
-        minCorner = min(minCorner, p - Vector3(r));
-        maxCorner = min(maxCorner, p + Vector3(r));
+        minCorner = simd::min(minCorner, p - Vector3(r));
+        maxCorner = simd::min(maxCorner, p + Vector3(r));
     }
 
     // Translate box.
@@ -108,8 +108,8 @@ namespace nv
 
     // Expand the box by a fixed amount.
     inline void Box::expand(float r) {
-        minCorner -= Vector3(r,r,r);
-        maxCorner += Vector3(r,r,r);
+        minCorner -= simd::make_float3(r,r,r);
+        maxCorner += simd::make_float3(r,r,r);
     }
 
     // Get the area of the box.

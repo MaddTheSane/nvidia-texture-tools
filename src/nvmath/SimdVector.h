@@ -2,4 +2,8 @@
 
 #include "Vector.h" // Vector3, Vector4
 
-//Blank, kept for legacy reasons.
+//kept for legacy reasons.
+
+namespace nv {
+    typedef simd::float4 SimdVector;
+}

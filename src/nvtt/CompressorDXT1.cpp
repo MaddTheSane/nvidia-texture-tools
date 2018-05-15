@@ -18,7 +18,10 @@
 
 
 using namespace nv;
-
+using simd::dot;
+using simd::make_float3;
+using simd::make_float4;
+using simd::all;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Color conversion functions.
@@ -109,7 +112,7 @@ static Color16 truncate_color32_to_color16(Color32 c32) {
 inline Vector3 color_to_vector3(Color32 c)
 {
     const float scale = 1.0f / 255.0f;
-    return Vector3(c.r * scale, c.g * scale, c.b * scale);
+    return make_float3(c.r * scale, c.g * scale, c.b * scale);
 }
 
 inline Color32 vector3_to_color(Vector3 v)
@@ -131,7 +134,7 @@ inline static void color_block_to_vector_block(const ColorBlock & rgba, Vector3 
 	for (int i = 0; i < 16; i++)
 	{
 		const Color32 c = rgba.color(i);
-		block[i] = Vector3(c.r, c.g, c.b);
+		block[i] = make_float3(c.r, c.g, c.b);
 	}
 }
 
@@ -153,7 +156,7 @@ static bool is_single_color_rgb(const Vector3 * colors, const float * weights, i
 {
     for (int i = 0; i < count; i++) {
         if (weights[i] > 0.0f) {
-            if (colors[i] != color) return false;
+            if (all(colors[i] != color)) return false;
         }
     }
 
@@ -166,7 +169,7 @@ static int reduce_colors(const Vector4 * input_colors, const float * input_weigh
     int n = 0;
     for (int i = 0; i < 16; i++)
     {
-        Vector3 ci = input_colors[i].xyz();
+        Vector3 ci = input_colors[i].xyz;
         float wi = input_weights[i];
 
         if (wi > 0) {
@@ -289,7 +292,7 @@ static float evaluate_mse(const Vector4 input_colors[16], const float input_weig
     float error = 0.0f;
     for (int i = 0; i < 16; i++) {
         int index = (output->indices >> (2 * i)) & 3;
-        error += input_weights[i] * evaluate_mse(vector_palette[index], input_colors[i].xyz(), color_weights);
+        error += input_weights[i] * evaluate_mse(vector_palette[index], input_colors[i].xyz, color_weights);
     }
     return error;
 }
@@ -356,10 +359,10 @@ static uint compute_indices4(const Vector4 input_colors[16], const Vector3 & col
     
     uint indices = 0;
 	for (int i = 0; i < 16; i++) {
-		float d0 = evaluate_mse(palette[0], input_colors[i].xyz(), color_weights);
-		float d1 = evaluate_mse(palette[1], input_colors[i].xyz(), color_weights);
-		float d2 = evaluate_mse(palette[2], input_colors[i].xyz(), color_weights);
-		float d3 = evaluate_mse(palette[3], input_colors[i].xyz(), color_weights);
+		float d0 = evaluate_mse(palette[0], input_colors[i].xyz, color_weights);
+		float d1 = evaluate_mse(palette[1], input_colors[i].xyz, color_weights);
+		float d2 = evaluate_mse(palette[2], input_colors[i].xyz, color_weights);
+		float d3 = evaluate_mse(palette[3], input_colors[i].xyz, color_weights);
 		
 		uint b0 = d0 > d3;
 		uint b1 = d1 > d2;
@@ -382,10 +385,10 @@ static uint compute_indices(const Vector4 input_colors[16], const Vector3 & colo
     
     uint indices = 0;
 	for (int i = 0; i < 16; i++) {
-		float d0 = evaluate_mse(palette[0], input_colors[i].xyz(), color_weights);
-		float d1 = evaluate_mse(palette[1], input_colors[i].xyz(), color_weights);
-		float d2 = evaluate_mse(palette[2], input_colors[i].xyz(), color_weights);
-		float d3 = evaluate_mse(palette[3], input_colors[i].xyz(), color_weights);
+		float d0 = evaluate_mse(palette[0], input_colors[i].xyz, color_weights);
+		float d1 = evaluate_mse(palette[1], input_colors[i].xyz, color_weights);
+		float d2 = evaluate_mse(palette[2], input_colors[i].xyz, color_weights);
+		float d3 = evaluate_mse(palette[3], input_colors[i].xyz, color_weights);
 		
         uint index;
         if (d0 < d1 && d0 < d2 && d0 < d3) index = 0;
@@ -517,12 +520,12 @@ float nv::compress_dxt1_least_squares_fit(const Vector3 * input_colors, const Ve
 float nv::compress_dxt1_bounding_box_exhaustive(const Vector4 input_colors[16], const Vector3 * colors, const float * weights, int count, const Vector3 & color_weights, bool three_color_mode, int max_volume, BlockDXT1 * output)
 {
     // Compute bounding box.
-    Vector3 min_color(1.0f);
-    Vector3 max_color(0.0f);
+    Vector3 min_color = make_float3(1.0f);
+    Vector3 max_color = make_float3(0.0f);
 
     for (int i = 0; i < count; i++) {
-        min_color = min(min_color, colors[i]);
-        max_color = max(max_color, colors[i]);
+        min_color = simd::min(min_color, colors[i]);
+        max_color = simd::max(max_color, colors[i]);
     }
 
     // Convert to 5:6:5
@@ -557,7 +560,7 @@ float nv::compress_dxt1_bounding_box_exhaustive(const Vector4 input_colors[16], 
     // @@ Convert to fixed point before building box?
     Color32 colors32[16];
     for (int i = 0; i < count; i++) {
-        colors32[i] = toColor32(Vector4(colors[i], 1));
+        colors32[i] = toColor32(make_float4(colors[i], 1));
     }
 
     float best_error = FLT_MAX;
@@ -620,7 +623,7 @@ float nv::compress_dxt1_bounding_box_exhaustive(const Vector4 input_colors[16], 
 void nv::compress_dxt1_cluster_fit(const Vector4 input_colors[16], const Vector3 * colors, const float * weights, int count, const Vector3 & color_weights, bool three_color_mode, BlockDXT1 * output)
 {
     ClusterFit fit;
-    fit.setColorWeights(Vector4(color_weights, 1));
+    fit.setColorWeights(make_float4(color_weights, 1));
     fit.setColorSet(colors, weights, count);
 
     // start & end are in [0, 1] range.
@@ -725,8 +728,8 @@ static bool optimize_end_points4(uint indices, const Vector3 * colors, const Vec
     float alpha2_sum = 0.0f;
     float beta2_sum = 0.0f;
     float alphabeta_sum = 0.0f;
-    Vector3 alphax_sum(0.0f);
-    Vector3 betax_sum(0.0f);
+    Vector3 alphax_sum = make_float3(0.0f);
+    Vector3 betax_sum = make_float3(0.0f);
 
     for (int i = 0; i < count; i++)
     {
@@ -761,8 +764,8 @@ static bool optimize_end_points3(uint indices, const Vector3 * colors, const Vec
     float alpha2_sum = 0.0f;
     float beta2_sum = 0.0f;
     float alphabeta_sum = 0.0f;
-    Vector3 alphax_sum(0.0f);
-    Vector3 betax_sum(0.0f);
+    Vector3 alphax_sum = make_float3(0.0f);
+    Vector3 betax_sum = make_float3(0.0f);
 
     for (int i = 0; i < count; i++)
     {

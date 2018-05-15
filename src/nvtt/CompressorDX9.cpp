@@ -117,9 +117,9 @@ void FastCompressorDXT5n::compressBlock(ColorBlock & rgba, nvtt::AlphaMode alpha
 
 #if 1
 
-void CompressorDXT1::compressBlock(const Vector4 colors[16], const float weights[16], const nvtt::CompressionOptions::Private & compressionOptions, void * output)
+void CompressorDXT1::compressBlock(const simd::float4 colors[16], const float weights[16], const nvtt::CompressionOptions::Private & compressionOptions, void * output)
 {
-    compress_dxt1(colors, weights, compressionOptions.colorWeight.xyz(), /*three_color_mode*/true, (BlockDXT1 *)output);
+    compress_dxt1(colors, weights, compressionOptions.colorWeight.xyz, /*three_color_mode*/true, (BlockDXT1 *)output);
 }
 
 #else
@@ -284,7 +284,7 @@ void CompressorDXT5n::compressBlock(ColorBlock & rgba, nvtt::AlphaMode alphaMode
 }
 
 
-void CompressorBC3_RGBM::compressBlock(const Vector4 colors[16], const float weights[16], const nvtt::CompressionOptions::Private & compressionOptions, void * output)
+void CompressorBC3_RGBM::compressBlock(const simd::float4 colors[16], const float weights[16], const nvtt::CompressionOptions::Private & compressionOptions, void * output)
 {
     float min_m = 0.25f; // @@ Get from compression options.
     compress_dxt5_rgbm(colors, weights, min_m, (BlockDXT5 *)output);

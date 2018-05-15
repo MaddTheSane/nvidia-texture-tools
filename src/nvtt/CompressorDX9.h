@@ -67,7 +67,7 @@ namespace nv
 #if 1
     struct CompressorDXT1 : public FloatColorCompressor
     {
-        virtual void compressBlock(const Vector4 colors[16], const float weights[16], const nvtt::CompressionOptions::Private & compressionOptions, void * output);
+        virtual void compressBlock(const simd::float4 colors[16], const float weights[16], const nvtt::CompressionOptions::Private & compressionOptions, void * output);
         virtual uint blockSize() const { return 8; }
     };
 #else
@@ -110,7 +110,7 @@ namespace nv
 
     struct CompressorBC3_RGBM : public FloatColorCompressor
     {
-        virtual void compressBlock(const Vector4 colors[16], const float weights[16], const nvtt::CompressionOptions::Private & compressionOptions, void * output);
+        virtual void compressBlock(const simd::float4 colors[16], const float weights[16], const nvtt::CompressionOptions::Private & compressionOptions, void * output);
         virtual uint blockSize() const { return 16; }
     };
 

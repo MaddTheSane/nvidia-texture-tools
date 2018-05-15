@@ -30,6 +30,7 @@ See the License for the specific language governing permissions and limitations 
 
 using namespace nv;
 using namespace AVPCL;
+using simd::dot;
 
 #define	NLSBMODES	4		// number of different lsb modes per region. since we have two .1 per region, that can have 4 values
 
@@ -987,7 +988,7 @@ static float rough(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS])
 	{
 		int np = 0;
 		Vector4 colors[Tile::TILE_TOTAL];
-		Vector4 mean(0,0,0,0);
+		Vector4 mean = simd::make_float4(0,0,0,0);
 
 		for (int y = 0; y < tile.size_y; y++)
 		for (int x = 0; x < tile.size_x; x++)
@@ -1001,7 +1002,7 @@ static float rough(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS])
 		// handle simple cases	
 		if (np == 0)
 		{
-			Vector4 zero(0,0,0,255.0f);
+			Vector4 zero = simd::make_float4(0,0,0,255.0f);
 			endpts[region].A = zero;
 			endpts[region].B = zero;
 			continue;

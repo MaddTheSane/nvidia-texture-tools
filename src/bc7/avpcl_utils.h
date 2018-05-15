@@ -14,7 +14,8 @@ See the License for the specific language governing permissions and limitations 
 #ifndef _AVPCL_UTILS_H
 #define _AVPCL_UTILS_H
 
-#include "nvmath/Vector.h"
+#include "nvmath/nvmath.h"
+#include <simd/simd.h>
 
 namespace AVPCL {
 
@@ -36,13 +37,13 @@ class Utils
 {
 public:
 	// error metrics
-	static float metric4(nv::Vector4::Arg a, nv::Vector4::Arg b);
-	static float metric3(nv::Vector3::Arg a, nv::Vector3::Arg b, int rotatemode);
+	static float metric4(const simd::float4 & a, const simd::float4 & b);
+	static float metric3(const simd::float3 & a, const simd::float3 & b, int rotatemode);
 	static float metric1(float a, float b, int rotatemode);
 
-	static float metric4premult(nv::Vector4::Arg rgba0, nv::Vector4::Arg rgba1);
-	static float metric3premult_alphaout(nv::Vector3::Arg rgb0, float a0, nv::Vector3::Arg rgb1, float a1);
-	static float metric3premult_alphain(nv::Vector3::Arg rgb0, nv::Vector3::Arg rgb1, int rotatemode);
+	static float metric4premult(const simd::float4 & rgba0, const simd::float4 & rgba1);
+	static float metric3premult_alphaout(const simd::float3 & rgb0, float a0, const simd::float3 & rgb1, float a1);
+	static float metric3premult_alphain(const simd::float3 & rgb0, const simd::float3 & rgb1, int rotatemode);
 	static float metric1premult(float rgb0, float a0, float rgb1, float a1, int rotatemode);
 
 	static float premult(float r, float a);
@@ -53,7 +54,7 @@ public:
 
 	// lerping
 	static int lerp(int a, int b, int i, int bias, int denom);
-	static nv::Vector4 lerp(nv::Vector4::Arg a, nv::Vector4::Arg b, int i, int bias, int denom);
+    static simd::float4 lerp(const simd::float4 & a, const simd::float4 & b, int i, int bias, int denom);
 };
 
 }

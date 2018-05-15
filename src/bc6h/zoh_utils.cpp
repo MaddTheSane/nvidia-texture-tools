@@ -89,13 +89,13 @@ void Utils::clamp(Vector3 &v)
 		switch(Utils::FORMAT)
 		{
 		case UNSIGNED_F16:
-			if (v.component[i] < 0.0) v.component[i] = 0;
-			else if (v.component[i] > F16MAX) v.component[i] = F16MAX;
+			if (v[i] < 0.0) v[i] = 0;
+			else if (v[i] > F16MAX) v[i] = F16MAX;
 			break;
 
 		case SIGNED_F16:
-			if (v.component[i] < -F16MAX) v.component[i] = -F16MAX;
-			else if (v.component[i] > F16MAX) v.component[i] = F16MAX;
+			if (v[i] < -F16MAX) v[i] = -F16MAX;
+			else if (v[i] > F16MAX) v[i] = F16MAX;
 			break;
 
 		default:
@@ -265,7 +265,7 @@ int Utils::unquantize(int q, int prec)
 float Utils::norm(const Vector3 &a, const Vector3 &b)
 {
 #ifdef	NORM_EUCLIDEAN
-	return lengthSquared(a - b);
+    return simd::length_squared(a - b);
 #endif
 #ifdef	NORM_ABS
 	Vector3 err = a - b;

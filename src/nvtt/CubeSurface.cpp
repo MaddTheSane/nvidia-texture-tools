@@ -33,7 +33,9 @@
 
 using namespace nv;
 using namespace nvtt;
-
+using simd::make_float3;
+using simd::float3;
+using simd::dot;
 
 
 // Solid angle of an axis aligned quad from (0,0,1) to (x,y,1)
@@ -131,7 +133,7 @@ static Vector3 texelDirection(uint face, uint x, uint y, int edgeLength, EdgeFix
         n.z = -1;
     }
 
-    return normalizeFast(n);
+    return simd_fast_normalize(n);
 }
 
 
@@ -177,34 +179,34 @@ float TexelTable::solidAngle(uint f, uint x, uint y) const {
 
 
 static const Vector3 faceNormals[6] = {
-    Vector3(1, 0, 0),
-    Vector3(-1, 0, 0),
-    Vector3(0, 1, 0),
-    Vector3(0, -1, 0),
-    Vector3(0, 0, 1),
-    Vector3(0, 0, -1),
+    make_float3(1, 0, 0),
+    make_float3(-1, 0, 0),
+    make_float3(0, 1, 0),
+    make_float3(0, -1, 0),
+    make_float3(0, 0, 1),
+    make_float3(0, 0, -1),
 };
 
 static const Vector3 faceU[6] = {
-    Vector3(0, 0, -1),
-    Vector3(0, 0, 1),
-    Vector3(1, 0, 0),
-    Vector3(1, 0, 0),
-    Vector3(1, 0, 0),
-    Vector3(-1, 0, 0),
+    make_float3(0, 0, -1),
+    make_float3(0, 0, 1),
+    make_float3(1, 0, 0),
+    make_float3(1, 0, 0),
+    make_float3(1, 0, 0),
+    make_float3(-1, 0, 0),
 };
 
 static const Vector3 faceV[6] = {
-    Vector3(0, -1, 0),
-    Vector3(0, -1, 0),
-    Vector3(0, 0, 1),
-    Vector3(0, 0, -1),
-    Vector3(0, -1, 0),
-    Vector3(0, -1, 0),
+    make_float3(0, -1, 0),
+    make_float3(0, -1, 0),
+    make_float3(0, 0, 1),
+    make_float3(0, 0, -1),
+    make_float3(0, -1, 0),
+    make_float3(0, -1, 0),
 };
 
 
-static Vector2 toPolar(Vector3::Arg v) {
+static Vector2 toPolar(const float3 & v) {
     Vector2 p;
     p.x = atan2(v.x, v.y);  // theta
     p.y = acosf(v.z);       // phi
@@ -225,7 +227,7 @@ static Vector2 toPlane(float theta, float phi) {
     return p;
 }
 
-static Vector2 toPlane(Vector3::Arg v) {
+static Vector2 toPlane(const float3 & v) {
     Vector2 p;
     p.x = v.x / fabs(v.z);
     p.y = v.y / fabs(v.z);

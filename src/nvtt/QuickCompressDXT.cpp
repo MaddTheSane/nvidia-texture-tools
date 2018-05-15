@@ -39,19 +39,20 @@
 
 using namespace nv;
 using namespace QuickCompress;
+using simd::float3;
+using simd::make_float3;
+using simd::dot;
 
-
-
-inline static void extractColorBlockRGB(const ColorBlock & rgba, Vector3 block[16])
+inline static void extractColorBlockRGB(const ColorBlock & rgba, simd::float3 block[16])
 {
 	for (int i = 0; i < 16; i++)
 	{
 		const Color32 c = rgba.color(i);
-		block[i] = Vector3(c.r, c.g, c.b);
+		block[i] = make_float3(c.r, c.g, c.b);
 	}
 }
 
-inline static uint extractColorBlockRGBA(const ColorBlock & rgba, Vector3 block[16])
+inline static uint extractColorBlockRGBA(const ColorBlock & rgba, simd::float3 block[16])
 {
 	int num = 0;
 	
@@ -60,7 +61,7 @@ inline static uint extractColorBlockRGBA(const ColorBlock & rgba, Vector3 block[
 		const Color32 c = rgba.color(i);
 		if (c.a > 127)
 		{
-			block[num++] = Vector3(c.r, c.g, c.b);
+			block[num++] = make_float3(c.r, c.g, c.b);
 		}
 	}
 	
@@ -69,28 +70,28 @@ inline static uint extractColorBlockRGBA(const ColorBlock & rgba, Vector3 block[
 
 
 // find minimum and maximum colors based on bounding box in color space
-inline static void findMinMaxColorsBox(const Vector3 * block, uint num, Vector3 * restrict maxColor, Vector3 * restrict minColor)
+inline static void findMinMaxColorsBox(const simd::float3 * block, uint num, simd::float3 * restrict maxColor, simd::float3 * restrict minColor)
 {
-	*maxColor = Vector3(0, 0, 0);
-	*minColor = Vector3(255, 255, 255);
+	*maxColor = make_float3(0, 0, 0);
+	*minColor = make_float3(255, 255, 255);
 	
 	for (uint i = 0; i < num; i++)
 	{
-		*maxColor = max(*maxColor, block[i]);
-		*minColor = min(*minColor, block[i]);
+        *maxColor = simd::max(*maxColor, block[i]);
+		*minColor = simd::min(*minColor, block[i]);
 	}
 }
 
 
-inline static void selectDiagonal(const Vector3 * block, uint num, Vector3 * restrict maxColor, Vector3 * restrict minColor)
+inline static void selectDiagonal(const simd::float3 * block, uint num, simd::float3 * restrict maxColor, simd::float3 * restrict minColor)
 {
-	Vector3 center = (*maxColor + *minColor) * 0.5f;
+	simd::float3 center = (*maxColor + *minColor) * 0.5f;
 
-	Vector2 covariance = Vector2(0.0f);
+    simd::float2 covariance = simd::make_float2(0.0f);
 	for (uint i = 0; i < num; i++)
 	{
-		Vector3 t = block[i] - center;
-		covariance += t.xy() * t.z;
+		simd::float3 t = block[i] - center;
+		covariance += t.xy * t.z;
 	}
 
 	float x0 = maxColor->x;
@@ -99,19 +100,19 @@ inline static void selectDiagonal(const Vector3 * block, uint num, Vector3 * res
 	float y1 = minColor->y;
 	
 	if (covariance.x < 0) {
-		swap(x0, x1);
+        std::swap(x0, x1);
 	}
 	if (covariance.y < 0) {
-		swap(y0, y1);
+		std::swap(y0, y1);
 	}
 	
-	maxColor->set(x0, y0, maxColor->z);
-	minColor->set(x1, y1, minColor->z);
+    *maxColor = make_float3(x0, y0, maxColor->z);
+	*minColor = make_float3(x1, y1, minColor->z);
 }
 
-inline static void insetBBox(Vector3 * restrict maxColor, Vector3 * restrict minColor)
+inline static void insetBBox(simd::float3 * restrict maxColor, simd::float3 * restrict minColor)
 {
-	Vector3 inset = (*maxColor - *minColor) / 16.0f - (8.0f / 255.0f) / 16.0f;
+	simd::float3 inset = (*maxColor - *minColor) / 16.0f - (8.0f / 255.0f) / 16.0f;
 	*maxColor = clamp(*maxColor - inset, 0.0f, 255.0f);
 	*minColor = clamp(*minColor + inset, 0.0f, 255.0f);
 }
@@ -119,7 +120,7 @@ inline static void insetBBox(Vector3 * restrict maxColor, Vector3 * restrict min
 #include "nvmath/ftoi.h"
 
 // Takes a normalized color in [0, 255] range and returns 
-inline static uint16 roundAndExpand(Vector3 * restrict v)
+inline static uint16 roundAndExpand(simd::float3 * restrict v)
 {
 	uint r = ftoi_floor(clamp(v->x * (31.0f / 255.0f), 0.0f, 31.0f));
 	uint g = ftoi_floor(clamp(v->y * (63.0f / 255.0f), 0.0f, 63.0f));
@@ -143,13 +144,13 @@ inline static uint16 roundAndExpand(Vector3 * restrict v)
 	r = (r << 3) | (r >> 2);
 	g = (g << 2) | (g >> 4);
 	b = (b << 3) | (b >> 2);
-	*v = Vector3(float(r), float(g), float(b));
+	*v = make_float3(float(r), float(g), float(b));
 	
 	return w;
 }
 
 // Takes a normalized color in [0, 255] range and returns 
-inline static uint16 roundAndExpand01(Vector3 * restrict v)
+inline static uint16 roundAndExpand01(simd::float3 * restrict v)
 {
 	uint r = ftoi_floor(clamp(v->x * 31.0f, 0.0f, 31.0f));
 	uint g = ftoi_floor(clamp(v->y * 63.0f, 0.0f, 63.0f));
@@ -173,28 +174,28 @@ inline static uint16 roundAndExpand01(Vector3 * restrict v)
 	r = (r << 3) | (r >> 2);
 	g = (g << 2) | (g >> 4);
 	b = (b << 3) | (b >> 2);
-	*v = Vector3(float(r) / 255.0f, float(g) / 255.0f, float(b) / 255.0f);
+	*v = make_float3(float(r) / 255.0f, float(g) / 255.0f, float(b) / 255.0f);
 	
 	return w;
 }
 
 
 
-inline static float colorDistance(Vector3::Arg c0, Vector3::Arg c1)
+inline static float colorDistance(const simd::float3 & c0, const simd::float3 & c1)
 {
-	return dot(c0-c1, c0-c1);
+    return simd::dot(c0-c1, c0-c1);
 }
 
-Vector3 round255(const Vector3 & v) {
+simd::float3 round255(const simd::float3 & v) {
     //return Vector3(ftoi_round(255 * v.x), ftoi_round(255 * v.y), ftoi_round(255 * v.z)) * (1.0f / 255);
     //return Vector3(floorf(v.x + 0.5f), floorf(v.y + 0.5f), floorf(v.z + 0.5f));
     return v;
 }
 
 
-inline static uint computeIndices4(const Vector3 block[16], Vector3::Arg maxColor, Vector3::Arg minColor)
+inline static uint computeIndices4(const simd::float3 block[16], const simd::float3 & maxColor, const simd::float3 & minColor)
 {
-	Vector3 palette[4];
+	simd::float3 palette[4];
 	palette[0] = maxColor;
 	palette[1] = minColor;
 	//palette[2] = round255((2 * palette[0] + palette[1]) / 3.0f);
@@ -293,7 +294,7 @@ inline static uint computeIndices4(const ColorSet & set, Vector3::Arg maxColor, 
 	return indices;
 }*/
 
-inline static float evaluatePaletteError4(const Vector3 block[16], Vector3::Arg maxColor, Vector3::Arg minColor)
+inline static float evaluatePaletteError4(const simd::float3 block[16], const simd::float3 & maxColor, const simd::float3 & minColor)
 {
 	Vector3 palette[4];
 	palette[0] = maxColor;
@@ -317,13 +318,13 @@ inline static float evaluatePaletteError4(const Vector3 block[16], Vector3::Arg 
 	return total;
 }
 
-inline static float evaluatePaletteError3(const Vector3 block[16], Vector3::Arg maxColor, Vector3::Arg minColor)
+inline static float evaluatePaletteError3(const simd::float3 block[16], const simd::float3 & maxColor, const simd::float3 & minColor)
 {
-	Vector3 palette[4];
+	simd::float3 palette[4];
 	palette[0] = minColor;
 	palette[1] = maxColor;
 	palette[2] = (palette[0] + palette[1]) * 0.5f;
-	palette[3] = Vector3(0);
+	palette[3] = simd::make_float3(0);
 	
 	float total = 0.0f;
 	for (int i = 0; i < 16; i++)
@@ -375,9 +376,9 @@ inline static float evaluatePaletteError3(const Vector3 block[16], Vector3::Arg 
 	return indices;
 }*/
 
-inline static uint computeIndices3(const Vector3 block[16], Vector3::Arg maxColor, Vector3::Arg minColor)
+inline static uint computeIndices3(const simd::float3 block[16], const simd::float3 & maxColor, const simd::float3 & minColor)
 {
-	Vector3 palette[4];
+	simd::float3 palette[4];
 	palette[0] = minColor;
 	palette[1] = maxColor;
 	palette[2] = (palette[0] + palette[1]) * 0.5f;
@@ -403,13 +404,13 @@ inline static uint computeIndices3(const Vector3 block[16], Vector3::Arg maxColo
 
 
 
-static void optimizeEndPoints4(Vector3 block[16], BlockDXT1 * dxtBlock)
+static void optimizeEndPoints4(simd::float3 block[16], BlockDXT1 * dxtBlock)
 {
 	float alpha2_sum = 0.0f;
 	float beta2_sum = 0.0f;
 	float alphabeta_sum = 0.0f;
-	Vector3 alphax_sum(0.0f);
-	Vector3 betax_sum(0.0f);
+	simd::float3 alphax_sum = simd::make_float3(0.0f);
+	simd::float3 betax_sum = simd::make_float3(0.0f);
 	
 	for( int i = 0; i < 16; ++i )
 	{
@@ -431,8 +432,8 @@ static void optimizeEndPoints4(Vector3 block[16], BlockDXT1 * dxtBlock)
 	
 	float factor = 1.0f / denom;
 	
-	Vector3 a = (alphax_sum * beta2_sum - betax_sum * alphabeta_sum) * factor;
-	Vector3 b = (betax_sum * alpha2_sum - alphax_sum * alphabeta_sum) * factor;
+	float3 a = (alphax_sum * beta2_sum - betax_sum * alphabeta_sum) * factor;
+	float3 b = (betax_sum * alpha2_sum - alphax_sum * alphabeta_sum) * factor;
 
 	a = clamp(a, 0, 255);
 	b = clamp(b, 0, 255);
@@ -451,13 +452,13 @@ static void optimizeEndPoints4(Vector3 block[16], BlockDXT1 * dxtBlock)
 	dxtBlock->indices = computeIndices4(block, a, b);
 }
 
-static void optimizeEndPoints3(Vector3 block[16], BlockDXT1 * dxtBlock)
+static void optimizeEndPoints3(simd::float3 block[16], BlockDXT1 * dxtBlock)
 {
 	float alpha2_sum = 0.0f;
 	float beta2_sum = 0.0f;
 	float alphabeta_sum = 0.0f;
-	Vector3 alphax_sum(0.0f);
-	Vector3 betax_sum(0.0f);
+	float3 alphax_sum(0.0f);
+	float3 betax_sum(0.0f);
 	
 	for( int i = 0; i < 16; ++i )
 	{
@@ -479,8 +480,8 @@ static void optimizeEndPoints3(Vector3 block[16], BlockDXT1 * dxtBlock)
 	
 	float factor = 1.0f / denom;
 	
-	Vector3 a = (alphax_sum * beta2_sum - betax_sum * alphabeta_sum) * factor;
-	Vector3 b = (betax_sum * alpha2_sum - alphax_sum * alphabeta_sum) * factor;
+	float3 a = (alphax_sum * beta2_sum - betax_sum * alphabeta_sum) * factor;
+	float3 b = (betax_sum * alpha2_sum - alphax_sum * alphabeta_sum) * factor;
 
 	a = clamp(a, 0, 255);
 	b = clamp(b, 0, 255);
@@ -659,12 +660,12 @@ void QuickCompress::compressDXT1(const ColorBlock & rgba, BlockDXT1 * dxtBlock)
 	else
 	{
 		// read block
-		Vector3 block[16];
+		float3 block[16];
 		extractColorBlockRGB(rgba, block);
 
 #if 1
 		// find min and max colors
-		Vector3 maxColor, minColor;
+		float3 maxColor, minColor;
 		findMinMaxColorsBox(block, 16, &maxColor, &minColor);
 		
 		selectDiagonal(block, 16, &maxColor, &minColor);
@@ -734,11 +735,11 @@ void QuickCompress::compressDXT1a(const ColorBlock & rgba, BlockDXT1 * dxtBlock)
 	else 
 	{
 		// read block
-		Vector3 block[16];
+		float3 block[16];
 		uint num = extractColorBlockRGBA(rgba, block);
 		
 		// find min and max colors
-		Vector3 maxColor, minColor;
+		float3 maxColor, minColor;
 		findMinMaxColorsBox(block, num, &maxColor, &minColor);
 		
 		selectDiagonal(block, num, &maxColor, &minColor);

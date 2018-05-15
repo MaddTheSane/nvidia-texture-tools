@@ -19,13 +19,13 @@ namespace nv
     NV_FORCEINLINE uint16 toU6_in_U16(int x) { nvDebugCheck(x >= 0 && x <= 63u); return (uint16)x; }
 
     // Clamp color components.
-    inline Vector3 colorClamp(Vector3::Arg c)
+    inline simd::float3 colorClamp(const simd::float3 & c)
     {
-        return Vector3(saturate(c.x), saturate(c.y), saturate(c.z));
+        return simd::make_float3(saturate(c.x), saturate(c.y), saturate(c.z));
     }
 
     // Clamp without allowing the hue to change.
-    inline Vector3 colorNormalize(Vector3::Arg c)
+    inline simd::float3 colorNormalize(const simd::float3 & c)
     {
         float scale = 1.0f;
         if (c.x > scale) scale = c.x;
@@ -121,7 +121,7 @@ namespace nv
     }
 
     // @@ Quantize with exact endpoints or with uniform bins?
-    inline Color32 toColor32(const Vector4 & v)
+    inline Color32 toColor32(const simd::float4 & v)
     {
         Color32 color;
         color.r = U8(ftoi_round(saturate(v.x) * 255));
@@ -131,7 +131,7 @@ namespace nv
         return color;
     }
 
-    inline Color32 toColor32_from_bgra(const Vector4 & v)
+    inline Color32 toColor32_from_bgra(const simd::float4 & v)
     {
         Color32 color;
         color.b = U8(ftoi_round(saturate(v.x) * 255));
@@ -141,7 +141,7 @@ namespace nv
         return color;
     }
 
-    inline Color32 toColor32_from_argb(const Vector4 & v)
+    inline Color32 toColor32_from_argb(const simd::float4 & v)
     {
         Color32 color;
         color.a = U8(ftoi_round(saturate(v.x) * 255));
@@ -151,14 +151,14 @@ namespace nv
         return color;
     }
 
-    inline Vector4 toVector4(Color32 c)
+    inline simd::float4 toVector4(Color32 c)
     {
         const float scale = 1.0f / 255.0f;
-        return Vector4(c.r * scale, c.g * scale, c.b * scale, c.a * scale);
+        return simd::make_float4(c.r * scale, c.g * scale, c.b * scale, c.a * scale);
     }
 
 
-    inline float perceptualColorDistance(Vector3::Arg c0, Vector3::Arg c1)
+    inline float perceptualColorDistance(const simd::float3 & c0, const simd::float3 & c1)
     {
         float rmean = (c0.x + c1.x) * 0.5f;
         float r = c1.x - c0.x;
@@ -190,12 +190,12 @@ namespace nv
         return f;
     }
 
-    inline Vector3 toSrgb(const Vector3 & v) {
-        return Vector3(toSrgb(v.x), toSrgb(v.y), toSrgb(v.z));
+    inline simd::float3 toSrgb(const simd::float3 & v) {
+        return simd::make_float3(toSrgb(v.x), toSrgb(v.y), toSrgb(v.z));
     }
 
-    inline Vector3 fromSrgb(const Vector3 & v) {
-        return Vector3(fromSrgb(v.x), fromSrgb(v.y), fromSrgb(v.z));
+    inline simd::float3 fromSrgb(const simd::float3 & v) {
+        return simd::make_float3(fromSrgb(v.x), fromSrgb(v.y), fromSrgb(v.z));
     }
 
 } // nv namespace

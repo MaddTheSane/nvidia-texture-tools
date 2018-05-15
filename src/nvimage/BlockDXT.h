@@ -28,6 +28,7 @@
 #include "nvimage.h"
 
 #include "nvmath/Color.h"
+#include "nvmath/Vector.h"
 
 namespace nv
 {
@@ -35,7 +36,6 @@ namespace nv
     struct ColorSet;
     struct AlphaBlock4x4;
     class Stream;
-    class Vector3;
 
 
     /// DXT1 block.

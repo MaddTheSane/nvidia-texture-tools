@@ -896,13 +896,13 @@ static float rough(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS_T
 		int np = 0;
 		Vector3 colors[Tile::TILE_TOTAL];
 		float alphas[2];
-		Vector4 mean(0,0,0,0);
+		Vector4 mean = simd::make_float4(0,0,0,0);
 
 		for (int y = 0; y < tile.size_y; y++)
 		for (int x = 0; x < tile.size_x; x++)
 			if (REGION(x,y,shapeindex) == region)
 			{
-				colors[np] = tile.data[y][x].xyz();
+				colors[np] = tile.data[y][x].xyz;
 				if (np < 2) alphas[np] = tile.data[y][x].w;
 				mean += tile.data[y][x];
 				++np;
@@ -911,21 +911,21 @@ static float rough(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS_T
 		// handle simple cases	
 		if (np == 0)
 		{
-			Vector4 zero(0,0,0,255.0f);
+			Vector4 zero = simd::make_float4(0,0,0,255.0f);
 			endpts[region].A = zero;
 			endpts[region].B = zero;
 			continue;
 		}
 		else if (np == 1)
 		{
-			endpts[region].A = Vector4(colors[0], alphas[0]);
-			endpts[region].B = Vector4(colors[0], alphas[0]);
+			endpts[region].A = simd::make_float4(colors[0], alphas[0]);
+			endpts[region].B = simd::make_float4(colors[0], alphas[0]);
 			continue;
 		}
 		else if (np == 2)
 		{
-			endpts[region].A = Vector4(colors[0], alphas[0]);
-			endpts[region].B = Vector4(colors[1], alphas[1]);
+			endpts[region].A = simd::make_float4(colors[0], alphas[0]);
+			endpts[region].B = simd::make_float4(colors[1], alphas[1]);
 			continue;
 		}
 
@@ -937,14 +937,14 @@ static float rough(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS_T
 		float minp = FLT_MAX, maxp = -FLT_MAX;
 		for (int i = 0; i < np; i++) 
 		{
-			float dp = dot(colors[i]-mean.xyz(), direction);
+            float dp = simd::dot(colors[i]-mean.xyz, direction);
 			if (dp < minp) minp = dp;
 			if (dp > maxp) maxp = dp;
 		}
 
 		// choose as endpoints 2 points along the principal direction that span the projections of all of the pixel values
-		endpts[region].A = mean + minp*Vector4(direction, 0);
-		endpts[region].B = mean + maxp*Vector4(direction, 0);
+		endpts[region].A = mean + minp*simd::make_float4(direction, 0);
+		endpts[region].B = mean + maxp*simd::make_float4(direction, 0);
 
 		// clamp endpoints
 		// the argument for clamping is that the actual endpoints need to be clamped and thus we need to choose the best

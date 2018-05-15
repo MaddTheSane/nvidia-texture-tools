@@ -26,6 +26,7 @@
 #define NV_TT_QUICKCOMPRESSDXT_H
 
 #include <nvimage/nvimage.h>
+#include <simd/simd.h>
 
 namespace nv
 {
@@ -37,7 +38,6 @@ namespace nv
 	struct BlockDXT5;
 	struct AlphaBlockDXT3;
 	struct AlphaBlockDXT5;
-    class Vector3;
 
 	namespace QuickCompress
 	{
@@ -51,8 +51,8 @@ namespace nv
 
 		void compressDXT5(const ColorBlock & src, BlockDXT5 * dst, int iterationCount=8);
 
-        void outputBlock4(const ColorSet & set, const Vector3 & start, const Vector3 & end, BlockDXT1 * block);
-        void outputBlock3(const ColorSet & set, const Vector3 & start, const Vector3 & end, BlockDXT1 * block);
+        void outputBlock4(const ColorSet & set, const simd::float3 & start, const simd::float3 & end, BlockDXT1 * block);
+        void outputBlock3(const ColorSet & set, const simd::float3 & start, const simd::float3 & end, BlockDXT1 * block);
 	}
 } // nv namespace
 

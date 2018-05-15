@@ -6,6 +6,7 @@
 
 #include "nvmath/Color.h"
 #include "nvmath/Vector.h"
+#include <simd/simd.h>
 
 namespace nv
 {
@@ -150,7 +151,7 @@ namespace nv
 
     struct FloatColorBlock4x4
     {
-        Vector4 colors[4 * 4];
+        simd::float4 colors[4 * 4];
         float weights[4 * 4];
     };
 

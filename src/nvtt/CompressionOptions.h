@@ -38,7 +38,7 @@ namespace nvtt
 
         Quality quality;
 
-        nv::Vector4 colorWeight;
+        simd::float4 colorWeight;
 
         // Pixel format description.
         uint bitcount;

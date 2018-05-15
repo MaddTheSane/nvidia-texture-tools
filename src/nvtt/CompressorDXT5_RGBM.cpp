@@ -16,20 +16,25 @@
 #include <stdio.h>
 
 using namespace nv;
+using simd::float3;
+using simd::float4;
+using simd::make_float3;
+using simd::make_float4;
+using simd::dot;
 
 //static uint atomic_counter = 0;
 
 
-float nv::compress_dxt5_rgbm(const Vector4 input_colors[16], const float input_weights[16], float min_m, BlockDXT5 * output) {
+float nv::compress_dxt5_rgbm(const float4 input_colors[16], const float input_weights[16], float min_m, BlockDXT5 * output) {
 
     // Convert to RGBM.
-    Vector4 input_colors_rgbm[16]; // @@ Write over input_colors?
+    float4 input_colors_rgbm[16]; // @@ Write over input_colors?
     float rgb_weights[16];
 
     float weight_sum = 0;
 
     for (uint i = 0; i < 16; i++) {
-        const Vector4 & c = input_colors[i];
+        const float4 & c = input_colors[i];
 
         float R = saturate(c.x);
         float G = saturate(c.y);
@@ -41,7 +46,7 @@ float nv::compress_dxt5_rgbm(const Vector4 input_colors[16], const float input_w
         float b = B / M;
         float a = (M - min_m) / (1 - min_m);
 
-        input_colors_rgbm[i] = Vector4(r, g, b, a);
+        input_colors_rgbm[i] = make_float4(r, g, b, a);
         rgb_weights[i] = input_weights[i] * M;
         weight_sum += input_weights[i];
     }
@@ -51,7 +56,7 @@ float nv::compress_dxt5_rgbm(const Vector4 input_colors[16], const float input_w
     }
 
     // Compress RGB.
-    compress_dxt1(input_colors_rgbm, rgb_weights, Vector3(1), /*three_color_mode=*/false, &output->color);
+    compress_dxt1(input_colors_rgbm, rgb_weights, make_float3(1), /*three_color_mode=*/false, &output->color);
 
     // Decompress RGB/M block.
     nv::ColorBlock RGB;
@@ -60,7 +65,7 @@ float nv::compress_dxt5_rgbm(const Vector4 input_colors[16], const float input_w
     // Compute M values to compensate for RGB's error.
     AlphaBlock4x4 M;
     for (int i = 0; i < 16; i++) {
-        const Vector4 & c = input_colors[i];
+        const float4 & c = input_colors[i];
 
         float R = saturate(c.x);
         float G = saturate(c.y);
@@ -83,7 +88,7 @@ float nv::compress_dxt5_rgbm(const Vector4 input_colors[16], const float input_w
 
         // m == dot(rgb, RGB) / dot(rgb, rgb)
 
-        float m = dot(Vector3(rm, gm, bm), Vector3(R, G, B)) / dot(Vector3(rm, gm, bm), Vector3(rm, gm, bm));
+        float m = dot(make_float3(rm, gm, bm), make_float3(R, G, B)) / dot(make_float3(rm, gm, bm), make_float3(rm, gm, bm));
 
         m = (m - min_m) / (1 - min_m);
 

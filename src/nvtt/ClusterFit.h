@@ -30,9 +30,10 @@
 #include "nvmath/SimdVector.h"
 #include "nvmath/Vector.h"
 #include "nvcore/Memory.h"
+#include <simd/simd.h>
 
 // Use SIMD version if altivec or SSE are available.
-#define NVTT_USE_SIMD (NV_USE_ALTIVEC || NV_USE_SSE || NV_USE_LIBSIMD)
+#define NVTT_USE_SIMD (0)
 //#define NVTT_USE_SIMD 0
 
 namespace nv {
@@ -45,13 +46,13 @@ namespace nv {
         ClusterFit();
 
         //void setColorSet(const ColorSet * set);
-        void setColorSet(const Vector3 * colors, const float * weights, int count);
+        void setColorSet(const simd::float3 * colors, const float * weights, int count);
 
-        void setColorWeights(const Vector4 & w);
+        void setColorWeights(const simd::float4 & w);
         float bestError() const;
 
-        bool compress3(Vector3 * start, Vector3 * end);
-        bool compress4(Vector3 * start, Vector3 * end);
+        bool compress3(simd::float3 * start, simd::float3 * end);
+        bool compress4(simd::float3 * start, simd::float3 * end);
 
     private:
 
@@ -67,12 +68,12 @@ namespace nv {
         SimdVector m_xsum;                      // color | weight (wsum)
         SimdVector m_besterror;                 // scalar
     #else
-        Vector3 m_weighted[17];
+        simd::float3 m_weighted[17];
         float m_weights[17];
-        Vector3 m_metric;
-        Vector3 m_metricSqr;
-        Vector3 m_xxsum;
-        Vector3 m_xsum;
+        simd::float3 m_metric;
+        simd::float3 m_metricSqr;
+        simd::float3 m_xxsum;
+        simd::float3 m_xsum;
         float m_wsum;
         float m_besterror;
     #endif

@@ -6,11 +6,10 @@
 
 #include "nvimage.h"
 #include "nvcore/Debug.h"
+#include <simd/simd.h>
 
 namespace nv
 {
-    class Vector4;
-
     /// Base filter class.
     class NVIMAGE_CLASS Filter
     {
@@ -186,7 +185,7 @@ namespace nv
         void initSobel();
         void initPrewitt();
 
-        void initBlendedSobel(const Vector4 & scale);
+        void initBlendedSobel(const simd::float4 & scale);
 
     private:
         const uint m_windowSize;

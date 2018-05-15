@@ -48,6 +48,12 @@
 
 using namespace nv;
 using namespace nvtt;
+using simd::float2;
+using simd::float3;
+using simd::float4;
+using simd::make_float2;
+using simd::make_float3;
+using simd::make_float4;
 
 namespace
 {
@@ -473,7 +479,7 @@ void Surface::histogram(int channel, float rangeMin, float rangeMax, int binCoun
 
 void Surface::range(int channel, float * rangeMin, float * rangeMax, int alpha_channel/*= -1*/, float alpha_ref/*= 0.f*/) const
 {
-    Vector2 range(FLT_MAX, -FLT_MAX);
+    float2 range = make_float2(FLT_MAX, -FLT_MAX);
 
     FloatImage * img = m->image;
 
@@ -1422,12 +1428,12 @@ void Surface::transform(const float w0[4], const float w1[4], const float w2[4],
     detach();
 
     Matrix xform(
-        Vector4(w0[0], w0[1], w0[2], w0[3]),
-        Vector4(w1[0], w1[1], w1[2], w1[3]),
-        Vector4(w2[0], w2[1], w2[2], w2[3]),
-        Vector4(w3[0], w3[1], w3[2], w3[3]));
+        make_float4(w0[0], w0[1], w0[2], w0[3]),
+        make_float4(w1[0], w1[1], w1[2], w1[3]),
+        make_float4(w2[0], w2[1], w2[2], w2[3]),
+        make_float4(w3[0], w3[1], w3[2], w3[3]));
 
-    Vector4 voffset(offset[0], offset[1], offset[2], offset[3]);
+    float4 voffset = make_float4(offset[0], offset[1], offset[2], offset[3]);
 
     m->image->transform(0, xform, voffset);
 }
@@ -2575,7 +2581,7 @@ void Surface::toNormalMap(float sm, float medium, float big, float large)
 
     detach();
 
-    const Vector4 filterWeights(sm, medium, big, large);
+    const simd::float4 filterWeights = simd::make_float4(sm, medium, big, large);
 
     const FloatImage * img = m->image;
     m->image = nv::createNormalMap(img, (FloatImage::WrapMode)m->wrapMode, filterWeights);
@@ -2608,9 +2614,9 @@ void Surface::transformNormals(NormalTransform xform)
         float & x = img->pixel(0, i);
         float & y = img->pixel(1, i);
         float & z = img->pixel(2, i);
-        Vector3 n(x, y, z);
+        float3 n = make_float3(x, y, z);
 
-        n = normalizeSafe(n, Vector3(0.0f), 0.0f);
+        n = normalizeSafe(n, make_float3(0.0f), 0.0f);
 
         if (xform == NormalTransform_Orthographic) {
             n.z = 0.0f;
@@ -2678,7 +2684,7 @@ void Surface::reconstructNormals(NormalTransform xform)
         float & x = img->pixel(0, i);
         float & y = img->pixel(1, i);
         float & z = img->pixel(2, i);
-        Vector3 n(x, y, z);
+        float3 n = make_float3(x, y, z);
 
         if (xform == NormalTransform_Orthographic) {
             n.z = sqrtf(1 - nv::clamp(n.x * n.x + n.y * n.y, 0.0f, 1.0f));
@@ -2693,13 +2699,13 @@ void Surface::reconstructNormals(NormalTransform xform)
             n.x = n.x;
             n.y = n.y;
             n.z = 1.0f - nv::clamp(n.x * n.x + n.y * n.y, 0.0f, 1.0f);
-            n = normalizeSafe(n, Vector3(0.0f), 0.0f);
+            n = normalizeSafe(n, make_float3(0.0f), 0.0f);
         }
         else if (xform == NormalTransform_Quartic) {
             n.x = n.x;
             n.y = n.y;
             n.z = nv::clamp((1 - n.x * n.x) * (1 - n.y * n.y), 0.0f, 1.0f);
-            n = normalizeSafe(n, Vector3(0.0f), 0.0f);
+            n = normalizeSafe(n, make_float3(0.0f), 0.0f);
         }
         /*else if (xform == NormalTransform_DualParaboloid) {
 
@@ -3089,8 +3095,8 @@ Surface nvtt::histogram(const Surface & img, int width, int height)
 
 nvtt::Surface nvtt::histogram(const Surface & img, float minRange, float maxRange, int width, int height)
 {
-    nv::Array<Vector3> buckets;
-    buckets.resize(width, Vector3(0));
+    nv::Array<float3> buckets;
+    buckets.resize(width, float3(0));
 
     int w = img.width();
     int h = img.height();
@@ -3177,7 +3183,7 @@ nvtt::Surface nvtt::histogram(const Surface & img, float minRange, float maxRang
             int c = ftoi_round(fc * (width - 1) / 1);
             c = clamp(c, 0, width - 1);
 
-            buckets[c] += Vector3(1);
+            buckets[c] += 1;
         }
     }
 

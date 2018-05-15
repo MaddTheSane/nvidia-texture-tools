@@ -33,6 +33,11 @@
 #include <float.h> // FLT_MAX
 
 using namespace nv;
+using simd::dot;
+using simd::float3;
+using simd::float4;
+using simd::make_float3;
+using simd::make_float4;
 
 ClusterFit::ClusterFit()
 {
@@ -151,8 +156,8 @@ void ClusterFit::setColorSet(const Vector3 * colors, const float * weights, int 
     m_xxsum = SimdVector( 0.0f );
     m_xsum = SimdVector( 0.0f );
 #else
-    m_xxsum = Vector3(0.0f);
-    m_xsum = Vector3(0.0f);
+    m_xxsum = make_float3(0.0f);
+    m_xsum = make_float3(0.0f);
     m_wsum = 0.0f;
 #endif
 	
@@ -176,13 +181,13 @@ void ClusterFit::setColorSet(const Vector3 * colors, const float * weights, int 
 
 
 
-void ClusterFit::setColorWeights(Vector4::Arg w)
+void ClusterFit::setColorWeights(const float4 & w)
 {
 #if NVTT_USE_SIMD
     NV_ALIGN_16 Vector4 tmp(w.xyz(), 1);
     m_metric = SimdVector(tmp.component);
 #else
-    m_metric = w.xyz();
+    m_metric = w.xyz;
 #endif
     m_metricSqr = m_metric * m_metric;
 }
@@ -431,21 +436,26 @@ inline Vector3 round565(const Vector3 & v) {
 	
 	b = (b << 3) | (b >> 2);
 
-    return Vector3(float(r)/255, float(g)/255, float(b)/255);
+    return make_float3(float(r)/255, float(g)/255, float(b)/255);
+}
+
+static simd::float3 clamp(simd::float3 a, float min, float max)
+{
+    
 }
 
 bool ClusterFit::compress3(Vector3 * start, Vector3 * end)
 {
     const uint count = m_count;
-    const Vector3 grid( 31.0f, 63.0f, 31.0f );
-    const Vector3 gridrcp( 1.0f/31.0f, 1.0f/63.0f, 1.0f/31.0f );
+    const Vector3 grid = make_float3( 31.0f, 63.0f, 31.0f );
+    const Vector3 gridrcp = make_float3( 1.0f/31.0f, 1.0f/63.0f, 1.0f/31.0f );
 
     // declare variables
-    Vector3 beststart( 0.0f );
-    Vector3 bestend( 0.0f );
+    Vector3 beststart = make_float3( 0.0f );
+    Vector3 bestend = make_float3( 0.0f );
     float besterror = FLT_MAX;
 
-    Vector3 x0(0.0f);
+    Vector3 x0 = make_float3(0.0f);
     float w0 = 0.0f;
 
     int b0 = 0, b1 = 0;
@@ -453,7 +463,7 @@ bool ClusterFit::compress3(Vector3 * start, Vector3 * end)
     // check all possible clusters for this total order
     for (uint c0 = 0; c0 <= count; c0++)
     {
-        Vector3 x1(0.0f);
+        Vector3 x1 = make_float3(0.0f);
         float w1 = 0.0f;
 
         for (uint c1 = 0; c1 <= count-c0; c1++)
@@ -476,8 +486,8 @@ bool ClusterFit::compress3(Vector3 * start, Vector3 * end)
             a = clamp(a, 0, 1);
             b = clamp(b, 0, 1);
 #if 1
-            a = floor(grid * a + 0.5f) * gridrcp;
-            b = floor(grid * b + 0.5f) * gridrcp;
+            a = simd::floor(grid * a + 0.5f) * gridrcp;
+            b = simd::floor(grid * b + 0.5f) * gridrcp;
 #else
 
             //int ar = ftoi_round(31 * a.x); ar = (ar << 3) | (ar >> 2); a.x = float(ar) / 255.0f;
@@ -544,22 +554,22 @@ bool ClusterFit::compress3(Vector3 * start, Vector3 * end)
 bool ClusterFit::compress4(Vector3 * start, Vector3 * end)
 {
     const uint count = m_count;
-    const Vector3 grid( 31.0f, 63.0f, 31.0f );
-    const Vector3 gridrcp( 1.0f/31.0f, 1.0f/63.0f, 1.0f/31.0f );
+    const Vector3 grid = make_float3( 31.0f, 63.0f, 31.0f );
+    const Vector3 gridrcp = make_float3( 1.0f/31.0f, 1.0f/63.0f, 1.0f/31.0f );
 
     // declare variables
-    Vector3 beststart( 0.0f );
-    Vector3 bestend( 0.0f );
+    Vector3 beststart = make_float3( 0.0f );
+    Vector3 bestend = make_float3( 0.0f );
     float besterror = FLT_MAX;
 
-    Vector3 x0(0.0f);
+    Vector3 x0 = make_float3(0.0f);
     float w0 = 0.0f;
     int b0 = 0, b1 = 0, b2 = 0;
 
     // check all possible clusters for this total order
     for (uint c0 = 0; c0 <= count; c0++)
     {
-        Vector3 x1(0.0f);
+        Vector3 x1 = make_float3(0.0f);
         float w1 = 0.0f;
 
         for (uint c1 = 0; c1 <= count-c0; c1++)

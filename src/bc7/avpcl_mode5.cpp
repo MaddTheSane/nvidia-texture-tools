@@ -28,6 +28,8 @@ See the License for the specific language governing permissions and limitations 
 
 using namespace nv;
 using namespace AVPCL;
+using simd::make_float4;
+using simd::dot;
 
 // there are 2 index arrays. INDEXMODE selects between the arrays being 2 & 3 bits or 3 & 2 bits
 // array 0 is always the RGB array and array 1 is always the A array
@@ -415,7 +417,7 @@ void AVPCL::decompress_mode5(const char *block, Tile &t)
 	// lookup
 	for (int y = 0; y < Tile::TILE_H; y++)
 	for (int x = 0; x < Tile::TILE_W; x++)
-		temp.data[y][x] = Vector4(palette_rgb[REGION(x,y,shapeindex)][indices[INDEXARRAY_RGB][y][x]], palette_a[REGION(x,y,shapeindex)][indices[INDEXARRAY_A][y][x]]);
+		temp.data[y][x] = make_float4(palette_rgb[REGION(x,y,shapeindex)][indices[INDEXARRAY_RGB][y][x]], palette_a[REGION(x,y,shapeindex)][indices[INDEXARRAY_A][y][x]]);
 
 	rotate_tile(temp, rotatemode, t);
 }
@@ -1125,13 +1127,13 @@ static void rough(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS])
 		int np = 0;
 		Vector3 colors[Tile::TILE_TOTAL];
 		float alphas[Tile::TILE_TOTAL];
-		Vector4 mean(0,0,0,0);
+		Vector4 mean = make_float4(0,0,0,0);
 
 		for (int y = 0; y < tile.size_y; y++)
 		for (int x = 0; x < tile.size_x; x++)
 			if (REGION(x,y,shapeindex) == region)
 			{
-				colors[np] = tile.data[y][x].xyz();
+				colors[np] = tile.data[y][x].xyz;
 				alphas[np] = tile.data[y][x].w;
 				mean += tile.data[y][x];
 				++np;
@@ -1140,21 +1142,21 @@ static void rough(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS])
 		// handle simple cases	
 		if (np == 0)
 		{
-			Vector4 zero(0,0,0,255.0f);
+			Vector4 zero = make_float4(0,0,0,255.0f);
 			endpts[region].A = zero;
 			endpts[region].B = zero;
 			continue;
 		}
 		else if (np == 1)
 		{
-			endpts[region].A = Vector4(colors[0], alphas[0]);
-			endpts[region].B = Vector4(colors[0], alphas[0]);
+			endpts[region].A = make_float4(colors[0], alphas[0]);
+			endpts[region].B = make_float4(colors[0], alphas[0]);
 			continue;
 		}
 		else if (np == 2)
 		{
-			endpts[region].A = Vector4(colors[0], alphas[0]);
-			endpts[region].B = Vector4(colors[1], alphas[1]);
+			endpts[region].A = make_float4(colors[0], alphas[0]);
+			endpts[region].B = make_float4(colors[1], alphas[1]);
 			continue;
 		}
 
@@ -1167,7 +1169,7 @@ static void rough(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS])
 		float mina = FLT_MAX, maxa = -FLT_MAX;
 		for (int i = 0; i < np; i++) 
 		{
-			float dp = dot(colors[i]-mean.xyz(), direction);
+			float dp = dot(colors[i]-mean.xyz, direction);
 			if (dp < minp) minp = dp;
 			if (dp > maxp) maxp = dp;
 
@@ -1177,8 +1179,8 @@ static void rough(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS])
 		}
 
 		// choose as endpoints 2 points along the principal direction that span the projections of all of the pixel values
-		endpts[region].A = mean + Vector4(minp*direction, mina);
-		endpts[region].B = mean + Vector4(maxp*direction, maxa);
+		endpts[region].A = mean + make_float4(minp*direction, mina);
+		endpts[region].B = mean + make_float4(maxp*direction, maxa);
 
 		// clamp endpoints
 		// the argument for clamping is that the actual endpoints need to be clamped and thus we need to choose the best

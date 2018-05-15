@@ -39,6 +39,8 @@
 
 using namespace nv;
 using namespace nvtt;
+using simd::float3;
+using simd::make_float3;
 
 namespace 
 {
@@ -267,11 +269,11 @@ namespace
         return v;
     }
 
-    Vector3 fromFloat3SE(Float3SE v) {
+    float3 fromFloat3SE(Float3SE v) {
         Float754 f;
         f.raw = 0x33800000 + (v.e << 23);
         float scale = f.value;
-        return scale * Vector3(float(v.xm), float(v.ym), float(v.zm));
+        return scale * simd::make_float3(float(v.xm), float(v.ym), float(v.zm));
     }
 
     // These are based on: http://www.graphics.cornell.edu/~bjw/rgbe/rgbe.c
@@ -279,7 +281,7 @@ namespace
     {
         float v = max3(r, g, b);
 
-        uint rgbe;
+        uint rgbe = 0;
 
         if (v < 1e-32) {
             rgbe = 0;
@@ -301,7 +303,7 @@ namespace
         return rgbe;
     }
 
-    Vector3 fromRGBE(uint rgbe) {
+    float3 fromRGBE(uint rgbe) {
         uint r = (rgbe >> 0) & 0xFF;
         uint g = (rgbe >> 8) & 0xFF;
         uint b = (rgbe >> 16) & 0xFF;
@@ -309,10 +311,10 @@ namespace
 
         if (e != 0) {
             float scale = ldexpf(1.0f, e-(int)(128+8));             // +8 to divide by 256. @@ Shouldn't we divide by 255 instead?
-            return scale * Vector3(float(r), float(g), float(b));
+            return scale * make_float3(float(r), float(g), float(b));
         }
         
-        return Vector3(0);
+        return make_float3(0);
     }
 
 
@@ -525,7 +527,7 @@ void PixelFormatConverter::compress(nvtt::AlphaMode /*alphaMode*/, uint w, uint 
                     
                     // @@ Add support for nvtt::PixelType_SignedInt, nvtt::PixelType_SignedNorm, nvtt::PixelType_UnsignedInt
 
-                    int ir, ig, ib, ia;
+                    int ir, ig, ib, ia=0;
                     if (compressionOptions.pixelType == nvtt::PixelType_UnsignedNorm) {
                         ir = iround(clamp(r * 65535.0f, 0.0f, 65535.0f));
                         ig = iround(clamp(g * 65535.0f, 0.0f, 65535.0f));

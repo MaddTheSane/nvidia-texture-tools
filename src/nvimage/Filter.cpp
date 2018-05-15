@@ -35,12 +35,14 @@
 
 #include "Filter.h"
 
-#include "nvmath/Vector.h" // Vector4
+#include "nvmath/NVMath.h"
+#include <simd/simd.h> // simd::float4
 #include "nvcore/Utils.h" // swap
 
 #include <string.h> // memset
 
 using namespace nv;
+using namespace simd;
 
 namespace
 {
@@ -489,7 +491,7 @@ void Kernel2::initPrewitt()
 }
 
 // Init blended sobel filter.
-void Kernel2::initBlendedSobel(const Vector4 & scale)
+void Kernel2::initBlendedSobel(const simd::float4 & scale)
 {
     nvCheck(m_windowSize == 9);
 

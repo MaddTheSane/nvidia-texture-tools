@@ -115,8 +115,8 @@ void InputOptions::reset()
     m.isNormalMap = false;
     m.normalizeMipmaps = true;
     m.convertToNormalMap = false;
-    m.heightFactors.set(0.0f, 0.0f, 0.0f, 1.0f);
-    m.bumpFrequencyScale = Vector4(1.0f, 0.5f, 0.25f, 0.125f) / (1.0f + 0.5f + 0.25f + 0.125f);
+    m.heightFactors = simd::make_float4(0.0f, 0.0f, 0.0f, 1.0f);
+    m.bumpFrequencyScale = simd::make_float4(1.0f, 0.5f, 0.25f, 0.125f) / (1.0f + 0.5f + 0.25f + 0.125f);
 
     m.maxExtent = 0;
     m.roundMode = RoundMode_None;
@@ -314,14 +314,14 @@ void InputOptions::setHeightEvaluation(float redScale, float greenScale, float b
 {
     // Do not normalize height factors.
 //  float total = redScale + greenScale + blueScale + alphaScale;
-    m.heightFactors = Vector4(redScale, greenScale, blueScale, alphaScale);
+    m.heightFactors = simd::make_float4(redScale, greenScale, blueScale, alphaScale);
 }
 
 /// Set normal map conversion filter.
 void InputOptions::setNormalFilter(float small, float medium, float big, float large)
 {
     float total = small + medium + big + large;
-    m.bumpFrequencyScale = Vector4(small, medium, big, large) / total;
+    m.bumpFrequencyScale = simd::make_float4(small, medium, big, large) / total;
 }
 
 /// Enable mipmap normalization.

@@ -20,6 +20,7 @@ See the License for the specific language governing permissions and limitations 
 
 using namespace nv;
 using namespace AVPCL;
+using namespace simd;
 
 static const int denom7_weights[] = {0, 9, 18, 27, 37, 46, 55, 64};										// divided by 64
 static const int denom15_weights[] = {0, 4, 9, 13, 17, 21, 26, 30, 34, 38, 43, 47, 51, 55, 60, 64};		// divided by 64
@@ -49,7 +50,7 @@ int Utils::lerp(int a, int b, int i, int bias, int denom)
 #endif
 }
 
-Vector4 Utils::lerp(Vector4::Arg a, Vector4::Arg b, int i, int bias, int denom)
+float4 Utils::lerp(const float4 & a, const float4 & b, int i, int bias, int denom)
 {
 #ifdef	USE_ZOH_INTERP
 	nvAssert (denom == 3 || denom == 7 || denom == 15);
@@ -64,7 +65,7 @@ Vector4 Utils::lerp(Vector4::Arg a, Vector4::Arg b, int i, int bias, int denom)
 	case 3:	denom *= 5; i *= 5;	// fall through to case 15
 	case 15:return (a*float(denom15_weights[denom-i]) + b*float(denom15_weights[i])) / 64.0f;
 	case 7:	return (a*float(denom7_weights[denom-i]) + b*float(denom7_weights[i])) / 64.0f;
-	default: nvUnreachable(); return Vector4(0);
+	default: nvUnreachable(); return float4(0);
 	}
 #else
 	return (((a)*((denom)-i)+(b)*(i)+(bias))/(denom));		// simple exact interpolation
@@ -117,9 +118,9 @@ int Utils::quantize(float value, int prec)
 	return q;
 }
 
-float Utils::metric4(Vector4::Arg a, Vector4::Arg b)
+float Utils::metric4(const float4 & a, const float4 & b)
 {
-	Vector4 err = a - b;
+	float4 err = a - b;
 
 	// if nonuniform, select weights and weigh away
 	if (AVPCL::flag_nonuniform || AVPCL::flag_nonuniform_ati)
@@ -140,13 +141,13 @@ float Utils::metric4(Vector4::Arg a, Vector4::Arg b)
 		err.z *= bwt;
 	}
 
-	return lengthSquared(err);
+    return length_squared(err);
 }
 
 // WORK -- implement rotatemode for the below -- that changes where the rwt, gwt, and bwt's go.
-float Utils::metric3(Vector3::Arg a, Vector3::Arg b, int rotatemode)
+float Utils::metric3(const float3 & a, const float3 & b, int rotatemode)
 {
-	Vector3 err = a - b;
+	float3 err = a - b;
 
 	// if nonuniform, select weights and weigh away
 	if (AVPCL::flag_nonuniform || AVPCL::flag_nonuniform_ati)
@@ -177,7 +178,7 @@ float Utils::metric3(Vector3::Arg a, Vector3::Arg b, int rotatemode)
 		err.z *= bwt;
 	}
 
-	return lengthSquared(err);
+    return length_squared(err);
 }
 
 float Utils::metric1(const float a, const float b, int rotatemode)
@@ -224,28 +225,28 @@ float Utils::premult(float r, float a)
 	return float((R*A + 127)/255);
 }
 
-static void premult4(Vector4& rgba)
+static void premult4(float4& rgba)
 {
 	rgba.x = Utils::premult(rgba.x, rgba.w);
 	rgba.y = Utils::premult(rgba.y, rgba.w);
 	rgba.z = Utils::premult(rgba.z, rgba.w);
 }
 
-static void premult3(Vector3& rgb, float a)
+static void premult3(float3& rgb, float a)
 {
 	rgb.x = Utils::premult(rgb.x, a);
 	rgb.y = Utils::premult(rgb.y, a);
 	rgb.z = Utils::premult(rgb.z, a);
 }
 
-float Utils::metric4premult(Vector4::Arg a, Vector4::Arg b)
+float Utils::metric4premult(const float4 & a, const float4 & b)
 {
-	Vector4 pma = a, pmb = b;
+	float4 pma = a, pmb = b;
 
 	premult4(pma);
 	premult4(pmb);
 
-	Vector4 err = pma - pmb;
+	float4 err = pma - pmb;
 
 	// if nonuniform, select weights and weigh away
 	if (AVPCL::flag_nonuniform || AVPCL::flag_nonuniform_ati)
@@ -266,17 +267,17 @@ float Utils::metric4premult(Vector4::Arg a, Vector4::Arg b)
 		err.z *= bwt;
 	}
 
-	return lengthSquared(err);
+    return length_squared(err);
 }
 
-float Utils::metric3premult_alphaout(Vector3::Arg rgb0, float a0, Vector3::Arg rgb1, float a1)
+float Utils::metric3premult_alphaout(const float3 & rgb0, float a0, const float3 & rgb1, float a1)
 {
-	Vector3 pma = rgb0, pmb = rgb1;
+	float3 pma = rgb0, pmb = rgb1;
 
 	premult3(pma, a0);
 	premult3(pmb, a1);
 
-	Vector3 err = pma - pmb;
+	float3 err = pma - pmb;
 
 	// if nonuniform, select weights and weigh away
 	if (AVPCL::flag_nonuniform || AVPCL::flag_nonuniform_ati)
@@ -297,12 +298,12 @@ float Utils::metric3premult_alphaout(Vector3::Arg rgb0, float a0, Vector3::Arg r
 		err.z *= bwt;
 	}
 
-	return lengthSquared(err);
+    return length_squared(err);
 }
 
-float Utils::metric3premult_alphain(Vector3::Arg rgb0, Vector3::Arg rgb1, int rotatemode)
+float Utils::metric3premult_alphain(const float3 & rgb0, const float3 & rgb1, int rotatemode)
 {
-	Vector3 pma = rgb0, pmb = rgb1;
+	float3 pma = rgb0, pmb = rgb1;
 
 	switch(rotatemode)
 	{
@@ -331,7 +332,7 @@ float Utils::metric3premult_alphain(Vector3::Arg rgb0, Vector3::Arg rgb1, int ro
 	default: nvUnreachable();
 	}
 
-	Vector3 err = pma - pmb;
+	float3 err = pma - pmb;
 
 	// if nonuniform, select weights and weigh away
 	if (AVPCL::flag_nonuniform || AVPCL::flag_nonuniform_ati)
@@ -352,7 +353,7 @@ float Utils::metric3premult_alphain(Vector3::Arg rgb0, Vector3::Arg rgb1, int ro
 		err.z *= bwt;
 	}
 
-	return lengthSquared(err);
+    return length_squared(err);
 }
 
 float Utils::metric1premult(float rgb0, float a0, float rgb1, float a1, int rotatemode)

@@ -797,7 +797,7 @@ float ZOH::roughtwo(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS_
     {
         int np = 0;
         Vector3 colors[Tile::TILE_TOTAL];
-        Vector3 mean(0,0,0);
+        Vector3 mean = simd::make_float3(0,0,0);
 
         for (int y = 0; y < tile.size_y; y++)
             for (int x = 0; x < tile.size_x; x++)
@@ -811,7 +811,7 @@ float ZOH::roughtwo(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS_
         // handle simple cases
         if (np == 0)
         {
-            Vector3 zero(0,0,0);
+            Vector3 zero = simd::make_float3(0,0,0);
             endpts[region].A = zero;
             endpts[region].B = zero;
             continue;
@@ -837,7 +837,7 @@ float ZOH::roughtwo(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS_
         float minp = FLT_MAX, maxp = -FLT_MAX;
         for (int i = 0; i < np; i++)
         {
-            float dp = dot(colors[i]-mean, direction);
+            float dp = simd::dot(colors[i]-mean, direction);
             if (dp < minp) minp = dp;
             if (dp > maxp) maxp = dp;
         }

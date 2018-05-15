@@ -28,6 +28,7 @@
 
 using namespace nv;
 using namespace nvtt;
+using simd::make_float4;
 
 
 /// Constructor. Sets compression options to the default values.
@@ -49,7 +50,7 @@ void CompressionOptions::reset()
 {
     m.format = Format_DXT1;
     m.quality = Quality_Normal;
-    m.colorWeight.set(1.0f, 1.0f, 1.0f, 1.0f);
+    m.colorWeight = make_float4(1.0f, 1.0f, 1.0f, 1.0f);
 
     m.bitcount = 32;
     m.bmask = 0x000000FF;
@@ -99,7 +100,7 @@ void CompressionOptions::setColorWeights(float red, float green, float blue, flo
 //    float x = red / total;
 //    float y = green / total;
 //    m.colorWeight.set(x, y, 1.0f - x - y);
-    m.colorWeight.set(red, green, blue, alpha);
+    m.colorWeight = make_float4(red, green, blue, alpha);
 }
 
 

@@ -115,7 +115,7 @@ void AVPCL::decompress(const char *cblock, Tile &t)
 	case 8: // return a black tile if you get a reserved mode
 		for (int y=0; y<Tile::TILE_H; ++y)
 			for (int x=0; x<Tile::TILE_W; ++x)
-				t.data[y][x].set(0, 0, 0, 0);
+                t.data[y][x] = simd::make_float4(0, 0, 0, 0);
 		break;
 	default: nvUnreachable();
 	}

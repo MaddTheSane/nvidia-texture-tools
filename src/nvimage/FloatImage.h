@@ -11,11 +11,10 @@
 #include "nvcore/Utils.h" // clamp
 
 #include <stdlib.h> // abs
-
+#include <simd/simd.h>
 
 namespace nv
 {
-    class Vector4;
     class Matrix;
     class Image;
     class Filter;
@@ -70,7 +69,7 @@ namespace nv
         NVIMAGE_API void toGamma(uint base_component, uint num, float gamma = 2.2f);
         NVIMAGE_API void exponentiate(uint base_component, uint num, float power);
 
-        NVIMAGE_API void transform(uint base_component, const Matrix & m, const Vector4 & offset);
+        NVIMAGE_API void transform(uint base_component, const Matrix & m, const simd::float4 & offset);
         NVIMAGE_API void swizzle(uint base_component, uint r, uint g, uint b, uint a);
 
         NVIMAGE_API FloatImage * fastDownSample() const;

@@ -26,6 +26,7 @@ See the License for the specific language governing permissions and limitations 
 
 using namespace nv;
 using namespace ZOH;
+using simd::dot;
 
 #define NINDICES	16
 #define	INDEXBITS	4
@@ -712,7 +713,7 @@ float ZOH::roughone(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS_
     {
         int np = 0;
         Vector3 colors[Tile::TILE_TOTAL];
-        Vector3 mean(0,0,0);
+        Vector3 mean = simd::make_float3(0,0,0);
 
         for (int y = 0; y < tile.size_y; y++) {
             for (int x = 0; x < tile.size_x; x++) {
@@ -728,7 +729,7 @@ float ZOH::roughone(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS_
         // handle simple cases
         if (np == 0)
         {
-            Vector3 zero(0,0,0);
+            Vector3 zero = simd::make_float3(0,0,0);
             endpts[region].A = zero;
             endpts[region].B = zero;
             continue;

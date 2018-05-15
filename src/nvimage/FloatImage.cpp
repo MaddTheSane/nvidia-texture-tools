@@ -20,7 +20,10 @@
 
 
 using namespace nv;
-
+using simd::float3;
+using simd::float4;
+using simd::make_float3;
+using simd::make_float4;
 
 /// Ctor.
 FloatImage::FloatImage() : m_componentCount(0), m_width(0), m_height(0), m_depth(0),
@@ -195,8 +198,8 @@ void FloatImage::normalize(uint baseComponent)
     const uint count = m_pixelCount;
     for (uint i = 0; i < count; i++) {
 
-        Vector3 normal(xChannel[i], yChannel[i], zChannel[i]);
-        normal = normalizeSafe(normal, Vector3(0), 0.0f);
+        float3 normal = simd::make_float3(xChannel[i], yChannel[i], zChannel[i]);
+        normal = normalizeSafe(normal, make_float3(0), 0.0f);
 
         xChannel[i] = normal.x;
         yChannel[i] = normal.y;
@@ -284,7 +287,7 @@ void FloatImage::exponentiate(uint baseComponent, uint num, float power)
 }
 
 /// Apply linear transform.
-void FloatImage::transform(uint baseComponent, const Matrix & m, Vector4::Arg offset)
+void FloatImage::transform(uint baseComponent, const Matrix & m, const float4 & offset)
 {
     nvCheck(baseComponent + 4 <= m_componentCount);
 
@@ -296,7 +299,7 @@ void FloatImage::transform(uint baseComponent, const Matrix & m, Vector4::Arg of
     const uint size = m_pixelCount;
     for (uint i = 0; i < size; i++)
     {
-        Vector4 color = nv::transform(m, Vector4(*r, *g, *b, *a)) + offset;
+        float4 color = nv::transform(m, simd::make_float4(*r, *g, *b, *a)) + offset;
 
         *r++ = color.x;
         *g++ = color.y;

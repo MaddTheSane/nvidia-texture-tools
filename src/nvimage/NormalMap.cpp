@@ -35,9 +35,12 @@
 
 
 using namespace nv;
+using simd::dot;
+using simd::normalize;
+using simd::make_float3;
 
 // Create normal map using the given kernels.
-static FloatImage * createNormalMap(const Image * img, FloatImage::WrapMode wm, Vector4::Arg heightWeights, const Kernel2 * kdu, const Kernel2 * kdv)
+static FloatImage * createNormalMap(const Image * img, FloatImage::WrapMode wm, const simd::float4 & heightWeights, const Kernel2 * kdu, const Kernel2 * kdv)
 {
     nvDebugCheck(kdu != NULL);
     nvDebugCheck(kdv != NULL);
@@ -66,7 +69,7 @@ static FloatImage * createNormalMap(const Image * img, FloatImage::WrapMode wm, 
             const float du = fimage->applyKernelXY(kdu, x, y, 0, 3, wm);
             const float dv = fimage->applyKernelXY(kdv, x, y, 0, 3, wm);
 
-            Vector3 n = normalize(Vector3(du, dv, heightScale));
+            Vector3 n = normalize(make_float3(du, dv, heightScale));
 
             fimage->pixel(0, x, y, 0) = 0.5f * n.x + 0.5f;
             fimage->pixel(1, x, y, 0) = 0.5f * n.y + 0.5f;
@@ -101,7 +104,7 @@ static FloatImage * createNormalMap(const FloatImage * img, FloatImage::WrapMode
             const float du = img->applyKernelXY(kdu, x, y, 0, 3, wm);
             const float dv = img->applyKernelXY(kdv, x, y, 0, 3, wm);
 
-            Vector3 n = normalize(Vector3(du, dv, heightScale));
+            Vector3 n = normalize(make_float3(du, dv, heightScale));
 
             img_out->pixel(0, x, y, 0) = n.x;
             img_out->pixel(1, x, y, 0) = n.y;
@@ -125,7 +128,7 @@ static FloatImage * createNormalMap(const FloatImage * img, FloatImage::WrapMode
 
 
 /// Create normal map using the given filter.
-FloatImage * nv::createNormalMap(const Image * img, FloatImage::WrapMode wm, Vector4::Arg heightWeights, NormalMapFilter filter /*= Sobel3x3*/)
+FloatImage * nv::createNormalMap(const Image * img, FloatImage::WrapMode wm, const simd::float4 & heightWeights, NormalMapFilter filter /*= Sobel3x3*/)
 {
     nvDebugCheck(img != NULL);
 
@@ -162,7 +165,7 @@ FloatImage * nv::createNormalMap(const Image * img, FloatImage::WrapMode wm, Vec
 
 
 /// Create normal map combining multiple sobel filters.
-FloatImage * nv::createNormalMap(const Image * img, FloatImage::WrapMode wm, Vector4::Arg heightWeights, Vector4::Arg filterWeights)
+FloatImage * nv::createNormalMap(const Image * img, FloatImage::WrapMode wm, const simd::float4 & heightWeights, const simd::float4 & filterWeights)
 {
     nvDebugCheck(img != NULL);
 
@@ -180,7 +183,7 @@ FloatImage * nv::createNormalMap(const Image * img, FloatImage::WrapMode wm, Vec
 }
 
 
-FloatImage * nv::createNormalMap(const FloatImage * img, FloatImage::WrapMode wm, Vector4::Arg filterWeights)
+FloatImage * nv::createNormalMap(const FloatImage * img, FloatImage::WrapMode wm, const simd::float4 & filterWeights)
 {
     nvDebugCheck(img != NULL);
 
