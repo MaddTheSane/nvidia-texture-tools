@@ -527,7 +527,7 @@ void PixelFormatConverter::compress(nvtt::AlphaMode /*alphaMode*/, uint w, uint 
                     
                     // @@ Add support for nvtt::PixelType_SignedInt, nvtt::PixelType_SignedNorm, nvtt::PixelType_UnsignedInt
 
-                    int ir, ig, ib, ia=0;
+                    int ir, ig, ib, ia;
                     if (compressionOptions.pixelType == nvtt::PixelType_UnsignedNorm) {
                         ir = iround(clamp(r * 65535.0f, 0.0f, 65535.0f));
                         ig = iround(clamp(g * 65535.0f, 0.0f, 65535.0f));
@@ -536,6 +536,7 @@ void PixelFormatConverter::compress(nvtt::AlphaMode /*alphaMode*/, uint w, uint 
                     }
                     else if (compressionOptions.pixelType == nvtt::PixelType_SignedNorm) {
                         // @@
+						ir=0; ig=0; ib=0; ia=0;
                     }
                     else if (compressionOptions.pixelType == nvtt::PixelType_UnsignedInt) {
                         ir = iround(clamp(r, 0.0f, 65535.0f));
@@ -545,6 +546,7 @@ void PixelFormatConverter::compress(nvtt::AlphaMode /*alphaMode*/, uint w, uint 
                     }
                     else if (compressionOptions.pixelType == nvtt::PixelType_SignedInt) {
                         // @@
+						ir=0; ig=0; ib=0; ia=0;
                     }
                     
                     uint p = 0;

@@ -34,6 +34,8 @@
 
 
 using namespace nv;
+using simd::float3;
+using simd::float4;
 
 
 /*----------------------------------------------------------------------------
@@ -632,12 +634,12 @@ void BlockCTX1::setIndices(int * idx)
 
 
 /// Decode BC6 block.
-void BlockBC6::decodeBlock(Vector3 colors[16]) const
+void BlockBC6::decodeBlock(float3 colors[16]) const
 {
 	ZOH::Tile tile(4, 4);
 	ZOH::decompress((const char *)data, tile);
 
-	// Convert ZOH's tile struct to Vector3, and convert half to float.
+	// Convert ZOH's tile struct to float3, and convert half to float.
 	for (uint y = 0; y < 4; ++y)
 	{
 		for (uint x = 0; x < 4; ++x)
@@ -664,7 +666,7 @@ void BlockBC7::decodeBlock(ColorBlock * block) const
 	{
 		for (uint x = 0; x < 4; ++x)
 		{
-			Vector4 rgba = tile.data[y][x];
+			float4 rgba = tile.data[y][x];
 			// Note: decoded rgba values are in [0, 255] range and should be an integer,
 			// because BC7 never uses more than 8 bits per channel.  So no need to round.
 			block->color(x, y).setRGBA(uint8(rgba.x), uint8(rgba.y), uint8(rgba.z), uint8(rgba.w));

@@ -33,8 +33,9 @@
 
 using namespace nv;
 using namespace nvtt;
-using simd::make_float3;
+using simd::float2;
 using simd::float3;
+using simd::make_float3;
 using simd::dot;
 
 
@@ -74,7 +75,7 @@ static float solidAngleTerm(uint x, uint y, float inverseEdgeLength) {
 }
 
 
-static Vector3 texelDirection(uint face, uint x, uint y, int edgeLength, EdgeFixup fixupMethod)
+static float3 texelDirection(uint face, uint x, uint y, int edgeLength, EdgeFixup fixupMethod)
 {
     float u, v;
     if (fixupMethod == EdgeFixup_Stretch) {
@@ -98,7 +99,7 @@ static Vector3 texelDirection(uint face, uint x, uint y, int edgeLength, EdgeFix
     nvDebugCheck(u >= -1.0f && u <= 1.0f);
     nvDebugCheck(v >= -1.0f && v <= 1.0f);
 
-    Vector3 n;
+    float3 n;
 
     if (face == 0) {
         n.x = 1;
@@ -162,7 +163,7 @@ TexelTable::TexelTable(uint edgeLength) : size(edgeLength) {
     }
 }
 
-const Vector3 & TexelTable::direction(uint f, uint x, uint y) const {
+const float3 & TexelTable::direction(uint f, uint x, uint y) const {
     nvDebugCheck(f < 6 && x < size && y < size);
     return directionArray[(f * size + y) * size + x];
 }
@@ -178,7 +179,7 @@ float TexelTable::solidAngle(uint f, uint x, uint y) const {
 }
 
 
-static const Vector3 faceNormals[6] = {
+static const float3 faceNormals[6] = {
     make_float3(1, 0, 0),
     make_float3(-1, 0, 0),
     make_float3(0, 1, 0),
@@ -187,7 +188,7 @@ static const Vector3 faceNormals[6] = {
     make_float3(0, 0, -1),
 };
 
-static const Vector3 faceU[6] = {
+static const float3 faceU[6] = {
     make_float3(0, 0, -1),
     make_float3(0, 0, 1),
     make_float3(1, 0, 0),
@@ -196,7 +197,7 @@ static const Vector3 faceU[6] = {
     make_float3(-1, 0, 0),
 };
 
-static const Vector3 faceV[6] = {
+static const float3 faceV[6] = {
     make_float3(0, -1, 0),
     make_float3(0, -1, 0),
     make_float3(0, 0, 1),
@@ -206,19 +207,19 @@ static const Vector3 faceV[6] = {
 };
 
 
-static Vector2 toPolar(const float3 & v) {
-    Vector2 p;
+static float2 toPolar(const float3 & v) {
+    float2 p;
     p.x = atan2(v.x, v.y);  // theta
     p.y = acosf(v.z);       // phi
     return p;
 }
 
-static Vector2 toPlane(float theta, float phi) {
+static float2 toPlane(float theta, float phi) {
     float x = sin(phi) * cos(theta);
     float y = sin(phi) * sin(theta);
     float z = cos(phi);
 
-    Vector2 p;
+    float2 p;
     p.x = x / fabs(z);
     p.y = y / fabs(z);
     //p.x = tan(phi) * cos(theta);
@@ -227,8 +228,8 @@ static Vector2 toPlane(float theta, float phi) {
     return p;
 }
 
-static Vector2 toPlane(const float3 & v) {
-    Vector2 p;
+static float2 toPlane(const float3 & v) {
+    float2 p;
     p.x = v.x / fabs(v.z);
     p.y = v.y / fabs(v.z);
     return p;
@@ -542,7 +543,7 @@ CubeSurface CubeSurface::irradianceFilter(int size, EdgeFixup fixupMethod) const
         for (uint y = 0; y < edgeLength; y++) {
             for (uint x = 0; x < edgeLength; x++) {
 
-                Vector3 dir = m->texelTable->direction(f, x, y);
+                float3 dir = m->texelTable->direction(f, x, y);
                 float solidAngle = m->texelTable->solidAngle(f, x, y);
 
                 Sh2 shDir;
@@ -569,12 +570,12 @@ CubeSurface CubeSurface::irradianceFilter(int size, EdgeFixup fixupMethod) const
 
 
 // Convolve filter against this cube.
-Vector3 CubeSurface::Private::applyAngularFilter(const Vector3 & filterDir, float coneAngle, float * filterTable, int tableSize)
+float3 CubeSurface::Private::applyAngularFilter(const float3 & filterDir, float coneAngle, float * filterTable, int tableSize)
 {
     const float cosineConeAngle = cos(coneAngle);
     nvDebugCheck(cosineConeAngle >= 0);
 
-    Vector3 color(0);
+    float3 color(0);
     float sum = 0;
 
     // Things I have tried to speed this up:
@@ -642,7 +643,7 @@ Vector3 CubeSurface::Private::applyAngularFilter(const Vector3 & filterDir, floa
             bool inside = false;
             for (int x = x0; x <= x1; x++) {
 
-                Vector3 dir = texelTable->direction(f, x, y);
+                float3 dir = texelTable->direction(f, x, y);
                 float cosineAngle = dot(dir, filterDir);
 
                 if (cosineAngle > cosineConeAngle) {
@@ -690,12 +691,12 @@ Vector3 CubeSurface::Private::applyAngularFilter(const Vector3 & filterDir, floa
 
 
 // Convolve filter against this cube.
-Vector3 CubeSurface::Private::applyCosinePowerFilter(const Vector3 & filterDir, float coneAngle, float cosinePower)
+float3 CubeSurface::Private::applyCosinePowerFilter(const float3 & filterDir, float coneAngle, float cosinePower)
 {
     const float cosineConeAngle = cos(coneAngle);
     nvDebugCheck(cosineConeAngle >= 0);
 
-    Vector3 color(0);
+    float3 color(0);
     float sum = 0;
 
     // Things I have tried to speed this up:
@@ -763,7 +764,7 @@ Vector3 CubeSurface::Private::applyCosinePowerFilter(const Vector3 & filterDir, 
             bool inside = false;
             for (int x = x0; x <= x1; x++) {
 
-                Vector3 dir = texelTable->direction(f, x, y);
+                float3 dir = texelTable->direction(f, x, y);
                 float cosineAngle = dot(dir, filterDir);
 
                 if (cosineAngle > cosineConeAngle) {
@@ -817,10 +818,10 @@ void ApplyAngularFilterTask(void * context, int id)
     nvtt::Surface & filteredFace = ctx->filteredCube->face[f];
     FloatImage * filteredImage = filteredFace.m->image;
 
-    const Vector3 filterDir = texelDirection(f, x, y, size, ctx->fixupMethod);
+    const float3 filterDir = texelDirection(f, x, y, size, ctx->fixupMethod);
 
     // Convolve filter against cube.
-    Vector3 color = ctx->inputCube->applyAngularFilter(filterDir, ctx->coneAngle, ctx->filterTable, ctx->tableSize);
+    float3 color = ctx->inputCube->applyAngularFilter(filterDir, ctx->coneAngle, ctx->filterTable, ctx->tableSize);
 
     filteredImage->pixel(0, idx) = color.x;
     filteredImage->pixel(1, idx) = color.y;
@@ -849,10 +850,10 @@ CubeSurface CubeSurface::cosinePowerFilter(int size, float cosinePower, EdgeFixu
         for (uint y = 0; y < uint(size); y++) {
             for (uint x = 0; x < uint(size); x++) {
 
-                const Vector3 filterDir = texelDirection(f, x, y, size, fixupMethod);
+                const float3 filterDir = texelDirection(f, x, y, size, fixupMethod);
 
                 // Convolve filter against cube.
-                Vector3 color = m->applyCosinePowerFilter(filterDir, coneAngle, cosinePower);
+                float3 color = m->applyCosinePowerFilter(filterDir, coneAngle, cosinePower);
 
                 filteredImage->pixel(0, x, y, 0) = color.x;
                 filteredImage->pixel(1, x, y, 0) = color.y;
@@ -906,7 +907,7 @@ CubeSurface CubeSurface::cosinePowerFilter(int size, float cosinePower, EdgeFixu
 
 
 // Sample cubemap in the given direction.
-Vector3 CubeSurface::Private::sample(const Vector3 & dir)
+float3 CubeSurface::Private::sample(const float3 & dir)
 {
     int f = -1;
     if (fabs(dir.x) > fabs(dir.y) && fabs(dir.x) > fabs(dir.z)) {
@@ -929,7 +930,7 @@ Vector3 CubeSurface::Private::sample(const Vector3 & dir)
 
     FloatImage * img = face[f].m->image;
 
-    Vector3 color;
+    float3 color;
     color.x = img->sampleLinearClamp(0, u, v);
     color.y = img->sampleLinearClamp(1, u, v);
     color.z = img->sampleLinearClamp(2, u, v);
@@ -952,9 +953,9 @@ CubeSurface CubeSurface::fastResample(int size, EdgeFixup fixupMethod) const
         for (uint y = 0; y < uint(size); y++) {
             for (uint x = 0; x < uint(size); x++) {
 
-                const Vector3 filterDir = texelDirection(f, x, y, size, fixupMethod);
+                const float3 filterDir = texelDirection(f, x, y, size, fixupMethod);
 
-                Vector3 color = m->sample(filterDir);
+                float3 color = m->sample(filterDir);
 
                 resampledImage->pixel(0, x, y, 0) = color.x;
                 resampledImage->pixel(1, x, y, 0) = color.y;

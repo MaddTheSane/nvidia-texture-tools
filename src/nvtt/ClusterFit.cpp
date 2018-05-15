@@ -49,23 +49,23 @@ void ClusterFit::setColorSet(const ColorSet * set)
     // initialise the best error
 #if NVTT_USE_SIMD
     m_besterror = SimdVector( FLT_MAX );
-    Vector3 metric = m_metric.toVector3();
+    float3 metric = m_metric.toVector3();
 #else
     m_besterror = FLT_MAX;
-    Vector3 metric = m_metric;
+    float3 metric = m_metric;
 #endif
 
     // cache some values
     m_count = set->colorCount;
 
-    Vector3 values[16];
+    float3 values[16];
     for (uint i = 0; i < m_count; i++)
     {
         values[i] = set->colors[i].xyz();
     }
 
-    Vector3 principal = Fit::computePrincipalComponent_PowerMethod(m_count, values, set->weights, metric);
-    //Vector3 principal = Fit::computePrincipalComponent_EigenSolver(m_count, values, set->weights, metric);
+    float3 principal = Fit::computePrincipalComponent_PowerMethod(m_count, values, set->weights, metric);
+    //float3 principal = Fit::computePrincipalComponent_EigenSolver(m_count, values, set->weights, metric);
 
     // build the list of values
     int order[16];
@@ -91,8 +91,8 @@ void ClusterFit::setColorSet(const ColorSet * set)
     m_xxsum = SimdVector( 0.0f );
     m_xsum = SimdVector( 0.0f );
 #else
-    m_xxsum = Vector3(0.0f);
-    m_xsum = Vector3(0.0f);
+    m_xxsum = float3(0.0f);
+    m_xsum = float3(0.0f);
     m_wsum = 0.0f;
 #endif
 	
@@ -116,21 +116,21 @@ void ClusterFit::setColorSet(const ColorSet * set)
 #endif // 0
 
 
-void ClusterFit::setColorSet(const Vector3 * colors, const float * weights, int count)
+void ClusterFit::setColorSet(const float3 * colors, const float * weights, int count)
 {
     // initialise the best error
 #if NVTT_USE_SIMD
     m_besterror = SimdVector( FLT_MAX );
-    Vector3 metric = m_metric.toVector3();
+    float3 metric = m_metric.toVector3();
 #else
     m_besterror = FLT_MAX;
-    Vector3 metric = m_metric;
+    float3 metric = m_metric;
 #endif
 
     m_count = count;
 
-    Vector3 principal = Fit::computePrincipalComponent_PowerMethod(count, colors, weights, metric);
-    //Vector3 principal = Fit::computePrincipalComponent_EigenSolver(count, colors, weights, metric);
+    float3 principal = Fit::computePrincipalComponent_PowerMethod(count, colors, weights, metric);
+    //float3 principal = Fit::computePrincipalComponent_EigenSolver(count, colors, weights, metric);
 
     // build the list of values
     int order[16];
@@ -206,7 +206,7 @@ float ClusterFit::bestError() const
 
 #if NVTT_USE_SIMD
 
-bool ClusterFit::compress3( Vector3 * start, Vector3 * end )
+bool ClusterFit::compress3( float3 * start, float3 * end )
 {
     const int count = m_count;
     const SimdVector one = SimdVector(1.0f);
@@ -234,12 +234,12 @@ bool ClusterFit::compress3( Vector3 * start, Vector3 * end )
         {
             const SimdVector x2 = m_xsum - x1 - x0;
 
-            //Vector3 alphax_sum = x0 + x1 * 0.5f;
+            //float3 alphax_sum = x0 + x1 * 0.5f;
             //float alpha2_sum = w0 + w1 * 0.25f;
             const SimdVector alphax_sum = multiplyAdd(x1, half, x0); // alphax_sum, alpha2_sum
             const SimdVector alpha2_sum = alphax_sum.splatW();
 
-            //const Vector3 betax_sum = x2 + x1 * 0.5f;
+            //const float3 betax_sum = x2 + x1 * 0.5f;
             //const float beta2_sum = w2 + w1 * 0.25f;
             const SimdVector betax_sum = multiplyAdd(x1, half, x2); // betax_sum, beta2_sum
             const SimdVector beta2_sum = betax_sum.splatW();
@@ -301,7 +301,7 @@ bool ClusterFit::compress3( Vector3 * start, Vector3 * end )
     return false;
 }
 
-bool ClusterFit::compress4( Vector3 * start, Vector3 * end )
+bool ClusterFit::compress4( float3 * start, float3 * end )
 {
     const int count = m_count;
     const SimdVector one = SimdVector(1.0f);
@@ -335,12 +335,12 @@ bool ClusterFit::compress4( Vector3 * start, Vector3 * end )
             {
                 const SimdVector x3 = m_xsum - x2 - x1 - x0;
 
-                //const Vector3 alphax_sum = x0 + x1 * (2.0f / 3.0f) + x2 * (1.0f / 3.0f);
+                //const float3 alphax_sum = x0 + x1 * (2.0f / 3.0f) + x2 * (1.0f / 3.0f);
                 //const float alpha2_sum = w0 + w1 * (4.0f/9.0f) + w2 * (1.0f/9.0f);
                 const SimdVector alphax_sum = multiplyAdd(x2, onethird, multiplyAdd(x1, twothirds, x0)); // alphax_sum, alpha2_sum
                 const SimdVector alpha2_sum = alphax_sum.splatW();
 
-                //const Vector3 betax_sum = x3 + x2 * (2.0f / 3.0f) + x1 * (1.0f / 3.0f);
+                //const float3 betax_sum = x3 + x2 * (2.0f / 3.0f) + x1 * (1.0f / 3.0f);
                 //const float beta2_sum = w3 + w2 * (4.0f/9.0f) + w1 * (1.0f/9.0f);
                 const SimdVector betax_sum = multiplyAdd(x2, twothirds, multiplyAdd(x1, onethird, x3)); // betax_sum, beta2_sum
                 const SimdVector beta2_sum = betax_sum.splatW();
@@ -416,7 +416,7 @@ bool ClusterFit::compress4( Vector3 * start, Vector3 * end )
 
 #else
 
-inline Vector3 round565(const Vector3 & v) {
+inline float3 round565(const float3 & v) {
 	uint r = ftoi_trunc(v.x * 31.0f);
     float r0 = float(((r+0) << 3) | ((r+0) >> 2));
     float r1 = float(((r+1) << 3) | ((r+1) >> 2));
@@ -439,23 +439,18 @@ inline Vector3 round565(const Vector3 & v) {
     return make_float3(float(r)/255, float(g)/255, float(b)/255);
 }
 
-static simd::float3 clamp(simd::float3 a, float min, float max)
-{
-    
-}
-
-bool ClusterFit::compress3(Vector3 * start, Vector3 * end)
+bool ClusterFit::compress3(float3 * start, float3 * end)
 {
     const uint count = m_count;
-    const Vector3 grid = make_float3( 31.0f, 63.0f, 31.0f );
-    const Vector3 gridrcp = make_float3( 1.0f/31.0f, 1.0f/63.0f, 1.0f/31.0f );
+    const float3 grid = make_float3( 31.0f, 63.0f, 31.0f );
+    const float3 gridrcp = make_float3( 1.0f/31.0f, 1.0f/63.0f, 1.0f/31.0f );
 
     // declare variables
-    Vector3 beststart = make_float3( 0.0f );
-    Vector3 bestend = make_float3( 0.0f );
+    float3 beststart = make_float3( 0.0f );
+    float3 bestend = make_float3( 0.0f );
     float besterror = FLT_MAX;
 
-    Vector3 x0 = make_float3(0.0f);
+    float3 x0 = make_float3(0.0f);
     float w0 = 0.0f;
 
     int b0 = 0, b1 = 0;
@@ -463,7 +458,7 @@ bool ClusterFit::compress3(Vector3 * start, Vector3 * end)
     // check all possible clusters for this total order
     for (uint c0 = 0; c0 <= count; c0++)
     {
-        Vector3 x1 = make_float3(0.0f);
+        float3 x1 = make_float3(0.0f);
         float w1 = 0.0f;
 
         for (uint c1 = 0; c1 <= count-c0; c1++)
@@ -476,11 +471,11 @@ bool ClusterFit::compress3(Vector3 * start, Vector3 * end)
             float const alphabeta_sum = w1 * 0.25f;
             float const factor = 1.0f / (alpha2_sum * beta2_sum - alphabeta_sum * alphabeta_sum);
 
-            Vector3 const alphax_sum = x0 + x1 * 0.5f;
-            Vector3 const betax_sum = m_xsum - alphax_sum;
+            float3 const alphax_sum = x0 + x1 * 0.5f;
+            float3 const betax_sum = m_xsum - alphax_sum;
 
-            Vector3 a = (alphax_sum*beta2_sum - betax_sum*alphabeta_sum) * factor;
-            Vector3 b = (betax_sum*alpha2_sum - alphax_sum*alphabeta_sum) * factor;
+            float3 a = (alphax_sum*beta2_sum - betax_sum*alphabeta_sum) * factor;
+            float3 b = (betax_sum*alpha2_sum - alphax_sum*alphabeta_sum) * factor;
 
             // clamp to the grid
             a = clamp(a, 0, 1);
@@ -512,7 +507,7 @@ bool ClusterFit::compress3(Vector3 * start, Vector3 * end)
 #endif
 
             // compute the error
-            Vector3 e1 = a*a*alpha2_sum + b*b*beta2_sum + 2.0f*( a*b*alphabeta_sum - a*alphax_sum - b*betax_sum );
+            float3 e1 = a*a*alpha2_sum + b*b*beta2_sum + 2.0f*( a*b*alphabeta_sum - a*alphax_sum - b*betax_sum );
 
             // apply the metric to the error term
             float error = dot(e1, m_metricSqr);
@@ -551,30 +546,30 @@ bool ClusterFit::compress3(Vector3 * start, Vector3 * end)
     return false;
 }
 
-bool ClusterFit::compress4(Vector3 * start, Vector3 * end)
+bool ClusterFit::compress4(float3 * start, float3 * end)
 {
     const uint count = m_count;
-    const Vector3 grid = make_float3( 31.0f, 63.0f, 31.0f );
-    const Vector3 gridrcp = make_float3( 1.0f/31.0f, 1.0f/63.0f, 1.0f/31.0f );
+    const float3 grid = make_float3( 31.0f, 63.0f, 31.0f );
+    const float3 gridrcp = make_float3( 1.0f/31.0f, 1.0f/63.0f, 1.0f/31.0f );
 
     // declare variables
-    Vector3 beststart = make_float3( 0.0f );
-    Vector3 bestend = make_float3( 0.0f );
+    float3 beststart = make_float3( 0.0f );
+    float3 bestend = make_float3( 0.0f );
     float besterror = FLT_MAX;
 
-    Vector3 x0 = make_float3(0.0f);
+    float3 x0 = make_float3(0.0f);
     float w0 = 0.0f;
     int b0 = 0, b1 = 0, b2 = 0;
 
     // check all possible clusters for this total order
     for (uint c0 = 0; c0 <= count; c0++)
     {
-        Vector3 x1 = make_float3(0.0f);
+        float3 x1 = make_float3(0.0f);
         float w1 = 0.0f;
 
         for (uint c1 = 0; c1 <= count-c0; c1++)
         {
-            Vector3 x2(0.0f);
+            float3 x2(0.0f);
             float w2 = 0.0f;
 
             for (uint c2 = 0; c2 <= count-c0-c1; c2++)
@@ -586,11 +581,11 @@ bool ClusterFit::compress4(Vector3 * start, Vector3 * end)
                 float const alphabeta_sum = (w1 + w2) * (2.0f/9.0f);
                 float const factor = 1.0f / (alpha2_sum * beta2_sum - alphabeta_sum * alphabeta_sum);
 
-                Vector3 const alphax_sum = x0 + x1 * (2.0f / 3.0f) + x2 * (1.0f / 3.0f);
-                Vector3 const betax_sum = m_xsum - alphax_sum;
+                float3 const alphax_sum = x0 + x1 * (2.0f / 3.0f) + x2 * (1.0f / 3.0f);
+                float3 const betax_sum = m_xsum - alphax_sum;
 
-                Vector3 a = ( alphax_sum*beta2_sum - betax_sum*alphabeta_sum )*factor;
-                Vector3 b = ( betax_sum*alpha2_sum - alphax_sum*alphabeta_sum )*factor;
+                float3 a = ( alphax_sum*beta2_sum - betax_sum*alphabeta_sum )*factor;
+                float3 b = ( betax_sum*alpha2_sum - alphax_sum*alphabeta_sum )*factor;
 
                 // clamp to the grid
                 a = clamp(a, 0, 1);
@@ -624,7 +619,7 @@ bool ClusterFit::compress4(Vector3 * start, Vector3 * end)
                 // @@ It would be much more accurate to evaluate the error exactly. 
 
                 // compute the error
-                Vector3 e1 = a*a*alpha2_sum + b*b*beta2_sum + 2.0f*( a*b*alphabeta_sum - a*alphax_sum - b*betax_sum );
+                float3 e1 = a*a*alpha2_sum + b*b*beta2_sum + 2.0f*( a*b*alphabeta_sum - a*alphax_sum - b*betax_sum );
 
                 // apply the metric to the error term
                 float error = dot( e1, m_metricSqr );

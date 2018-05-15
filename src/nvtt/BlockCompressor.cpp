@@ -39,6 +39,7 @@
 
 using namespace nv;
 using namespace nvtt;
+using simd::float4;
 
 /*
 // OpenMP
@@ -259,7 +260,7 @@ void FloatColorCompressorTask(void * data, int i)
     const float * b = (const float *)d->data + d->w * d->h * d->d * 2;
     const float * a = (const float *)d->data + d->w * d->h * d->d * 3;
 
-    Vector4 colors[16];
+    float4 colors[16];
     float weights[16];
 
     const uint block_w = min(d->w - block_x * 4U, 4U);
@@ -278,14 +279,14 @@ void FloatColorCompressorTask(void * data, int i)
         }
         for (; x < 4; x++) {
             uint dst_idx = 4 * y + x;
-            colors[dst_idx] = Vector4(0);
+            colors[dst_idx] = float4(0);
             weights[dst_idx] = 0.0f;
         }
     }
     for (; y < 4; y++) {
         for (x = 0; x < 4; x++) {
             uint dst_idx = 4 * y + x;
-            colors[dst_idx] = Vector4(0);
+            colors[dst_idx] = float4(0);
             weights[dst_idx] = 0.0f;
         }
     }

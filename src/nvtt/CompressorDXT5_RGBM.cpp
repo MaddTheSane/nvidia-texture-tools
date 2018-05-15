@@ -176,7 +176,7 @@ float nv::compress_dxt5_rgbm(const float4 input_colors[16], const float input_we
         float b = B / M;
         float a = c.w;
 
-        rgba.color(i) = toColor32(Vector4(r, g, b, a));
+        rgba.color(i) = toColor32(make_float4(r, g, b, a));
     }
 
     if (rgba.isSingleColor())
@@ -213,7 +213,7 @@ float nv::compress_dxt5_rgbm(const float4 input_colors[16], const float input_we
         float b = B / M;
         float a = c.w;
 
-        rgb.colors[i] = Vector4(r, g, b, a);
+        rgb.colors[i] = make_float4(r, g, b, a);
         rgb.indices[i] = i;
         rgb.weights[i] = max(weights[i], 0.001f);// weights[i];   // IC: For some reason 0 weights are causing problems, even if we eliminate the corresponding colors from the set.
     }
@@ -242,7 +242,7 @@ float nv::compress_dxt5_rgbm(const float4 input_colors[16], const float input_we
 #if 1
     AlphaBlock4x4 M;
     for (int i = 0; i < 16; i++) {
-        const Vector4 & c = colors[i];
+        const float4 & c = colors[i];
         float R = saturate(c.x);
         float G = saturate(c.y);
         float B = saturate(c.z);

@@ -18,6 +18,7 @@ See the License for the specific language governing permissions and limitations 
 
 using namespace nv;
 using namespace ZOH;
+using simd::float3;
 
 static const int denom7_weights_64[] = {0, 9, 18, 27, 37, 46, 55, 64};										// divided by 64
 static const int denom15_weights_64[] = {0, 4, 9, 13, 17, 21, 26, 30, 34, 38, 43, 47, 51, 55, 60, 64};		// divided by 64
@@ -37,13 +38,13 @@ int Utils::lerp(int a, int b, int i, int denom)
 	case 3:		denom *= 5; i *= 5;	// fall through to case 15
 	case 15:	weights = denom15_weights_64; break;
 	case 7:		weights = denom7_weights_64; break;
-	default:	nvDebugCheck(0);
+	default:	nvDebugCheck(0); return 0;
 	}
 
 	return (a*weights[denom-i] +b*weights[i] + round) >> shift;
 }
 
-Vector3 Utils::lerp(const Vector3& a, const Vector3 &b, int i, int denom)
+float3 Utils::lerp(const float3& a, const float3 &b, int i, int denom)
 {
 	nvDebugCheck (denom == 3 || denom == 7 || denom == 15);
 	nvDebugCheck (i >= 0 && i <= denom);
@@ -82,7 +83,7 @@ Vector3 Utils::lerp(const Vector3& a, const Vector3 &b, int i, int denom)
 // note that each channel is a float storing the allowable range as a bit pattern converted to float
 // that is, for unsigned f16 say, we would clamp each channel to the range [0, F16MAX]
 
-void Utils::clamp(Vector3 &v)
+void Utils::clamp(float3 &v)
 {
 	for (int i=0; i<3; ++i)
 	{
@@ -262,13 +263,13 @@ int Utils::unquantize(int q, int prec)
 // pick a norm!
 #define	NORM_EUCLIDEAN 1
 
-float Utils::norm(const Vector3 &a, const Vector3 &b)
+float Utils::norm(const float3 &a, const float3 &b)
 {
 #ifdef	NORM_EUCLIDEAN
     return simd::length_squared(a - b);
 #endif
 #ifdef	NORM_ABS
-	Vector3 err = a - b;
+	float3 err = a - b;
 	return fabs(err.x) + fabs(err.y) + fabs(err.z);
 #endif
 }

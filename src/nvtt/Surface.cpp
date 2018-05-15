@@ -873,7 +873,7 @@ bool Surface::setImage2D(Format format, Decoder decoder, int w, int h, const voi
 			{
 				for (int x = 0; x < bw; x++)
 				{
-                    Vector3 colors[16];
+                    float3 colors[16];
                     const BlockBC6 * block = (const BlockBC6 *)ptr;
 					block->decodeBlock(colors);
 
@@ -881,7 +881,7 @@ bool Surface::setImage2D(Format format, Decoder decoder, int w, int h, const voi
 					{
 						for (int xx = 0; xx < 4; xx++)
 						{
-							Vector3 rgb = colors[yy*4 + xx];
+							float3 rgb = colors[yy*4 + xx];
 
 							if (x * 4 + xx < w && y * 4 + yy < h)
 							{
@@ -2331,13 +2331,13 @@ void Surface::blockLuminanceScale(float scale)
     const uint bw = max(1U, w/4);
     const uint bh = max(1U, h/4);
 
-    Vector3 L = normalize(Vector3(1, 1, 1));
+    float3 L = normalize(float3(1, 1, 1));
 
     for (uint bj = 0; bj < bh; bj++) {
         for (uint bi = 0; bi < bw; bi++) {
 
             // Compute block centroid.
-            Vector3 centroid(0.0f);
+            float3 centroid(0.0f);
             int count = 0;
             for (uint j = 0; j < 4; j++) {
                 const uint y = bj*4 + j;
@@ -2350,7 +2350,7 @@ void Surface::blockLuminanceScale(float scale)
                     float r = img->pixel(x, y, 0);
                     float g = img->pixel(x, y, 1);
                     float b = img->pixel(x, y, 2);
-                    Vector3 rgb(r, g, b);
+                    float3 rgb(r, g, b);
 
                     centroid += rgb;
                     count++;
@@ -2371,9 +2371,9 @@ void Surface::blockLuminanceScale(float scale)
                     float & r = img->pixel(x, y, 0);
                     float & g = img->pixel(x, y, 1);
                     float & b = img->pixel(x, y, 2);
-                    Vector3 rgb(r, g, b);
+                    float3 rgb(r, g, b);
 
-                    Vector3 delta = rgb - centroid;
+                    float3 delta = rgb - centroid;
 
                     delta -= scale * dot(delta, L) * L;
 
@@ -3225,11 +3225,11 @@ nvtt::Surface nvtt::histogram(const Surface & img, float minRange, float maxRang
             int c = ftoi_round(fc * (width - 1));
             c = clamp(c, 0, width - 1);
 
-            buckets[c] += Vector3(1);
+            buckets[c] += float3(1);
         }
     }
 
-    //buckets[0] = Vector3(1);    // Hack, for prettier histograms.
+    //buckets[0] = float3(1);    // Hack, for prettier histograms.
 
 #endif
 

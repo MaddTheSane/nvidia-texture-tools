@@ -37,6 +37,8 @@
 using namespace nv;
 using simd::dot;
 using simd::normalize;
+using simd::float3;
+using simd::float4;
 using simd::make_float3;
 
 // Create normal map using the given kernels.
@@ -56,7 +58,7 @@ static FloatImage * createNormalMap(const Image * img, FloatImage::WrapMode wm, 
     float * alphaChannel = fimage->channel(3);
     for(uint i = 0; i < w * h; i++)
     {
-        Vector4 color = toVector4(img->pixel(i));
+        float4 color = toVector4(img->pixel(i));
         alphaChannel[i] = dot(color, heightWeights);
     }
 
@@ -69,7 +71,7 @@ static FloatImage * createNormalMap(const Image * img, FloatImage::WrapMode wm, 
             const float du = fimage->applyKernelXY(kdu, x, y, 0, 3, wm);
             const float dv = fimage->applyKernelXY(kdv, x, y, 0, 3, wm);
 
-            Vector3 n = normalize(make_float3(du, dv, heightScale));
+            float3 n = normalize(make_float3(du, dv, heightScale));
 
             fimage->pixel(0, x, y, 0) = 0.5f * n.x + 0.5f;
             fimage->pixel(1, x, y, 0) = 0.5f * n.y + 0.5f;
@@ -104,7 +106,7 @@ static FloatImage * createNormalMap(const FloatImage * img, FloatImage::WrapMode
             const float du = img->applyKernelXY(kdu, x, y, 0, 3, wm);
             const float dv = img->applyKernelXY(kdv, x, y, 0, 3, wm);
 
-            Vector3 n = normalize(make_float3(du, dv, heightScale));
+            float3 n = normalize(make_float3(du, dv, heightScale));
 
             img_out->pixel(0, x, y, 0) = n.x;
             img_out->pixel(1, x, y, 0) = n.y;

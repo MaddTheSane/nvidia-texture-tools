@@ -37,9 +37,10 @@
 
 using namespace nv;
 using namespace nvtt;
+using simd::float4;
 
 
-void CompressorBC6::compressBlock(const Vector4 colors[16], const float weights[16], const CompressionOptions::Private & compressionOptions, void * output)
+void CompressorBC6::compressBlock(const float4 colors[16], const float weights[16], const CompressionOptions::Private & compressionOptions, void * output)
 {
     // !!!UNDONE: support channel weights
     // !!!UNDONE: set flags once, not per block (this is especially sketchy since block compression is multithreaded...)
@@ -63,7 +64,7 @@ void CompressorBC6::compressBlock(const Vector4 colors[16], const float weights[
     {
         for (uint x = 0; x < 4; ++x)
         {
-            Vector4 color = colors[4*y+x];
+            float4 color = colors[4*y+x];
             uint16 rHalf = to_half(color.x);
             uint16 gHalf = to_half(color.y);
             uint16 bHalf = to_half(color.z);
@@ -77,7 +78,7 @@ void CompressorBC6::compressBlock(const Vector4 colors[16], const float weights[
     ZOH::compress(zohTile, (char *)output);
 }
 
-void CompressorBC7::compressBlock(const Vector4 colors[16], const float weights[16], const CompressionOptions::Private & compressionOptions, void * output)
+void CompressorBC7::compressBlock(const float4 colors[16], const float weights[16], const CompressionOptions::Private & compressionOptions, void * output)
 {
     // !!!UNDONE: support channel weights
     // !!!UNDONE: set flags once, not per block (this is especially sketchy since block compression is multithreaded...)
@@ -92,7 +93,7 @@ void CompressorBC7::compressBlock(const Vector4 colors[16], const float weights[
     memset(avpclTile.data, 0, sizeof(avpclTile.data));
     for (uint y = 0; y < 4; ++y) {
         for (uint x = 0; x < 4; ++x) {
-            Vector4 color = colors[4*y+x];
+            float4 color = colors[4*y+x];
             avpclTile.data[y][x] = color * 255.0f;
             avpclTile.importance_map[y][x] = 1.0f; //weights[4*y+x];
         }

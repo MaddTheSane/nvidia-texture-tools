@@ -37,6 +37,7 @@
 
 
 using namespace nv;
+using simd::float3;
 
 namespace
 {
@@ -1495,7 +1496,7 @@ void DirectDrawSurface::readBlock(ColorBlock * rgba)
     {
         BlockBC6 block;
         *stream << block;
-        Vector3 colors[16];
+        float3 colors[16];
         block.decodeBlock(colors);
 
         // Clamp to [0, 1] and round to 8-bit
@@ -1503,7 +1504,7 @@ void DirectDrawSurface::readBlock(ColorBlock * rgba)
         {
             for (int x = 0; x < 4; ++x)
             {
-                Vector3 px = colors[y*4 + x];
+                float3 px = colors[y*4 + x];
                 rgba->color(x, y).setRGBA(
                                     ftoi_round(clamp(px.x, 0.0f, 1.0f) * 255.0f),
                                     ftoi_round(clamp(px.y, 0.0f, 1.0f) * 255.0f),

@@ -46,15 +46,15 @@ public:
     static Format FORMAT;     // this is a global -- we're either handling unsigned or unsigned half values
 
     // error metrics
-    static float norm(const nv::Vector3 &a, const nv::Vector3 &b);
-    static float mpsnr_norm(const nv::Vector3 &a, int exposure, const nv::Vector3 &b);
+    static float norm(const simd::float3 &a, const simd::float3 &b);
+    static float mpsnr_norm(const simd::float3 &a, int exposure, const simd::float3 &b);
 
     // conversion & clamp
     static int ushort_to_format(unsigned short input);
     static unsigned short format_to_ushort(int input);
 
     // clamp to format
-    static void clamp(nv::Vector3 &v);
+    static void clamp(simd::float3 &v);
 
     // quantization and unquantization
     static int finish_unquantize(int q, int prec);
@@ -65,7 +65,7 @@ public:
 
     // lerping
     static int lerp(int a, int b, int i, int denom);
-    static nv::Vector3 lerp(const nv::Vector3 & a, const nv::Vector3 & b, int i, int denom);
+    static simd::float3 lerp(const simd::float3 & a, const simd::float3 & b, int i, int denom);
 };
 
 }

@@ -36,6 +36,9 @@ See the License for the specific language governing permissions and limitations 
 
 using namespace nv;
 using namespace AVPCL;
+using simd::float3;
+using simd::float4;
+using simd::make_float4;
 
 #define	NLSBMODES	4		// number of different lsb modes per region. since we have two .1 per region, that can have 4 values
 
@@ -321,7 +324,7 @@ static void emit_block(const IntEndptsRGB_2 endpts[NREGIONS], int shapeindex, co
 	nvAssert(out.getptr() == AVPCL::BITSIZE);
 }
 
-static void generate_palette_quantized(const IntEndptsRGB_2 &endpts_2, const RegionPrec &region_prec, Vector4 palette[NINDICES])
+static void generate_palette_quantized(const IntEndptsRGB_2 &endpts_2, const RegionPrec &region_prec, float4 palette[NINDICES])
 {
 	IntEndptsRGB endpts;
 
@@ -377,7 +380,7 @@ void AVPCL::decompress_mode0(const char *block, Tile &t)
 		transform_inverse(endpts);
 	}
 
-	Vector4 palette[NREGIONS][NINDICES];
+	float4 palette[NREGIONS][NINDICES];
 	for (int r = 0; r < NREGIONS; ++r)
 		generate_palette_quantized(endpts[r], pattern_precs[pat_index].region_precs[r], &palette[r][0]);
 
@@ -394,11 +397,11 @@ void AVPCL::decompress_mode0(const char *block, Tile &t)
 }
 
 // given a collection of colors and quantized endpoints, generate a palette, choose best entries, and return a single toterr
-static float map_colors(const Vector4 colors[], const float importance[], int np, const IntEndptsRGB_2 &endpts, const RegionPrec &region_prec, float current_err, int indices[Tile::TILE_TOTAL])
+static float map_colors(const float4 colors[], const float importance[], int np, const IntEndptsRGB_2 &endpts, const RegionPrec &region_prec, float current_err, int indices[Tile::TILE_TOTAL])
 {
-	Vector4 palette[NINDICES];
+	float4 palette[NINDICES];
 	float toterr = 0;
-	Vector4 err;
+	float4 err;
 
 	generate_palette_quantized(endpts, region_prec, palette);
 
@@ -438,7 +441,7 @@ static void assign_indices(const Tile &tile, int shapeindex, IntEndptsRGB_2 endp
 						   int indices[Tile::TILE_H][Tile::TILE_W], float toterr[NREGIONS])
 {
 	// build list of possibles
-	Vector4 palette[NREGIONS][NINDICES];
+	float4 palette[NREGIONS][NINDICES];
 
 	for (int region = 0; region < NREGIONS; ++region)
 	{
@@ -446,7 +449,7 @@ static void assign_indices(const Tile &tile, int shapeindex, IntEndptsRGB_2 endp
 		toterr[region] = 0;
 	}
 
-	Vector4 err;
+	float4 err;
 
 	for (int y = 0; y < tile.size_y; y++)
 	for (int x = 0; x < tile.size_x; x++)
@@ -472,7 +475,7 @@ static void assign_indices(const Tile &tile, int shapeindex, IntEndptsRGB_2 endp
 
 // note: indices are valid only if the value returned is less than old_err; otherwise they contain -1's
 // this function returns either old_err or a value smaller (if it was successful in improving the error)
-static float perturb_one(const Vector4 colors[], const float importance[], int np, int ch, const RegionPrec &region_prec, const IntEndptsRGB_2 &old_endpts, IntEndptsRGB_2 &new_endpts, 
+static float perturb_one(const float4 colors[], const float importance[], int np, int ch, const RegionPrec &region_prec, const IntEndptsRGB_2 &old_endpts, IntEndptsRGB_2 &new_endpts,
 						  float old_err, int do_b, int indices[Tile::TILE_TOTAL])
 {
 	// we have the old endpoints: old_endpts
@@ -543,7 +546,7 @@ static float perturb_one(const Vector4 colors[], const float importance[], int n
 // for np = 16 -- adjust error thresholds as a function of np
 // always ensure endpoint ordering is preserved (no need to overlap the scan)
 // if orig_err returned from this is less than its input value, then indices[] will contain valid indices
-static float exhaustive(const Vector4 colors[], const float importance[], int np, int ch, const RegionPrec &region_prec, float &orig_err, IntEndptsRGB_2 &opt_endpts, int indices[Tile::TILE_TOTAL])
+static float exhaustive(const float4 colors[], const float importance[], int np, int ch, const RegionPrec &region_prec, float &orig_err, IntEndptsRGB_2 &opt_endpts, int indices[Tile::TILE_TOTAL])
 {
 	IntEndptsRGB_2 temp_endpts;
 	float best_err = orig_err;
@@ -636,7 +639,7 @@ static float exhaustive(const Vector4 colors[], const float importance[], int np
 	return best_err;
 }
 
-static float optimize_one(const Vector4 colors[], const float importance[], int np, float orig_err, const IntEndptsRGB_2 &orig_endpts, const RegionPrec &region_prec, IntEndptsRGB_2 &opt_endpts)
+static float optimize_one(const float4 colors[], const float importance[], int np, float orig_err, const IntEndptsRGB_2 &orig_endpts, const RegionPrec &region_prec, IntEndptsRGB_2 &opt_endpts)
 {
 	float opt_err = orig_err;
 
@@ -785,7 +788,7 @@ static float optimize_one(const Vector4 colors[], const float importance[], int 
 static void optimize_endpts(const Tile &tile, int shapeindex, const float orig_err[NREGIONS], 
 							const IntEndptsRGB_2 orig_endpts[NREGIONS], const PatternPrec &pattern_prec, float opt_err[NREGIONS], IntEndptsRGB_2 opt_endpts[NREGIONS])
 {
-	Vector4 pixels[Tile::TILE_TOTAL];
+	float4 pixels[Tile::TILE_TOTAL];
     float importance[Tile::TILE_TOTAL];
 	IntEndptsRGB_2 temp_in, temp_out;
 	int temp_indices[Tile::TILE_TOTAL];
@@ -900,7 +903,7 @@ static float refine(const Tile &tile, int shapeindex_best, const FltEndpts endpt
 	return FLT_MAX;
 }
 
-static void clamp(Vector4 &v)
+static void clamp(float4 &v)
 {
 	if (v.x < 0.0f) v.x = 0.0f;
 	if (v.x > 255.0f) v.x = 255.0f;
@@ -911,7 +914,7 @@ static void clamp(Vector4 &v)
 	v.w = 255.0f;
 }
 
-static void generate_palette_unquantized(const FltEndpts endpts[NREGIONS], Vector4 palette[NREGIONS][NINDICES])
+static void generate_palette_unquantized(const FltEndpts endpts[NREGIONS], float4 palette[NREGIONS][NINDICES])
 {
 	for (int region = 0; region < NREGIONS; ++region)
 	for (int i = 0; i < NINDICES; ++i)
@@ -922,12 +925,12 @@ static void generate_palette_unquantized(const FltEndpts endpts[NREGIONS], Vecto
 static float map_colors(const Tile &tile, int shapeindex, const FltEndpts endpts[NREGIONS])
 {
 	// build list of possibles
-	Vector4 palette[NREGIONS][NINDICES];
+	float4 palette[NREGIONS][NINDICES];
 
 	generate_palette_unquantized(endpts, palette);
 
 	float toterr = 0;
-	Vector4 err;
+	float4 err;
 
 	for (int y = 0; y < tile.size_y; y++)
 	for (int x = 0; x < tile.size_x; x++)
@@ -956,9 +959,9 @@ static float rough(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS])
 	for (int region=0; region<NREGIONS; ++region)
 	{
 		int np = 0;
-		Vector3 colors[Tile::TILE_TOTAL];
+		float3 colors[Tile::TILE_TOTAL];
 		float alphas[2];
-		Vector4 mean = simd::make_float4(0,0,0,0);
+		float4 mean = make_float4(0,0,0,0);
 
 		for (int y = 0; y < tile.size_y; y++)
 		for (int x = 0; x < tile.size_x; x++)
@@ -973,27 +976,27 @@ static float rough(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS])
 		// handle simple cases	
 		if (np == 0)
 		{
-			Vector4 zero = simd::make_float4(0,0,0,255.0f);
+			float4 zero = make_float4(0,0,0,255.0f);
 			endpts[region].A = zero;
 			endpts[region].B = zero;
 			continue;
 		}
 		else if (np == 1)
 		{
-			endpts[region].A = simd::make_float4(colors[0], alphas[0]);
-			endpts[region].B = simd::make_float4(colors[0], alphas[0]);
+			endpts[region].A = make_float4(colors[0], alphas[0]);
+			endpts[region].B = make_float4(colors[0], alphas[0]);
 			continue;
 		}
 		else if (np == 2)
 		{
-			endpts[region].A = simd::make_float4(colors[0], alphas[0]);
-			endpts[region].B = simd::make_float4(colors[1], alphas[1]);
+			endpts[region].A = make_float4(colors[0], alphas[0]);
+			endpts[region].B = make_float4(colors[1], alphas[1]);
 			continue;
 		}
 
 		mean /= float(np);
 
-		Vector3 direction = Fit::computePrincipalComponent_EigenSolver(np, colors);
+		float3 direction = Fit::computePrincipalComponent_EigenSolver(np, colors);
 
 		// project each pixel value along the principal direction
 		float minp = FLT_MAX, maxp = -FLT_MAX;
@@ -1005,8 +1008,8 @@ static float rough(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS])
 		}
 
 		// choose as endpoints 2 points along the principal direction that span the projections of all of the pixel values
-		endpts[region].A = mean + minp*simd::make_float4(direction, 0);
-		endpts[region].B = mean + maxp*simd::make_float4(direction, 0);
+		endpts[region].A = mean + minp*make_float4(direction, 0);
+		endpts[region].B = mean + maxp*make_float4(direction, 0);
 
 		// clamp endpoints
 		// the argument for clamping is that the actual endpoints need to be clamped and thus we need to choose the best

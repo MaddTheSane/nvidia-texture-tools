@@ -140,18 +140,18 @@ float nv::averageAlphaError(const FloatImage * ref, const FloatImage * img)
 // http://www.brucelindbloom.com/
 
 // Assumes input is in *linear* sRGB color space.
-static Vector3 rgbToXyz(const float3 & c)
+static float3 rgbToXyz(const float3 & c)
 {
-    Vector3 xyz;
+    float3 xyz;
     xyz.x = 0.412453f * c.x + 0.357580f * c.y + 0.180423f * c.z;
     xyz.y = 0.212671f * c.x + 0.715160f * c.y + 0.072169f * c.z;
     xyz.z = 0.019334f * c.x + 0.119193f * c.y + 0.950227f * c.z;
     return xyz;
 }
 
-static Vector3 xyzToRgb(const float3 & c)
+static float3 xyzToRgb(const float3 & c)
 {
-    Vector3 rgb;
+    float3 rgb;
     rgb.x =  3.2404542f * c.x - 1.5371385f * c.y - 0.4985314f * c.z;
     rgb.y = -0.9692660f * c.x + 1.8760108f * c.y + 0.0415560f * c.z;
     rgb.z =  0.0556434f * c.x - 0.2040259f * c.y + 1.0572252f * c.z;
@@ -169,12 +169,12 @@ static float toGamma(float f)
     return powf(f, 1.0f/2.2f);
 }
 
-static Vector3 toLinear(const float3 & c)
+static float3 toLinear(const float3 & c)
 {
     return make_float3(toLinear(c.x), toLinear(c.y), toLinear(c.z));
 }
 
-static Vector3 toGamma(const float3 & c)
+static float3 toGamma(const float3 & c)
 {
     return make_float3(toGamma(c.x), toGamma(c.y), toGamma(c.z));
 }
@@ -201,7 +201,7 @@ static float finv(float t)
     }
 }
 
-static Vector3 xyzToCieLab(const float3 & c)
+static float3 xyzToCieLab(const float3 & c)
 {
     // Normalized white point.
     const float Xn = 0.950456f;
@@ -223,13 +223,13 @@ static Vector3 xyzToCieLab(const float3 & c)
     return make_float3(L, a, b);
 }
 
-static Vector3 rgbToCieLab(const float3 & c)
+static float3 rgbToCieLab(const float3 & c)
 {
     return xyzToCieLab(rgbToXyz(toLinear(c)));
 }
 
 // h is hue-angle in radians
-static Vector3 cieLabToLCh(const float3 & c)
+static float3 cieLabToLCh(const float3 & c)
 {
     return make_float3(c.x, sqrtf(c.y*c.y + c.z*c.z), atan2f(c.y, c.z));
 }
@@ -254,7 +254,7 @@ static void rgbToCieLab(const FloatImage * rgbImage, FloatImage * LabImage)
     const uint count = w*h;
     for (uint i = 0; i < count; i++)
     {
-        Vector3 Lab = rgbToCieLab(make_float3(R[i], G[i], B[i]));
+        float3 Lab = rgbToCieLab(make_float3(R[i], G[i], B[i]));
         L[i] = Lab.x;
         a[i] = Lab.y;
         b[i] = Lab.z;
@@ -281,11 +281,11 @@ float nv::cieLabError(const FloatImage * img0, const FloatImage * img1)
     const uint count = img0->pixelCount();
     for (uint i = 0; i < count; i++)
     {
-        Vector3 lab0 = rgbToCieLab(make_float3(r0[i], g0[i], b0[i]));
-        Vector3 lab1 = rgbToCieLab(make_float3(r1[i], g1[i], b1[i]));
+        float3 lab0 = rgbToCieLab(make_float3(r0[i], g0[i], b0[i]));
+        float3 lab1 = rgbToCieLab(make_float3(r1[i], g1[i], b1[i]));
 
         // @@ Measure Delta E.
-        Vector3 delta = lab0 - lab1;
+        float3 delta = lab0 - lab1;
         
         error += length(delta);
     }
@@ -320,17 +320,17 @@ float nv::cieLab94Error(const FloatImage * img0, const FloatImage * img1)
     const uint count = img0->pixelCount();
     for (uint i = 0; i < count; ++i)
     {
-        Vector3 lab0 = rgbToCieLab(make_float3(r0[i], g0[i], b0[i]));
-        Vector3 lch0 = cieLabToLCh(lab0);
-        Vector3 lab1 = rgbToCieLab(make_float3(r1[i], g1[i], b1[i]));
-        Vector3 lch1 = cieLabToLCh(lab1);
+        float3 lab0 = rgbToCieLab(make_float3(r0[i], g0[i], b0[i]));
+        float3 lch0 = cieLabToLCh(lab0);
+        float3 lab1 = rgbToCieLab(make_float3(r1[i], g1[i], b1[i]));
+        float3 lch1 = cieLabToLCh(lab1);
 
         const float sC = 1 + k1*lch0.x;
         const float sH = 1 + k2*lch0.x;
 
         // @@ Measure Delta E using the 1994 definition
-        Vector3 labDelta = lab0 - lab1;
-        Vector3 lchDelta = lch0 - lch1;
+        float3 labDelta = lab0 - lab1;
+        float3 lchDelta = lch0 - lch1;
 
         double deltaLsq = powf(lchDelta.x / (kL*sL), 2);
         double deltaCsq = powf(lchDelta.y / (kC*sC), 2);
@@ -408,8 +408,8 @@ float nv::averageAngularError(const FloatImage * img0, const FloatImage * img1)
     const uint count = w*h;
     for (uint i = 0; i < count; i++)
     {
-        Vector3 n0 = make_float3(x0[i], y0[i], z0[i]);
-        Vector3 n1 = make_float3(x1[i], y1[i], z1[i]);
+        float3 n0 = make_float3(x0[i], y0[i], z0[i]);
+        float3 n1 = make_float3(x1[i], y1[i], z1[i]);
 
         n0 = 2.0f * n0 - make_float3(1);
         n1 = 2.0f * n1 - make_float3(1);
@@ -446,8 +446,8 @@ float nv::rmsAngularError(const FloatImage * img0, const FloatImage * img1)
     const uint count = w*h;
     for (uint i = 0; i < count; i++)
     {
-        Vector3 n0 = make_float3(x0[i], y0[i], z0[i]);
-        Vector3 n1 = make_float3(x1[i], y1[i], z1[i]);
+        float3 n0 = make_float3(x0[i], y0[i], z0[i]);
+        float3 n1 = make_float3(x1[i], y1[i], z1[i]);
 
         n0 = 2.0f * n0 - make_float3(1);
         n1 = 2.0f * n1 - make_float3(1);

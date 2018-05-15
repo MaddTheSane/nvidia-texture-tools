@@ -154,7 +154,7 @@ namespace nv
     inline simd::float4 toVector4(Color32 c)
     {
         const float scale = 1.0f / 255.0f;
-        return simd::make_float4(c.r * scale, c.g * scale, c.b * scale, c.a * scale);
+        return simd::make_float4(c.r, c.g, c.b, c.a) * scale;
     }
 
 

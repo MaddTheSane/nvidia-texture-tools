@@ -28,8 +28,8 @@ static const int CHANNEL_A		= 3;
 
 struct FltEndpts
 {
-	nv::Vector4	A;
-	nv::Vector4	B;
+    simd::float4	A;
+	simd::float4	B;
 };
 
 struct IntEndptsRGB

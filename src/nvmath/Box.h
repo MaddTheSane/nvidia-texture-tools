@@ -21,7 +21,7 @@ namespace nv
 
         inline Box() {}
         inline Box(const Box & b) : minCorner(b.minCorner), maxCorner(b.maxCorner) {}
-        inline Box(const Vector3 & mins, const Vector3 & maxs) : minCorner(mins), maxCorner(maxs) {}
+        inline Box(const simd::float3 & mins, const simd::float3 & maxs) : minCorner(mins), maxCorner(maxs) {}
 
         Box & operator=(const Box & b);
 
@@ -34,31 +34,31 @@ namespace nv
         bool isValid() const;
 
         // Build a cube centered on center and with edge = 2*dist
-        void cube(const Vector3 & center, float dist);
+        void cube(const simd::float3 & center, float dist);
 
         // Build a box, given center and extents.
-        void setCenterExtents(const Vector3 & center, const Vector3 & extents);
+        void setCenterExtents(const simd::float3 & center, const simd::float3 & extents);
 
         // Get box center.
-        Vector3 center() const;
+        simd::float3 center() const;
 
         // Return extents of the box.
-        Vector3 extents() const;
+        simd::float3 extents() const;
 
         // Return extents of the box.
         float extents(uint axis) const;
 
         // Add a point to this box.
-        void addPointToBounds(const Vector3 & p);
+        void addPointToBounds(const simd::float3 & p);
 
         // Add a box to this box.
         void addBoxToBounds(const Box & b);
 
         // Add sphere to this box.
-        void addSphereToBounds(const Vector3 & p, float r);
+        void addSphereToBounds(const simd::float3 & p, float r);
 
         // Translate box.
-        void translate(const Vector3 & v);
+        void translate(const simd::float3 & v);
 
         // Scale the box.
         void scale(float s);
@@ -73,29 +73,29 @@ namespace nv
         float volume() const;
 
         // Return true if the box contains the given point.
-        bool contains(const Vector3 & p) const;
+        bool contains(const simd::float3 & p) const;
 
         // Split the given box in 8 octants and assign the ith one to this box.
-        void setOctant(const Box & box, const Vector3 & center, int i);
+        void setOctant(const Box & box, const simd::float3 & center, int i);
 
 
         // Clip the given segment against this box.
-        bool clipSegment(const Vector3 & origin, const Vector3 & dir, float * t_near, float * t_far) const;
+        bool clipSegment(const simd::float3 & origin, const simd::float3 & dir, float * t_near, float * t_far) const;
 
 
         friend Stream & operator<< (Stream & s, Box & box);
 
-        const Vector3 & corner(int i) const { return (&minCorner)[i]; }
+        const simd::float3 & corner(int i) const { return (&minCorner)[i]; }
 
-        Vector3 minCorner;
-        Vector3 maxCorner;
+        simd::float3 minCorner;
+        simd::float3 maxCorner;
     };
 
-    float distanceSquared(const Box &box, const Vector3 &point);
+    float distanceSquared(const Box &box, const simd::float3 &point);
     bool overlap(const Box &box, const Sphere &sphere);
 
     // p is ray origin, id is inverse ray direction.
-    bool intersect(const Box & box, const Vector3 & p, const Vector3 & id, float * t);
+    bool intersect(const Box & box, const simd::float3 & p, const simd::float3 & id, float * t);
 
 } // nv namespace
 

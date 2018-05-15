@@ -25,8 +25,8 @@ static const int NCHANNELS		= 3;
 
 struct FltEndpts
 {
-    nv::Vector3 A;
-    nv::Vector3 B;
+    simd::float3 A;
+    simd::float3 B;
 };
 
 struct IntEndpts

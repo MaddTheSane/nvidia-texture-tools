@@ -25,6 +25,7 @@ http://www.efg2.com/Lab/Library/ImageProcessing/DHALF.TXT
 
 
 using namespace nv;
+using simd::float4;
 
 
 // Simple quantization.
@@ -166,10 +167,10 @@ void nv::Quantize::FloydSteinberg(Image * image, uint rsize, uint gsize, uint bs
 	const uint w = image->width();
 	const uint h = image->height();
 	
-	Vector4 * row0 = new Vector4[w+2];
-	Vector4 * row1 = new Vector4[w+2];
-	memset(row0, 0, sizeof(Vector4)*(w+2));
-	memset(row1, 0, sizeof(Vector4)*(w+2));
+	float4 * row0 = new float4[w+2];
+	float4 * row1 = new float4[w+2];
+	memset(row0, 0, sizeof(float4)*(w+2));
+	memset(row1, 0, sizeof(float4)*(w+2));
 	
 	for (uint y = 0; y < h; y++) {
 		for (uint x = 0; x < w; x++) {
@@ -204,7 +205,7 @@ void nv::Quantize::FloydSteinberg(Image * image, uint rsize, uint gsize, uint bs
 			image->pixel(x, y) = Color32(r, g, b, a);
 			
 			// Compute new error.
-			Vector4 diff(float(int(pixel.r) - r), float(int(pixel.g) - g), float(int(pixel.b) - b), float(int(pixel.a) - a));
+			float4 diff(float(int(pixel.r) - r), float(int(pixel.g) - g), float(int(pixel.b) - b), float(int(pixel.a) - a));
 			
 			// Propagate new error.
 			row0[1+x+1] += 7.0f / 16.0f * diff;
@@ -214,7 +215,7 @@ void nv::Quantize::FloydSteinberg(Image * image, uint rsize, uint gsize, uint bs
 		}
 		
 		swap(row0, row1);
-		memset(row1, 0, sizeof(Vector4)*(w+2));
+		memset(row1, 0, sizeof(float4)*(w+2));
 	}
 	
 	delete [] row0;

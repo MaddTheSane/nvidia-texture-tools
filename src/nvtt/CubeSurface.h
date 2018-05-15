@@ -42,11 +42,11 @@ namespace nvtt
         TexelTable(uint edgeLength);
 
         float solidAngle(uint f, uint x, uint y) const;
-        const nv::Vector3 & direction(uint f, uint x, uint y) const;
+        const simd::float3 & direction(uint f, uint x, uint y) const;
 
         uint size;
         nv::Array<float> solidAngleArray;
-        nv::Array<nv::Vector3> directionArray;
+        nv::Array<simd::float3> directionArray;
     };
 
 
@@ -94,10 +94,10 @@ namespace nvtt
         }
 
         // Filtering helpers:
-        nv::Vector3 applyAngularFilter(const nv::Vector3 & dir, float coneAngle, float * filterTable, int tableSize);
-        nv::Vector3 applyCosinePowerFilter(const nv::Vector3 & dir, float coneAngle, float cosinePower);
+        simd::float3 applyAngularFilter(const simd::float3 & dir, float coneAngle, float * filterTable, int tableSize);
+        simd::float3 applyCosinePowerFilter(const simd::float3 & dir, float coneAngle, float cosinePower);
 
-        nv::Vector3 sample(const nv::Vector3 & dir);
+        simd::float3 sample(const simd::float3 & dir);
 
         uint edgeLength;
         Surface face[6];

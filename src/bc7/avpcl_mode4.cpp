@@ -28,6 +28,8 @@ See the License for the specific language governing permissions and limitations 
 
 using namespace nv;
 using namespace AVPCL;
+using simd::float3;
+using simd::float4;
 
 // there are 2 index arrays. INDEXMODE selects between the arrays being 2 & 3 bits or 3 & 2 bits
 // array 0 is always the RGB array and array 1 is always the A array
@@ -311,7 +313,7 @@ static void emit_block(const IntEndptsRGBA endpts[NREGIONS], int shapeindex, con
 	nvAssert(out.getptr() == AVPCL::BITSIZE);
 }
 
-static void generate_palette_quantized_rgb_a(const IntEndptsRGBA &endpts, const RegionPrec &region_prec, int indexmode, Vector3 palette_rgb[NINDICES3], float palette_a[NINDICES3])
+static void generate_palette_quantized_rgb_a(const IntEndptsRGBA &endpts, const RegionPrec &region_prec, int indexmode, float3 palette_rgb[NINDICES3], float palette_a[NINDICES3])
 {
 	// scale endpoints for RGB
 	int a, b;
@@ -397,7 +399,7 @@ void AVPCL::decompress_mode4(const char *block, Tile &t)
 	if (p.transform_mode)
 		transform_inverse(p.transform_mode, endpts);
 
-	Vector3 palette_rgb[NREGIONS][NINDICES3];	// could be nindices2
+	float3 palette_rgb[NREGIONS][NINDICES3];	// could be nindices2
 	float palette_a[NREGIONS][NINDICES3];	// could be nindices2
 
 	for (int region = 0; region < NREGIONS; ++region)
@@ -422,15 +424,15 @@ void AVPCL::decompress_mode4(const char *block, Tile &t)
 // given a collection of colors and quantized endpoints, generate a palette, choose best entries, and return a single toterr
 // we already have a candidate mapping when we call this function, thus an error. take an early exit if the accumulated error so far
 // exceeds what we already have
-static float map_colors(const Vector4 colors[], const float importance[], int np, int rotatemode, int indexmode, const IntEndptsRGBA &endpts, const RegionPrec &region_prec, float current_besterr, int indices[NINDEXARRAYS][Tile::TILE_TOTAL])
+static float map_colors(const float4 colors[], const float importance[], int np, int rotatemode, int indexmode, const IntEndptsRGBA &endpts, const RegionPrec &region_prec, float current_besterr, int indices[NINDEXARRAYS][Tile::TILE_TOTAL])
 {
-	Vector3 palette_rgb[NINDICES3];	// could be nindices2
+	float3 palette_rgb[NINDICES3];	// could be nindices2
 	float palette_a[NINDICES3];	// could be nindices2
 	float toterr = 0;
 
 	generate_palette_quantized_rgb_a(endpts, region_prec, indexmode, &palette_rgb[0], &palette_a[0]);
 
-	Vector3 rgb;
+	float3 rgb;
 	float a;
 
 	for (int i = 0; i < np; ++i)
@@ -557,7 +559,7 @@ static float map_colors(const Vector4 colors[], const float importance[], int np
 static void assign_indices(const Tile &tile, int shapeindex, int rotatemode, int indexmode, IntEndptsRGBA endpts[NREGIONS], const PatternPrec &pattern_prec, 
 						   int indices[NINDEXARRAYS][Tile::TILE_H][Tile::TILE_W], float toterr[NREGIONS])
 {
-	Vector3 palette_rgb[NREGIONS][NINDICES3];	// could be nindices2
+	float3 palette_rgb[NREGIONS][NINDICES3];	// could be nindices2
 	float palette_a[NREGIONS][NINDICES3];	// could be nindices2
 
 	for (int region = 0; region < NREGIONS; ++region)
@@ -566,7 +568,7 @@ static void assign_indices(const Tile &tile, int shapeindex, int rotatemode, int
 		toterr[region] = 0;
 	}
 
-	Vector3 rgb;
+	float3 rgb;
 	float a;
 
 	for (int y = 0; y < tile.size_y; y++)
@@ -672,7 +674,7 @@ static void assign_indices(const Tile &tile, int shapeindex, int rotatemode, int
 
 // note: indices are valid only if the value returned is less than old_err; otherwise they contain -1's
 // this function returns either old_err or a value smaller (if it was successful in improving the error)
-static float perturb_one(const Vector4 colors[], const float importance[], int np, int rotatemode, int indexmode, int ch, const RegionPrec &region_prec, const IntEndptsRGBA &old_endpts, IntEndptsRGBA &new_endpts, 
+static float perturb_one(const float4 colors[], const float importance[], int np, int rotatemode, int indexmode, int ch, const RegionPrec &region_prec, const IntEndptsRGBA &old_endpts, IntEndptsRGBA &new_endpts,
 						  float old_err, int do_b, int indices[NINDEXARRAYS][Tile::TILE_TOTAL])
 {
 	// we have the old endpoints: old_endpts
@@ -744,7 +746,7 @@ static float perturb_one(const Vector4 colors[], const float importance[], int n
 // if err > 40  6.25%
 // for np = 16 -- adjust error thresholds as a function of np
 // always ensure endpoint ordering is preserved (no need to overlap the scan)
-static float exhaustive(const Vector4 colors[], const float importance[], int np, int rotatemode, int indexmode, int ch, const RegionPrec &region_prec, float orig_err, IntEndptsRGBA &opt_endpts, int indices[NINDEXARRAYS][Tile::TILE_TOTAL])
+static float exhaustive(const float4 colors[], const float importance[], int np, int rotatemode, int indexmode, int ch, const RegionPrec &region_prec, float orig_err, IntEndptsRGBA &opt_endpts, int indices[NINDEXARRAYS][Tile::TILE_TOTAL])
 {
 	IntEndptsRGBA temp_endpts;
 	float best_err = orig_err;
@@ -841,7 +843,7 @@ static float exhaustive(const Vector4 colors[], const float importance[], int np
 	return best_err;
 }
 
-static float optimize_one(const Vector4 colors[], const float importance[], int np, int rotatemode, int indexmode, float orig_err, const IntEndptsRGBA &orig_endpts, const RegionPrec &region_prec, IntEndptsRGBA &opt_endpts)
+static float optimize_one(const float4 colors[], const float importance[], int np, int rotatemode, int indexmode, float orig_err, const IntEndptsRGBA &orig_endpts, const RegionPrec &region_prec, IntEndptsRGBA &opt_endpts)
 {
 	float opt_err = orig_err;
 
@@ -989,7 +991,7 @@ static float optimize_one(const Vector4 colors[], const float importance[], int 
 static void optimize_endpts(const Tile &tile, int shapeindex, int rotatemode, int indexmode, const float orig_err[NREGIONS], 
 							const IntEndptsRGBA orig_endpts[NREGIONS], const PatternPrec &pattern_prec, float opt_err[NREGIONS], IntEndptsRGBA opt_endpts[NREGIONS])
 {
-	Vector4 pixels[Tile::TILE_TOTAL];
+	float4 pixels[Tile::TILE_TOTAL];
     float importance[Tile::TILE_TOTAL];
 	IntEndptsRGBA temp_in, temp_out;
 
@@ -1103,7 +1105,7 @@ static float refine(const Tile &tile, int shapeindex_best, int rotatemode, int i
 	return FLT_MAX;
 }
 
-static void clamp(Vector4 &v)
+static void clamp(float4 &v)
 {
 	if (v.x < 0.0f) v.x = 0.0f;
 	if (v.x > 255.0f) v.x = 255.0f;
@@ -1122,9 +1124,9 @@ static void rough(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS])
 	for (int region=0; region<NREGIONS; ++region)
 	{
 		int np = 0;
-		Vector3 colors[Tile::TILE_TOTAL];
+		float3 colors[Tile::TILE_TOTAL];
 		float alphas[Tile::TILE_TOTAL];
-        Vector4 mean = simd::make_float4(0,0,0,0);
+        float4 mean = simd::make_float4(0,0,0,0);
 
 		for (int y = 0; y < tile.size_y; y++)
 		for (int x = 0; x < tile.size_x; x++)
@@ -1139,7 +1141,7 @@ static void rough(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS])
 		// handle simple cases	
 		if (np == 0)
 		{
-			Vector4 zero = simd::make_float4(0,0,0,255.0f);
+			float4 zero = simd::make_float4(0,0,0,255.0f);
 			endpts[region].A = zero;
 			endpts[region].B = zero;
 			continue;
@@ -1159,7 +1161,7 @@ static void rough(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS])
 
 		mean /= float(np);
 
-		Vector3 direction = Fit::computePrincipalComponent_EigenSolver(np, colors);
+		float3 direction = Fit::computePrincipalComponent_EigenSolver(np, colors);
 
 		// project each pixel value along the principal direction
 		float minp = FLT_MAX, maxp = -FLT_MAX;

@@ -187,8 +187,8 @@ inline static float colorDistance(const simd::float3 & c0, const simd::float3 & 
 }
 
 simd::float3 round255(const simd::float3 & v) {
-    //return Vector3(ftoi_round(255 * v.x), ftoi_round(255 * v.y), ftoi_round(255 * v.z)) * (1.0f / 255);
-    //return Vector3(floorf(v.x + 0.5f), floorf(v.y + 0.5f), floorf(v.z + 0.5f));
+    //return float3(ftoi_round(255 * v.x), ftoi_round(255 * v.y), ftoi_round(255 * v.z)) * (1.0f / 255);
+    //return float3(floorf(v.x + 0.5f), floorf(v.y + 0.5f), floorf(v.z + 0.5f));
     return v;
 }
 
@@ -229,19 +229,19 @@ inline static uint computeIndices4(const simd::float3 block[16], const simd::flo
 
 // maxColor and minColor are expected to be in the same range as the color set.
 /*
-inline static uint computeIndices4(const ColorSet & set, Vector3::Arg maxColor, Vector3::Arg minColor)
+inline static uint computeIndices4(const ColorSet & set, float3::Arg maxColor, float3::Arg minColor)
 {
-	Vector3 palette[4];
+	float3 palette[4];
 	palette[0] = maxColor;
 	palette[1] = minColor;
 	palette[2] = lerp(palette[0], palette[1], 1.0f / 3.0f);
 	palette[3] = lerp(palette[0], palette[1], 2.0f / 3.0f);
 	
-    Vector3 mem[(4+2)*2];
+    float3 mem[(4+2)*2];
     memset(mem, 0, sizeof(mem));
 
-	Vector3 * row0 = mem;
-	Vector3 * row1 = mem + (4+2);
+	float3 * row0 = mem;
+	float3 * row1 = mem + (4+2);
 
 	uint indices = 0;
     //for(int i = 0; i < 16; i++)
@@ -254,7 +254,7 @@ inline static uint computeIndices4(const ColorSet & set, Vector3::Arg maxColor, 
                 continue;
             }
 
-            Vector3 color = set.color(i).xyz();
+            float3 color = set.color(i).xyz();
 
             // Add error.
             color += row0[1+x];
@@ -278,7 +278,7 @@ inline static uint computeIndices4(const ColorSet & set, Vector3::Arg maxColor, 
 		    indices |= index << (2 * i);
 
 		    // Compute new error.
-		    Vector3 diff = color - palette[index];
+		    float3 diff = color - palette[index];
             
 		    // Propagate new error.
 		    //row0[1+x+1] += 7.0f / 16.0f * diff;
@@ -288,7 +288,7 @@ inline static uint computeIndices4(const ColorSet & set, Vector3::Arg maxColor, 
         }
 
 		swap(row0, row1);
-		memset(row1, 0, sizeof(Vector3) * (4+2));
+		memset(row1, 0, sizeof(float3) * (4+2));
 	}
 
 	return indices;
@@ -296,7 +296,7 @@ inline static uint computeIndices4(const ColorSet & set, Vector3::Arg maxColor, 
 
 inline static float evaluatePaletteError4(const simd::float3 block[16], const simd::float3 & maxColor, const simd::float3 & minColor)
 {
-	Vector3 palette[4];
+	float3 palette[4];
 	palette[0] = maxColor;
 	palette[1] = minColor;
 	//palette[2] = round255((2 * palette[0] + palette[1]) / 3.0f);
@@ -343,9 +343,9 @@ inline static float evaluatePaletteError3(const simd::float3 block[16], const si
 
 
 // maxColor and minColor are expected to be in the same range as the color set.
-/*inline static uint computeIndices3(const ColorSet & set, Vector3::Arg maxColor, Vector3::Arg minColor)
+/*inline static uint computeIndices3(const ColorSet & set, float3::Arg maxColor, float3::Arg minColor)
 {
-	Vector3 palette[4];
+	float3 palette[4];
 	palette[0] = minColor;
 	palette[1] = maxColor;
 	palette[2] = (palette[0] + palette[1]) * 0.5f;
@@ -359,7 +359,7 @@ inline static float evaluatePaletteError3(const simd::float3 block[16], const si
             continue;
         }
 
-        Vector3 color = set.color(i).xyz();
+        float3 color = set.color(i).xyz();
 		
 		float d0 = colorDistance(palette[0], color);
 		float d1 = colorDistance(palette[1], color);
@@ -673,10 +673,10 @@ void QuickCompress::compressDXT1(const ColorBlock & rgba, BlockDXT1 * dxtBlock)
 		insetBBox(&maxColor, &minColor);
 #else
 		float weights[16] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-		Vector3 cluster[4];
-		int count = Compute4Means(16, block, weights, Vector3(1, 1, 1), cluster);
+		float3 cluster[4];
+		int count = Compute4Means(16, block, weights, float3(1, 1, 1), cluster);
 
-		Vector3 maxColor, minColor;
+		float3 maxColor, minColor;
 		float bestError = FLT_MAX;
 
 		for (int i = 1; i < 4; i++)
@@ -829,10 +829,10 @@ void QuickCompress::compressDXT5(const ColorBlock & rgba, BlockDXT5 * dxtBlock, 
 
 
 
-/*void QuickCompress::outputBlock4(const ColorSet & set, const Vector3 & start, const Vector3 & end, BlockDXT1 * block)
+/*void QuickCompress::outputBlock4(const ColorSet & set, const float3 & start, const float3 & end, BlockDXT1 * block)
 {
-    Vector3 minColor = start * 255.0f;
-    Vector3 maxColor = end * 255.0f;
+    float3 minColor = start * 255.0f;
+    float3 maxColor = end * 255.0f;
     uint16 color0 = roundAndExpand(&maxColor);
     uint16 color1 = roundAndExpand(&minColor);
 
@@ -849,10 +849,10 @@ void QuickCompress::compressDXT5(const ColorBlock & rgba, BlockDXT5 * dxtBlock, 
     //optimizeEndPoints4(set, block);
 }
 
-void QuickCompress::outputBlock3(const ColorSet & set, const Vector3 & start, const Vector3 & end, BlockDXT1 * block)
+void QuickCompress::outputBlock3(const ColorSet & set, const float3 & start, const float3 & end, BlockDXT1 * block)
 {
-    Vector3 minColor = start * 255.0f;
-    Vector3 maxColor = end * 255.0f;
+    float3 minColor = start * 255.0f;
+    float3 maxColor = end * 255.0f;
     uint16 color0 = roundAndExpand(&minColor);
     uint16 color1 = roundAndExpand(&maxColor);
 

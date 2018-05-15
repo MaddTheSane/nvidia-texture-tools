@@ -69,8 +69,8 @@ namespace nvtt
         bool isNormalMap;
         bool normalizeMipmaps;
         bool convertToNormalMap;
-        nv::Vector4 heightFactors;
-        nv::Vector4 bumpFrequencyScale;
+        simd::float4 heightFactors;
+        simd::float4 bumpFrequencyScale;
 
         // Adjust extents.
         uint maxExtent;

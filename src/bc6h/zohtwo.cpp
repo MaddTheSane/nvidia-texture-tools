@@ -50,6 +50,7 @@ See the License for the specific language governing permissions and limitations 
 
 using namespace nv;
 using namespace ZOH;
+using simd::float3;
 
 #define NINDICES	8
 #define	INDEXBITS	3
@@ -387,7 +388,7 @@ static void emit_block(const ComprEndpts compr_endpts[NREGIONS_TWO], int shapein
     nvDebugCheck(out.getptr() == ZOH::BITSIZE);
 }
 
-static void generate_palette_quantized(const IntEndpts &endpts, int prec, Vector3 palette[NINDICES])
+static void generate_palette_quantized(const IntEndpts &endpts, int prec, float3 palette[NINDICES])
 {
     // scale endpoints
     int a, b;			// really need a IntVector3...
@@ -449,14 +450,14 @@ void ZOH::decompresstwo(const char *block, Tile &t)
         // reserved mode, return all zeroes
         for (int y = 0; y < Tile::TILE_H; y++)
             for (int x = 0; x < Tile::TILE_W; x++)
-                t.data[y][x] = Vector3(0.0f);
+                t.data[y][x] = float3(0.0f);
 
         return;
     }
 
     decompress_endpts(compr_endpts, endpts, p);
 
-    Vector3 palette[NREGIONS_TWO][NINDICES];
+    float3 palette[NREGIONS_TWO][NINDICES];
     for (int r = 0; r < NREGIONS_TWO; ++r)
         generate_palette_quantized(endpts[r], p.chan[0].prec[0], &palette[r][0]);
 
@@ -473,11 +474,11 @@ void ZOH::decompresstwo(const char *block, Tile &t)
 }
 
 // given a collection of colors and quantized endpoints, generate a palette, choose best entries, and return a single toterr
-static float map_colors(const Vector3 colors[], const float importance[], int np, const IntEndpts &endpts, int prec)
+static float map_colors(const float3 colors[], const float importance[], int np, const IntEndpts &endpts, int prec)
 {
-    Vector3 palette[NINDICES];
+    float3 palette[NINDICES];
     float toterr = 0;
-    Vector3 err;
+    float3 err;
 
     generate_palette_quantized(endpts, prec, palette);
 
@@ -506,7 +507,7 @@ static void assign_indices(const Tile &tile, int shapeindex, IntEndpts endpts[NR
                            int indices[Tile::TILE_H][Tile::TILE_W], float toterr[NREGIONS_TWO])
 {
     // build list of possibles
-    Vector3 palette[NREGIONS_TWO][NINDICES];
+    float3 palette[NREGIONS_TWO][NINDICES];
 
     for (int region = 0; region < NREGIONS_TWO; ++region)
     {
@@ -514,7 +515,7 @@ static void assign_indices(const Tile &tile, int shapeindex, IntEndpts endpts[NR
         toterr[region] = 0;
     }
 
-    Vector3 err;
+    float3 err;
 
     for (int y = 0; y < tile.size_y; y++)
 	for (int x = 0; x < tile.size_x; x++)
@@ -541,7 +542,7 @@ static void assign_indices(const Tile &tile, int shapeindex, IntEndpts endpts[NR
     }
 }
 
-static float perturb_one(const Vector3 colors[], const float importance[], int np, int ch, int prec, const IntEndpts &old_endpts, IntEndpts &new_endpts,
+static float perturb_one(const float3 colors[], const float importance[], int np, int ch, int prec, const IntEndpts &old_endpts, IntEndpts &new_endpts,
                           float old_err, int do_b)
 {
     // we have the old endpoints: old_endpts
@@ -595,7 +596,7 @@ static float perturb_one(const Vector3 colors[], const float importance[], int n
     return min_err;
 }
 
-static void optimize_one(const Vector3 colors[], const float importance[], int np, float orig_err, const IntEndpts &orig_endpts, int prec, IntEndpts &opt_endpts)
+static void optimize_one(const float3 colors[], const float importance[], int np, float orig_err, const IntEndpts &orig_endpts, int prec, IntEndpts &opt_endpts)
 {
     float opt_err = orig_err;
     for (int ch = 0; ch < NCHANNELS; ++ch)
@@ -670,7 +671,7 @@ static void optimize_one(const Vector3 colors[], const float importance[], int n
 static void optimize_endpts(const Tile &tile, int shapeindex, const float orig_err[NREGIONS_TWO], 
                             const IntEndpts orig_endpts[NREGIONS_TWO], int prec, IntEndpts opt_endpts[NREGIONS_TWO])
 {
-    Vector3 pixels[Tile::TILE_TOTAL];
+    float3 pixels[Tile::TILE_TOTAL];
     float importance[Tile::TILE_TOTAL];
     float err = 0;
 
@@ -751,7 +752,7 @@ float ZOH::refinetwo(const Tile &tile, int shapeindex_best, const FltEndpts endp
 	return FLT_MAX;
 }
 
-static void generate_palette_unquantized(const FltEndpts endpts[NREGIONS_TWO], Vector3 palette[NREGIONS_TWO][NINDICES])
+static void generate_palette_unquantized(const FltEndpts endpts[NREGIONS_TWO], float3 palette[NREGIONS_TWO][NINDICES])
 {
     for (int region = 0; region < NREGIONS_TWO; ++region)
 	for (int i = 0; i < NINDICES; ++i)
@@ -762,12 +763,12 @@ static void generate_palette_unquantized(const FltEndpts endpts[NREGIONS_TWO], V
 static float map_colors(const Tile &tile, int shapeindex, const FltEndpts endpts[NREGIONS_TWO])
 {
     // build list of possibles
-    Vector3 palette[NREGIONS_TWO][NINDICES];
+    float3 palette[NREGIONS_TWO][NINDICES];
 
     generate_palette_unquantized(endpts, palette);
 
     float toterr = 0;
-    Vector3 err;
+    float3 err;
 
     for (int y = 0; y < tile.size_y; y++)
 	for (int x = 0; x < tile.size_x; x++)
@@ -796,8 +797,8 @@ float ZOH::roughtwo(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS_
     for (int region=0; region<NREGIONS_TWO; ++region)
     {
         int np = 0;
-        Vector3 colors[Tile::TILE_TOTAL];
-        Vector3 mean = simd::make_float3(0,0,0);
+        float3 colors[Tile::TILE_TOTAL];
+        float3 mean = simd::make_float3(0,0,0);
 
         for (int y = 0; y < tile.size_y; y++)
             for (int x = 0; x < tile.size_x; x++)
@@ -811,7 +812,7 @@ float ZOH::roughtwo(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS_
         // handle simple cases
         if (np == 0)
         {
-            Vector3 zero = simd::make_float3(0,0,0);
+            float3 zero = simd::make_float3(0,0,0);
             endpts[region].A = zero;
             endpts[region].B = zero;
             continue;
@@ -831,7 +832,7 @@ float ZOH::roughtwo(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS_
 
         mean /= float(np);
 
-        Vector3 direction = Fit::computePrincipalComponent_EigenSolver(np, colors);
+        float3 direction = Fit::computePrincipalComponent_EigenSolver(np, colors);
 
         // project each pixel value along the principal direction
         float minp = FLT_MAX, maxp = -FLT_MAX;

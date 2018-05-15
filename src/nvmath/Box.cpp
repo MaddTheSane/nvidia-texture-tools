@@ -5,12 +5,12 @@
 //#include "Sphere.h"
 
 using namespace nv;
-
+using simd::float3;
 
 
 
 // Clip the given segment against this box.
-bool Box::clipSegment(const Vector3 & origin, const Vector3 & dir, float * t_near, float * t_far) const {
+bool Box::clipSegment(const float3 & origin, const float3 & dir, float * t_near, float * t_far) const {
 
 	// Avoid aliasing.
 	float tnear = *t_near;
@@ -60,8 +60,8 @@ bool Box::clipSegment(const Vector3 & origin, const Vector3 & dir, float * t_nea
 }
 
 
-float nv::distanceSquared(const Box &box, const Vector3 &point) {
-    Vector3 closest;
+float nv::distanceSquared(const Box &box, const float3 &point) {
+    float3 closest;
 
     if (point.x < box.minCorner.x) closest.x = box.minCorner.x;
     else if (point.x > box.maxCorner.x) closest.x = box.maxCorner.x;
@@ -83,7 +83,7 @@ float nv::distanceSquared(const Box &box, const Vector3 &point) {
 }*/
 
 
-bool nv::intersect(const Box & box, const Vector3 & p, const Vector3 & id, float * t /*= NULL*/) {
+bool nv::intersect(const Box & box, const float3 & p, const float3 & id, float * t /*= NULL*/) {
     // Precompute these in ray structure?
     int sdx = (id.x < 0);
     int sdy = (id.y < 0);

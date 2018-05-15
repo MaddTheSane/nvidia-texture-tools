@@ -18,7 +18,7 @@ namespace nv
     //inline Box::Box(const Box & b) : minCorner(b.minCorner), maxCorner(b.maxCorner) { }
 
     // Init ctor.
-    //inline Box::Box(const Vector3 & mins, const Vector3 & maxs) : minCorner(mins), maxCorner(maxs) { }
+    //inline Box::Box(const simd::float3 & mins, const simd::float3 & maxs) : minCorner(mins), maxCorner(maxs) { }
 
     // Assignment operator.
     inline Box & Box::operator=(const Box & b) { minCorner = b.minCorner; maxCorner = b.maxCorner; return *this; }
@@ -37,26 +37,26 @@ namespace nv
     }
 
     // Build a cube centered on center and with edge = 2*dist
-    inline void Box::cube(const Vector3 & center, float dist)
+    inline void Box::cube(const simd::float3 & center, float dist)
     {
         setCenterExtents(center, simd::make_float3(dist));
     }
 
     // Build a box, given center and extents.
-    inline void Box::setCenterExtents(const Vector3 & center, const Vector3 & extents)
+    inline void Box::setCenterExtents(const simd::float3 & center, const simd::float3 & extents)
     {
         minCorner = center - extents;
         maxCorner = center + extents;
     }
 
     // Get box center.
-    inline Vector3 Box::center() const
+    inline simd::float3 Box::center() const
     {
         return (minCorner + maxCorner) * 0.5f;
     }
 
     // Return extents of the box.
-    inline Vector3 Box::extents() const
+    inline simd::float3 Box::extents() const
     {
         return (maxCorner - minCorner) * 0.5f;
     }
@@ -73,7 +73,7 @@ namespace nv
     }
 
     // Add a point to this box.
-    inline void Box::addPointToBounds(const Vector3 & p)
+    inline void Box::addPointToBounds(const simd::float3 & p)
     {
         minCorner = simd::min(minCorner, p);
         maxCorner = simd::max(maxCorner, p);
@@ -87,13 +87,13 @@ namespace nv
     }
 
     // Add sphere to this box.
-    inline void Box::addSphereToBounds(const Vector3 & p, float r) {
-        minCorner = simd::min(minCorner, p - Vector3(r));
-        maxCorner = simd::min(maxCorner, p + Vector3(r));
+    inline void Box::addSphereToBounds(const simd::float3 & p, float r) {
+        minCorner = simd::min(minCorner, p - r);
+        maxCorner = simd::min(maxCorner, p + r);
     }
 
     // Translate box.
-    inline void Box::translate(const Vector3 & v)
+    inline void Box::translate(const simd::float3 & v)
     {
         minCorner += v;
         maxCorner += v;
@@ -115,19 +115,19 @@ namespace nv
     // Get the area of the box.
     inline float Box::area() const
     {
-        const Vector3 d = extents();
+        const simd::float3 d = extents();
         return 8.0f * (d.x*d.y + d.x*d.z + d.y*d.z);
     }	
 
     // Get the volume of the box.
     inline float Box::volume() const
     {
-        Vector3 d = extents();
+        simd::float3 d = extents();
         return 8.0f * (d.x * d.y * d.z);
     }
 
     // Return true if the box contains the given point.
-    inline bool Box::contains(const Vector3 & p) const
+    inline bool Box::contains(const simd::float3 & p) const
     {
         return 
             minCorner.x < p.x && minCorner.y < p.y && minCorner.z < p.z &&
@@ -135,7 +135,7 @@ namespace nv
     }
 
     // Split the given box in 8 octants and assign the ith one to this box.
-    inline void Box::setOctant(const Box & box, const Vector3 & center, int i)
+    inline void Box::setOctant(const Box & box, const simd::float3 & center, int i)
     {
         minCorner = box.minCorner;
         maxCorner = box.maxCorner;
