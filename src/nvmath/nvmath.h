@@ -58,10 +58,6 @@
 #   endif
 #endif
 
-#if defined(__APPLE__) && defined(__clang__)
-#define NV_USE_LIBSIMD 1
-#endif
-
 // Internally set NV_USE_SIMD when either altivec or sse is available.
 #if NV_USE_ALTIVEC && NV_USE_SSE
 #	error "Cannot enable both altivec and sse!"
