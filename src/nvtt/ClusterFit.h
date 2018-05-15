@@ -32,7 +32,7 @@
 #include "nvcore/Memory.h"
 
 // Use SIMD version if altivec or SSE are available.
-#define NVTT_USE_SIMD (NV_USE_ALTIVEC || NV_USE_SSE)
+#define NVTT_USE_SIMD (NV_USE_ALTIVEC || NV_USE_SSE || NV_USE_LIBSIMD)
 //#define NVTT_USE_SIMD 0
 
 namespace nv {
