@@ -160,7 +160,7 @@ namespace nv
 	inline simd::float3 toVector3(Color32 c)
     {
         const float scale = 1.0f / 255.0f;
-		return simd::make_float3(c.r * scale, c.g * scale, c.b * scale);
+        return simd::make_float3(c.r * scale, c.g * scale, c.b * scale);
     }
 
 

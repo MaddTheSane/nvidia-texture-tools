@@ -23,7 +23,7 @@ namespace nv
 
     inline simd::float3 Plane::vector() const { return v.xyz; }
     inline float Plane::offset() const { return v.w; }
-	inline simd::float3 Plane::normal() const { return simd::normalize(vector()); }
+    inline simd::float3 Plane::normal() const { return simd::normalize(vector()); }
 
     // Normalize plane.
     inline Plane normalize(const Plane & plane, float epsilon = NV_EPSILON)

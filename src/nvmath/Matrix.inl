@@ -845,9 +845,9 @@ namespace nv
     }
 
     // Transform the given 4d vector with the given matrix.
-	inline simd::float4 transform(Matrix::Arg m, const simd::float4 & p)
+    inline simd::float4 transform(Matrix::Arg m, const simd::float4 & p)
     {
-		return simd::make_float4(
+        return simd::make_float4(
             p.x * m(0,0) + p.y * m(0,1) + p.z * m(0,2) + p.w * m(0,3),
             p.x * m(1,0) + p.y * m(1,1) + p.z * m(1,2) + p.w * m(1,3),
             p.x * m(2,0) + p.y * m(2,1) + p.z * m(2,2) + p.w * m(2,3),
