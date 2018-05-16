@@ -38,6 +38,7 @@
 
 using namespace nv;
 using simd::float3;
+using simd::float4;
 
 namespace
 {
@@ -456,7 +457,8 @@ namespace
 
         { "L8", D3DFMT_L8,             DXGI_FORMAT_R8_UNORM ,         { 8,  0xFF,       0,          0,          0 } },
         { "L16", D3DFMT_L16,            DXGI_FORMAT_R16_UNORM,         { 16, 0xFFFF,     0,          0,          0 } },
-        { "AL88", D3DFMT_A8L8,           DXGI_FORMAT_R8G8_UNORM,        { 16, 0xFF,       0,          0,     0xFF00 } },
+        { "AL88", D3DFMT_A8L8,           0,                             { 16, 0xFF,       0,          0,     0xFF00 } },
+        { "", 0,                     DXGI_FORMAT_R8G8_UNORM,        { 16, 0xFF,       0xFF00,     0,          0 } },
     };
 
     static const uint s_formatCount = NV_ARRAY_SIZE(s_formats);
@@ -650,7 +652,7 @@ void DDSHeader::setFourCC(uint8 c0, uint8 c1, uint8 c2, uint8 c3)
 {
     // set fourcc pixel format.
     this->pf.flags = DDPF_FOURCC;
-    this->pf.fourcc = MAKEFOURCC(c0, c1, c2, c3);
+    this->pf.fourcc = NV_MAKEFOURCC(c0, c1, c2, c3);
 
     this->pf.bitcount = 0;
     this->pf.rmask = 0;
@@ -674,7 +676,7 @@ void DDSHeader::setFormatCode(uint32 code)
 
 void DDSHeader::setSwizzleCode(uint8 c0, uint8 c1, uint8 c2, uint8 c3)
 {
-    this->pf.bitcount = MAKEFOURCC(c0, c1, c2, c3);
+    this->pf.bitcount = NV_MAKEFOURCC(c0, c1, c2, c3);
 }
 
 
@@ -1496,7 +1498,7 @@ void DirectDrawSurface::readBlock(ColorBlock * rgba)
     {
         BlockBC6 block;
         *stream << block;
-        float3 colors[16];
+        float4 colors[16];
         block.decodeBlock(colors);
 
         // Clamp to [0, 1] and round to 8-bit
@@ -1504,7 +1506,7 @@ void DirectDrawSurface::readBlock(ColorBlock * rgba)
         {
             for (int x = 0; x < 4; ++x)
             {
-                float3 px = colors[y*4 + x];
+                float4 px = colors[y*4 + x];
                 rgba->color(x, y).setRGBA(
                                     ftoi_round(clamp(px.x, 0.0f, 1.0f) * 255.0f),
                                     ftoi_round(clamp(px.y, 0.0f, 1.0f) * 255.0f),
@@ -1586,7 +1588,7 @@ uint DirectDrawSurface::surfaceSize(uint mipmap) const
     else {
         w = (w + 3) / 4;
         h = (h + 3) / 4;
-        d = d; // @@ How are 3D textures aligned?
+        //d = d; // @@ How are 3D textures aligned?
         return blockSize * w * h * d;
     }
 }

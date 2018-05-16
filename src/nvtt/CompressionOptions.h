@@ -39,7 +39,8 @@ namespace nvtt
         Quality quality;
 
         simd::float4 colorWeight;
-
+        float rgbmThreshold;
+        
         // Pixel format description.
         uint bitcount;
         uint rmask;

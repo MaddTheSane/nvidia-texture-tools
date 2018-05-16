@@ -40,7 +40,7 @@ using namespace nvtt;
 using simd::float4;
 
 
-void CompressorBC6::compressBlock(const float4 colors[16], const float weights[16], const CompressionOptions::Private & compressionOptions, void * output)
+void CompressorBC6::compressBlock(float4 colors[16], float weights[16], const CompressionOptions::Private & compressionOptions, void * output)
 {
     // !!!UNDONE: support channel weights
     // !!!UNDONE: set flags once, not per block (this is especially sketchy since block compression is multithreaded...)
@@ -78,7 +78,7 @@ void CompressorBC6::compressBlock(const float4 colors[16], const float weights[1
     ZOH::compress(zohTile, (char *)output);
 }
 
-void CompressorBC7::compressBlock(const float4 colors[16], const float weights[16], const CompressionOptions::Private & compressionOptions, void * output)
+void CompressorBC7::compressBlock(float4 colors[16], float weights[16], const CompressionOptions::Private & compressionOptions, void * output)
 {
     // !!!UNDONE: support channel weights
     // !!!UNDONE: set flags once, not per block (this is especially sketchy since block compression is multithreaded...)

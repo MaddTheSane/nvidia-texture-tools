@@ -14,6 +14,46 @@ namespace nv
 {
     enum identity_t { identity };
 
+    // 2x2 matrix.
+    class NVMATH_CLASS Matrix2
+    {
+    public:
+        Matrix2();
+        explicit Matrix2(float f);
+        explicit Matrix2(identity_t);
+        Matrix2(const Matrix2 & m);
+        Matrix2(const simd::float2 & v0, const simd::float2 & v1);
+        Matrix2(float a, float b, float c, float d);
+        
+        float data(uint idx) const;
+        float & data(uint idx);
+        float get(uint row, uint col) const;
+        float operator()(uint row, uint col) const;
+        float & operator()(uint row, uint col);
+        
+        simd::float2 row(uint i) const;
+        simd::float2 column(uint i) const;
+        
+        void operator*=(float s);
+        void operator/=(float s);
+        void operator+=(const Matrix2 & m);
+        void operator-=(const Matrix2 & m);
+        
+        void scale(float s);
+        void scale(const simd::float2 & s);
+        float determinant() const;
+        
+    private:
+        float m_data[4];
+    };
+    
+    // Solve equation system using LU decomposition and back-substitution.
+	extern bool solveLU(const Matrix2 & m, const simd::float2 & b, simd::float2 * x);
+    
+    // Solve equation system using Cramer's inverse.
+    extern bool solveCramer(const Matrix2 & A, const simd::float2 & b, simd::float2 * x);
+    
+    
     // 3x3 matrix.
     class NVMATH_CLASS Matrix3
     {
@@ -52,6 +92,8 @@ namespace nv
     // Solve equation system using Cramer's inverse.
     extern bool solveCramer(const Matrix3 & A, const simd::float3 & b, simd::float3 * x);
 
+    extern Matrix3 inverse(const simd::float3 & m);
+    
 
     // 4x4 matrix.
     class NVMATH_CLASS Matrix
@@ -106,7 +148,6 @@ namespace nv
 
     // Compute inverse using Gaussian elimination and partial pivoting.
     extern Matrix inverse(const Matrix & m);
-    extern Matrix3 inverse(const Matrix3 & m);
 
 } // nv namespace
 

@@ -157,6 +157,12 @@ namespace nv
         return simd::make_float4(c.r, c.g, c.b, c.a) * scale;
     }
 
+    inline Vector3 toVector3(Color32 c)
+    {
+        const float scale = 1.0f / 255.0f;
+        return Vector3(c.r * scale, c.g * scale, c.b * scale);
+    }
+
 
     inline float perceptualColorDistance(const simd::float3 & c0, const simd::float3 & c1)
     {

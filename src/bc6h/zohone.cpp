@@ -586,7 +586,7 @@ static void optimize_endpts(const Tile &tile, int shapeindex, const float orig_e
 {
     float3 pixels[Tile::TILE_TOTAL];
     float importance[Tile::TILE_TOTAL];
-    float err = 0;
+    //float err = 0;
 
     for (int region=0; region<NREGIONS_ONE; ++region)
     {
@@ -684,7 +684,7 @@ static float map_colors(const Tile &tile, int shapeindex, const FltEndpts endpts
     generate_palette_unquantized(endpts, palette);
 
     float toterr = 0;
-    float3 err;
+    //float3 err;
 
     for (int y = 0; y < tile.size_y; y++)
 	for (int x = 0; x < tile.size_x; x++)

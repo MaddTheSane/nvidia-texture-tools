@@ -1,8 +1,8 @@
 // This code is in the public domain -- Ignacio Castaño <castano@gmail.com>
 
 //#pragma once
-#ifndef NV_CORE_STDSTREAM_H
-#define NV_CORE_STDSTREAM_H
+//#ifndef NV_CORE_STDSTREAM_H
+//#define NV_CORE_STDSTREAM_H
 
 #include "nvcore.h"
 #include "Stream.h"
@@ -213,9 +213,12 @@ namespace nv
 #elif NV_OS_LINUX
             return (uint)fread_unlocked(data, 1, len, m_fp);
 #elif NV_OS_DARWIN
-            // @@ No error checking, always returns len.
+            // This is rather lame. Not sure if it's faster than the locked version.
             for (uint i = 0; i < len; i++) {
                 ((char *)data)[i] = getc_unlocked(m_fp);
+                if (feof_unlocked(m_fp) != 0) {
+                    return i;
+                }
             }
             return len;
 #else
@@ -460,4 +463,4 @@ namespace nv
 } // nv namespace
 
 
-#endif // NV_CORE_STDSTREAM_H
+//#endif // NV_CORE_STDSTREAM_H

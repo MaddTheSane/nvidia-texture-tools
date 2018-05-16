@@ -220,7 +220,7 @@ namespace nv
 	struct BlockBC6
 	{
 		uint8 data[16];		// Not even going to try to write a union for this thing.
-		void decodeBlock(simd::float3 colors[16]) const;
+        void decodeBlock(simd::float4 colors[16]) const;
 	};
 
 	/// BC7 block.

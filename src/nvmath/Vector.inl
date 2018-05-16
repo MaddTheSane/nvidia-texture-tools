@@ -19,7 +19,7 @@ namespace nv
         simd::float2 tV = t * v2;
         return sV + tV;
     }
-    
+	
     inline simd::float2 normalizeSafe(const simd::float2 & v, const simd::float2 & fallback, float epsilon = NV_EPSILON)
     {
         float l = simd::length(v);
@@ -28,7 +28,7 @@ namespace nv
         }
         return simd::normalize(v);
     }
-    
+	
     inline simd::float2 clamp(const simd::float2 & v, float min, float max)
     {
         return simd::make_float2(clamp(v.x, min, max), clamp(v.y, min, max));
@@ -55,7 +55,7 @@ namespace nv
         }
         return simd::normalize(v);
     }
-    
+	
     inline simd::float3 clamp(const simd::float3 & v, float min, float max)
     {
         return simd::make_float3(clamp(v.x, min, max), clamp(v.y, min, max), clamp(v.z, min, max));
@@ -87,7 +87,7 @@ namespace nv
     {
         return simd::make_float4(clamp(v.x, min, max), clamp(v.y, min, max), clamp(v.z, min, max), clamp(v.w, min, max));
     }
-    
+	
     inline simd::float4 saturate(const simd::float4 & v)
     {
         return simd::make_float4(saturate(v.x), saturate(v.y), saturate(v.z), saturate(v.w));

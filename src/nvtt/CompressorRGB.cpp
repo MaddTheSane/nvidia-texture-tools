@@ -252,6 +252,8 @@ namespace
 
         // Compute shared exponent.
         int exp_shared_p = max(-B-1, ftoi_floor(log2f(max_c))) + 1 + B;
+        nvDebugCheck(exp_shared_p <= Emax);
+        nvDebugCheck(exp_shared_p >= 0);
 
         int max_s = ftoi_round(max_c / (1 << (exp_shared_p - B - N)));
 
@@ -273,7 +275,7 @@ namespace
         Float754 f;
         f.raw = 0x33800000 + (v.e << 23);
         float scale = f.value;
-        return scale * simd::make_float3(float(v.xm), float(v.ym), float(v.zm));
+        return scale * make_float3(float(v.xm), float(v.ym), float(v.zm));
     }
 
     // These are based on: http://www.graphics.cornell.edu/~bjw/rgbe/rgbe.c
@@ -536,7 +538,7 @@ void PixelFormatConverter::compress(nvtt::AlphaMode /*alphaMode*/, uint w, uint 
                     }
                     else if (compressionOptions.pixelType == nvtt::PixelType_SignedNorm) {
                         // @@
-						ir=0; ig=0; ib=0; ia=0;
+                        ir = ig = ib = ia = 0;
                     }
                     else if (compressionOptions.pixelType == nvtt::PixelType_UnsignedInt) {
                         ir = iround(clamp(r, 0.0f, 65535.0f));
@@ -546,7 +548,11 @@ void PixelFormatConverter::compress(nvtt::AlphaMode /*alphaMode*/, uint w, uint 
                     }
                     else if (compressionOptions.pixelType == nvtt::PixelType_SignedInt) {
                         // @@
-						ir=0; ig=0; ib=0; ia=0;
+                        ir = ig = ib = ia = 0;
+                    }
+                    else {
+                        // @@
+                        ir = ig = ib = ia = 0;
                     }
                     
                     uint p = 0;

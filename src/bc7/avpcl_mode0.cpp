@@ -39,6 +39,7 @@ using namespace AVPCL;
 using simd::float3;
 using simd::float4;
 using simd::make_float4;
+using simd::dot;
 
 #define	NLSBMODES	4		// number of different lsb modes per region. since we have two .1 per region, that can have 4 values
 
@@ -246,7 +247,7 @@ static void write_header(const IntEndptsRGB_2 endpts[NREGIONS], int shapeindex, 
 
 static void read_header(Bits &in, IntEndptsRGB_2 endpts[NREGIONS], int &shapeindex, Pattern &p, int &pat_index)
 {
-	int mode = AVPCL::getmode(in);
+	//int mode = AVPCL::getmode(in);
 
 	pat_index = 0;
 	nvAssert (pat_index >= 0 && pat_index < NPATTERNS);
@@ -583,7 +584,7 @@ static float exhaustive(const float4 colors[], const float importance[], int np,
 	int bhigh = min((1<<bprec)-1, opt_endpts.B[ch] + bdelta);
 
 	// now there's no need to swap the ordering of A and B
-	bool a_le_b = opt_endpts.A[ch] <= opt_endpts.B[ch];
+	//bool a_le_b = opt_endpts.A[ch] <= opt_endpts.B[ch];
 
 	int amin, bmin;
 
@@ -1002,7 +1003,7 @@ static float rough(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS])
 		float minp = FLT_MAX, maxp = -FLT_MAX;
 		for (int i = 0; i < np; i++) 
 		{
-            float dp = simd::dot(colors[i]-mean.xyz, direction);
+			float dp = dot(colors[i]-mean.xyz, direction);
 			if (dp < minp) minp = dp;
 			if (dp > maxp) maxp = dp;
 		}

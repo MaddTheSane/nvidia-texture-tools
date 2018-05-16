@@ -51,6 +51,8 @@ See the License for the specific language governing permissions and limitations 
 using namespace nv;
 using namespace ZOH;
 using simd::float3;
+using simd::make_float3;
+using simd::dot;
 
 #define NINDICES	8
 #define	INDEXBITS	3
@@ -673,7 +675,7 @@ static void optimize_endpts(const Tile &tile, int shapeindex, const float orig_e
 {
     float3 pixels[Tile::TILE_TOTAL];
     float importance[Tile::TILE_TOTAL];
-    float err = 0;
+    //float err = 0;
 
     for (int region=0; region<NREGIONS_TWO; ++region)
     {
@@ -798,7 +800,7 @@ float ZOH::roughtwo(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS_
     {
         int np = 0;
         float3 colors[Tile::TILE_TOTAL];
-        float3 mean = simd::make_float3(0,0,0);
+        float3 mean = make_float3(0,0,0);
 
         for (int y = 0; y < tile.size_y; y++)
             for (int x = 0; x < tile.size_x; x++)
@@ -812,7 +814,7 @@ float ZOH::roughtwo(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS_
         // handle simple cases
         if (np == 0)
         {
-            float3 zero = simd::make_float3(0,0,0);
+            float3 zero = make_float3(0,0,0);
             endpts[region].A = zero;
             endpts[region].B = zero;
             continue;
@@ -838,7 +840,7 @@ float ZOH::roughtwo(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS_
         float minp = FLT_MAX, maxp = -FLT_MAX;
         for (int i = 0; i < np; i++)
         {
-            float dp = simd::dot(colors[i]-mean, direction);
+            float dp = dot(colors[i]-mean, direction);
             if (dp < minp) minp = dp;
             if (dp > maxp) maxp = dp;
         }
