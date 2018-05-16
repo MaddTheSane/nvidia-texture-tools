@@ -25,7 +25,7 @@ namespace nv
 
         simd::float3 vector() const;
         float offset() const;
-        Vector3 normal() const;
+        simd::float3 normal() const;
 
         void operator*=(float s);
 

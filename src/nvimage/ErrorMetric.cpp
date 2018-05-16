@@ -254,7 +254,7 @@ static float finv(float t)
     }
 }
 
-static Vector3 xyzToCieLab(Vector3::Arg c)
+static float3 xyzToCieLab(const float3 & c)
 {
     // Normalized white point.
     const float Xn = 0.950456f;

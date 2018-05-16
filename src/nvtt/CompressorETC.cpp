@@ -24,6 +24,12 @@ extern int formatSigned;
 #define assert nvCheck
 
 using namespace nv;
+using simd::float3;
+using simd::float4;
+using simd::make_float3;
+using simd::make_float4;
+using simd::dot;
+using simd::all;
 
 // TODO:
 // - Accurate rounding of signed 3-bit components.
@@ -243,13 +249,13 @@ struct ETC_Options {
     bool use_t_mode = true;
     bool use_h_mode = true;
     bool onebit_alpha = false;
-    Vector3 color_weights = Vector3(1);
+    float3 color_weights = float3(1);
     
     //int8 eac_search_radius = 1;  // [0-3]
     //bool eac_11bit_mode = false;
 };
 
-/*static*/ float compress_etc(Vector4 input_colors[16], float input_weights[16], const ETC_Options & options, BlockETC * output);
+/*static*/ float compress_etc(float4 input_colors[16], float input_weights[16], const ETC_Options & options, BlockETC * output);
 
 
 struct BlockEAC {
@@ -673,10 +679,10 @@ static void unpack_color_444(uint32 packed_color, int * r, int * g, int * b) {
     *b = b4 << 4 | b4;  // bitexpand(b4, 4, 8);
 }
 
-static Vector3 unpack_color_444(uint32 packed_color) {
+static float3 unpack_color_444(uint32 packed_color) {
     int r, g, b;
     unpack_color_444(packed_color, &r, &g, &b);
-    return Vector3(float(r), float(g), float(b)) * 1.0f / 255.0f;
+    return make_float3(float(r), float(g), float(b)) * 1.0f / 255.0f;
 }
 
 static void unpack_color_555(uint32 packed_color, int * r, int * g, int * b) {
@@ -688,10 +694,10 @@ static void unpack_color_555(uint32 packed_color, int * r, int * g, int * b) {
     *b = (b5 << 3) | (b5 >> 2); // bitexpand(b5, 5, 8);
 }
 
-static Vector3 unpack_color_555(uint32 packed_color) {
+static float3 unpack_color_555(uint32 packed_color) {
     int r, g, b;
     unpack_color_555(packed_color, &r, &g, &b);
-    return Vector3(float(r), float(g), float(b)) * 1.0f / 255.0f;
+    return make_float3(float(r), float(g), float(b)) * 1.0f / 255.0f;
 }
 
 // Returns signed r,g,b without bit expansion.
@@ -728,11 +734,11 @@ static bool unpack_color_555(uint32 packed_color, uint32 packed_delta, int * r, 
     return success;
 }
 
-static Vector3 unpack_color_555(uint32 packed_color, uint32 packed_delta) {
+static float3 unpack_color_555(uint32 packed_color, uint32 packed_delta) {
     int r, g, b;
     bool success = unpack_color_555(packed_color, packed_delta, &r, &g, &b);
     assert(success);
-    return Vector3(float(r), float(g), float(b)) * 1.0f / 255.0f;
+    return make_float3(float(r), float(g), float(b)) * 1.0f / 255.0f;
 }
 
 
@@ -747,7 +753,7 @@ static void unpack_color_676(uint32 packed_color, int * r, int * g, int * b) {
 }
 
 
-static uint32 pack_color_444(Vector3 color) {
+static uint32 pack_color_444(float3 color) {
 
     // Truncate.
     uint r = U32(ftoi_trunc(clamp(color.x * 15.0f, 0.0f, 15.0f)));
@@ -762,7 +768,7 @@ static uint32 pack_color_444(Vector3 color) {
     return (r << 8) | (g << 4) | b;
 }
 
-static uint32 pack_color_555(Vector3 color) {
+static uint32 pack_color_555(float3 color) {
 
     // Truncate.
     uint r = U32(ftoi_trunc(clamp(color.x * 31.0f, 0.0f, 31.0f)));
@@ -777,7 +783,7 @@ static uint32 pack_color_555(Vector3 color) {
     return (r << 10) | (g << 5) | b;
 }
 
-static uint32 pack_delta_333(Vector3 delta) {
+static uint32 pack_delta_333(float3 delta) {
     // @@ Accurate rounding of signed 3-bit components.
 
     int r = ftoi_round(clamp(delta.x * 31.0f, -4.0f, 3.0f));
@@ -835,8 +841,8 @@ static uint8 pack_float_7(float f, bool round_dir) {
 
 
 
-Vector3 get_partition_color_average(const Vector4 input_colors[16], const float input_weights[16], bool flip, int partition) {
-    Vector3 sum_c(0);
+float3 get_partition_color_average(const float4 input_colors[16], const float input_weights[16], bool flip, int partition) {
+    float3 sum_c(0);
     float sum_w = 0;
 
     if (flip) {
@@ -844,7 +850,7 @@ Vector3 get_partition_color_average(const Vector4 input_colors[16], const float 
         int offset = partition ? 8 : 0;
 
         for (int i = 0; i < 8; i++) {
-            sum_c += input_colors[i+offset].xyz() * input_weights[i+offset];
+            sum_c += input_colors[i+offset].xyz * input_weights[i+offset];
             sum_w += input_weights[i+offset];
         }
     }
@@ -853,10 +859,10 @@ Vector3 get_partition_color_average(const Vector4 input_colors[16], const float 
         int offset = partition ? 2 : 0;
 
         for (int i = 0; i < 4; i++) {
-            sum_c += input_colors[i+offset].xyz() * input_weights[i+offset];
+            sum_c += input_colors[i+offset].xyz * input_weights[i+offset];
             sum_w += input_weights[i+offset];
 
-            sum_c += input_colors[i+offset+1].xyz() * input_weights[i+offset+1];
+            sum_c += input_colors[i+offset+1].xyz * input_weights[i+offset+1];
             sum_w += input_weights[i+offset+1];
 
             offset += 2;
@@ -870,8 +876,8 @@ Vector3 get_partition_color_average(const Vector4 input_colors[16], const float 
 }
 
 // Approximate partition color using average.
-Vector3 base_color_average(const Vector3 colors[8]) {
-    Vector3 sum_c(0);
+float3 base_color_average(const float3 colors[8]) {
+    float3 sum_c(0);
 
     for (uint i = 0; i < 8; i++) {
         sum_c += colors[i];
@@ -879,8 +885,8 @@ Vector3 base_color_average(const Vector3 colors[8]) {
 
     return sum_c * 1.0f / 8.0f;
 }
-Vector3 base_color_average(const Vector3 colors[8], const float weights[8]) {
-    Vector3 sum_c(0);
+float3 base_color_average(const float3 colors[8], const float weights[8]) {
+    float3 sum_c(0);
     float sum_w = 0;
 
     for (uint i = 0; i < 8; i++) {
@@ -893,14 +899,14 @@ Vector3 base_color_average(const Vector3 colors[8], const float weights[8]) {
 
 #if 0
 // Compute base color using least squares.
-Vector3 base_color_least_squares(const Vector3 colors[8], int table_index, int indices[8]) {
+float3 base_color_least_squares(const float3 colors[8], int table_index, int indices[8]) {
 
     // Compute dot(C, I) and dot(I, I)
-    Vector3 CI(0);
+    float3 CI(0);
     float II = 0;
 
     for (int i = 0; i < 8; i++) {
-        Vector3 C = colors[i];
+        float3 C = colors[i];
         float I = etc_intensity_modifiers[table_index][indices[i]];
         CI += C * I;
         II += I * I;
@@ -910,10 +916,10 @@ Vector3 base_color_least_squares(const Vector3 colors[8], int table_index, int i
 }
 
 // @@ Do weighted least squares!
-Vector3 base_color_least_squares(const Vector3 colors[8], const float weights[8], int table_index, int indices[8]) {
+float3 base_color_least_squares(const float3 colors[8], const float weights[8], int table_index, int indices[8]) {
 
     // Compute dot(C, I) and dot(I, I)
-    Vector3 CI(0);
+    float3 CI(0);
     float II = 0;
 
     for (int i = 0; i < 8; i++) {
@@ -928,10 +934,10 @@ Vector3 base_color_least_squares(const Vector3 colors[8], const float weights[8]
 }
 
 // Is this any faster than the above?
-Vector3 base_color_least_squares(const Vector3 colors[8], int table_index, int c0, int c1, int c2) {
+float3 base_color_least_squares(const float3 colors[8], int table_index, int c0, int c1, int c2) {
 
     // Compute dot(C, I) and dot(I, I)
-    Vector3 CI(0);
+    float3 CI(0);
 
     float I0 = etc_intensity_modifiers[table_index][0];
     float I1 = etc_intensity_modifiers[table_index][1];
@@ -979,7 +985,7 @@ static int cluster_count(int count = 8) {
 // Does each partition have its own table index? Or is it shared for both?
 
 
-void test_all_total_orders(const Vector4 colors[8], const float weights[8], int table_index) {
+void test_all_total_orders(const float4 colors[8], const float weights[8], int table_index) {
 
     // @@ compute average luminance of each partition.
 
@@ -1008,7 +1014,7 @@ void test_all_total_orders(const Vector4 colors[8], const float weights[8], int 
 */
 }
 
-void test_all_total_orders(const Vector4 input_colors[16], const float input_weights[16], uint count, bool flip, int table_index) {
+void test_all_total_orders(const float4 input_colors[16], const float input_weights[16], uint count, bool flip, int table_index) {
 
     // Slow method is to test both flip modes.
     //test_all_total_orders(input_colors, input_weights, /*flip=*/false, int table_index);
@@ -1111,7 +1117,7 @@ static int get_partition(const ETC_Data & data, int x, int y) {
     return data.etc.flip ? y > 1 : x > 1;
 }
 
-static void decode_etc1(const ETC_Data & data, Vector4 colors[16]) {
+static void decode_etc1(const ETC_Data & data, float4 colors[16]) {
     assert(data.mode == ETC_Data::Mode_ETC1);
 
     Color32 palette[2][4];
@@ -1134,7 +1140,7 @@ static void decode_etc1(const ETC_Data & data, Vector4 colors[16]) {
     }
 }
 
-static void decode_etc2_t(const ETC_Data & data, Vector4 output_colors[16]) {
+static void decode_etc2_t(const ETC_Data & data, float4 output_colors[16]) {
     assert(data.mode == ETC_Data::Mode_T);
 
     int r, g, b;
@@ -1157,7 +1163,7 @@ static void decode_etc2_t(const ETC_Data & data, Vector4 output_colors[16]) {
     }
 }
 
-static void decode_etc2_h(const ETC_Data & data, Vector4 output_colors[16]) {
+static void decode_etc2_h(const ETC_Data & data, float4 output_colors[16]) {
     assert(data.mode == ETC_Data::Mode_H);
 
     int r, g, b;
@@ -1180,7 +1186,7 @@ static void decode_etc2_h(const ETC_Data & data, Vector4 output_colors[16]) {
     }
 }
 
-static void decode_etc2_planar(const ETC_Data & data, Vector4 output_colors[16]) {
+static void decode_etc2_planar(const ETC_Data & data, float4 output_colors[16]) {
     assert(data.mode == ETC_Data::Mode_Planar);
 
     int ro, go, bo; // origin color
@@ -1216,7 +1222,7 @@ static void decode_etc2_planar(const ETC_Data & data, Vector4 output_colors[16])
     }
 }
 
-static void decode_etc2(const ETC_Data & data, Vector4 colors[16]) {
+static void decode_etc2(const ETC_Data & data, float4 colors[16]) {
 
     if (data.mode == ETC_Data::Mode_ETC1) {
         decode_etc1(data, colors);
@@ -1263,42 +1269,42 @@ static float get_alpha8(int base, int table, int mul, int index) {
 
 
 
-static void decode_eac_8(const EAC_Data & data, Vector4 output_colors[16], int output_channel = 3) {
+static void decode_eac_8(const EAC_Data & data, float4 output_colors[16], int output_channel = 3) {
     for (int i = 0; i < 16; i++) {
         int s = data.selector[4*(i%4) + i/4];
-        output_colors[i].component[output_channel] = get_alpha8(data.alpha, data.table_index, data.multiplier, s);
+        output_colors[i][output_channel] = get_alpha8(data.alpha, data.table_index, data.multiplier, s);
     }
 }
 
-static void decode_eac_11(const EAC_Data & data, Vector4 output_colors[16], int output_channel = 0) {
+static void decode_eac_11(const EAC_Data & data, float4 output_colors[16], int output_channel = 0) {
     for (int i = 0; i < 16; i++) {
         int s = data.selector[4*(i%4) + i/4];
-        output_colors[i].component[output_channel] = get_alpha11(data.alpha, data.table_index, data.multiplier, s);
+        output_colors[i][output_channel] = get_alpha11(data.alpha, data.table_index, data.multiplier, s);
     }
 }
 
 
 
 
-static float evaluate_mse(const Vector3 & p, const Vector3 & c, const Vector3 & w) {
-    Vector3 d = (p - c) * w;
+static float evaluate_mse(const float3 & p, const float3 & c, const float3 & w) {
+    float3 d = (p - c) * w;
     return dot(d, d);
 }
 
-static float evaluate_rgb_mse(const Vector4 input_colors[16], const float input_weights[16], const ETC_Options & options, const ETC_Data & data) {
+static float evaluate_rgb_mse(const float4 input_colors[16], const float input_weights[16], const ETC_Options & options, const ETC_Data & data) {
     // Decode data and compare?
-    Vector4 colors[16];
+    float4 colors[16];
     decode_etc2(data, colors);
 
     float error = 0;
     for (int i = 0; i < 16; i++) {
-        error += input_weights[i] * evaluate_mse(input_colors[i].xyz(), colors[i].xyz(), options.color_weights);
+        error += input_weights[i] * evaluate_mse(input_colors[i].xyz, colors[i].xyz, options.color_weights);
     }
     return error;
 }
 
 
-static int select_table_index(const Vector3 & base_color, const Vector4 input_colors[16], const float input_weights[16], bool flip, int partition) {
+static int select_table_index(const float3 & base_color, const float4 input_colors[16], const float input_weights[16], bool flip, int partition) {
 
     //float min_lum_delta = NV_FLOAT_MAX;
     float max_lum_delta = -NV_FLOAT_MAX;
@@ -1309,7 +1315,7 @@ static int select_table_index(const Vector3 & base_color, const Vector4 input_co
     for (int y = 0; y < 4; y++) {
         for (int x = xb; x < xe; x++) {
             int idx = flip ? x*4 + y : y*4 + x;
-            float lum_delta = dot(base_color, Vector3(1.0f/3)) - dot(input_colors[idx].xyz(), Vector3(1.0f/3));
+            float lum_delta = dot(base_color, float3(1.0f/3)) - dot(input_colors[idx].xyz, float3(1.0f/3));
             //min_lum_delta = min(min_lum_delta, lum_delta);
             max_lum_delta = max(max_lum_delta, fabsf(lum_delta));
         }
@@ -1328,7 +1334,7 @@ static int select_table_index(const Vector3 & base_color, const Vector4 input_co
     return best_range;
 }
 
-static float update_selectors(const Vector4 input_colors[16], const float input_weights[16], ETC_Data & data, const ETC_Options & options) {
+static float update_selectors(const float4 input_colors[16], const float input_weights[16], ETC_Data & data, const ETC_Options & options) {
 
     Color32 palette[2][4];
 
@@ -1353,7 +1359,7 @@ static float update_selectors(const Vector4 input_colors[16], const float input_
             int best_p = 0;
 
             for (int p = 0; p < 4; p++) {
-                float error = evaluate_mse(toVector3(palette[get_partition(data, x, y)][p]), input_colors[i].xyz(), options.color_weights);
+                float error = evaluate_mse(toVector3(palette[get_partition(data, x, y)][p]), input_colors[i].xyz, options.color_weights);
                 if (error < best_error) {
                     best_error = error;
                     best_p = p;
@@ -1371,7 +1377,7 @@ static float update_selectors(const Vector4 input_colors[16], const float input_
 }
 
 
-static void partition_input_block(const Vector4 input_colors[16], const float input_weights[16], bool flip, int partition, Vector3 output_colors[8], float output_weights[8]) {
+static void partition_input_block(const float4 input_colors[16], const float input_weights[16], bool flip, int partition, float3 output_colors[8], float output_weights[8]) {
 
     const int xb = partition ? 2 : 0;
     const int xe = partition ? 4 : 2;
@@ -1380,7 +1386,7 @@ static void partition_input_block(const Vector4 input_colors[16], const float in
         for (int x = xb; x < xe; x++, i++) {
             int idx = flip ? x*4 + y : y*4 + x;
 
-            output_colors[i] = input_colors[idx].xyz();
+            output_colors[i] = input_colors[idx].xyz;
             output_weights[i] = input_weights[idx];
         }
     }
@@ -1388,20 +1394,20 @@ static void partition_input_block(const Vector4 input_colors[16], const float in
 
 
 struct ETC_SubBlock {
-    Vector3 color;
+    float3 color;
     bool delta;
     int table;
     int indices[8];
 };
 
-static float evaluate_rgb_mse(const Vector3 colors[8], const float weights[8], const ETC_Options & options, ETC_SubBlock * sub_block) {
+static float evaluate_rgb_mse(const float3 colors[8], const float weights[8], const ETC_Options & options, ETC_SubBlock * sub_block) {
 
     // Evaluate sub block palette.
-    Vector3 palette[4];
-    palette[0] = sub_block->color + Vector3(etc_intensity_modifiers[sub_block->table][0] / 255.0f);
-    palette[1] = sub_block->color + Vector3(etc_intensity_modifiers[sub_block->table][1] / 255.0f);
-    palette[2] = sub_block->color + Vector3(etc_intensity_modifiers[sub_block->table][2] / 255.0f);
-    palette[3] = sub_block->color + Vector3(etc_intensity_modifiers[sub_block->table][3] / 255.0f);
+    float3 palette[4];
+    palette[0] = sub_block->color + float3(etc_intensity_modifiers[sub_block->table][0] / 255.0f);
+    palette[1] = sub_block->color + float3(etc_intensity_modifiers[sub_block->table][1] / 255.0f);
+    palette[2] = sub_block->color + float3(etc_intensity_modifiers[sub_block->table][2] / 255.0f);
+    palette[3] = sub_block->color + float3(etc_intensity_modifiers[sub_block->table][3] / 255.0f);
 
     float mse = 0;
     for (int i = 0; i < 8; i++) {
@@ -1411,7 +1417,7 @@ static float evaluate_rgb_mse(const Vector3 colors[8], const float weights[8], c
     return mse;
 }
 
-static void optimize_base_color(const Vector3 colors[8], const float weights[8], ETC_SubBlock * sub_block) {
+static void optimize_base_color(const float3 colors[8], const float weights[8], ETC_SubBlock * sub_block) {
 
     // @@ For a given index selection, find color that minimizes the error. RGB components are independent.
 
@@ -1447,7 +1453,7 @@ static void optimize_base_color(const Vector3 colors[8], const float weights[8],
 
 
 
-static int reduce_colors(Vector3 * colors, float * weights, int count) {
+static int reduce_colors(float3 * colors, float * weights, int count) {
 
     int n = 0;
 
@@ -1463,7 +1469,7 @@ static int reduce_colors(Vector3 * colors, float * weights, int count) {
 
         // find color[j] that matches color[i]
         for (int j = i + 1; j < count; j++) {
-            if (colors[i] == colors[j]) {       // @@ Compare within threshold?
+            if (all(colors[i] == colors[j])) {       // @@ Compare within threshold?
                 weights[n] += weights[j];
                 weights[j] = 0.0f;
             }
@@ -1476,7 +1482,7 @@ static int reduce_colors(Vector3 * colors, float * weights, int count) {
 }
 
 // stable sort. in place.
-static void sort_colors(Vector3 * colors, float * weights, int count) {
+static void sort_colors(float3 * colors, float * weights, int count) {
     assert(count <= 8);
 
     // build the list of values
@@ -1551,9 +1557,9 @@ float optimize_center(float colors[4][10], uniform int p, uniform int table_leve
 
 
 
-static void compress_etc1_test(const Vector4 input_colors[16], const float input_weights[16], const ETC_Options & options, ETC_Solution * result) {
+static void compress_etc1_test(const float4 input_colors[16], const float input_weights[16], const ETC_Options & options, ETC_Solution * result) {
 
-    Vector3 colors[8];
+    float3 colors[8];
     float weights[8];
     //int xrefs[8];
     ETC_SubBlock sub_block[2];
@@ -1613,30 +1619,30 @@ static void compress_etc1_test(const Vector4 input_colors[16], const float input
     }
 }*/
 
-static void compress_etc1_range_fit(const Vector4 input_colors[16], const float input_weights[16], const ETC_Options & options, ETC_Solution * result) {
+static void compress_etc1_range_fit(const float4 input_colors[16], const float input_weights[16], const ETC_Options & options, ETC_Solution * result) {
 
     float best_error = NV_FLOAT_MAX;
     bool best_diff = false;
     bool best_flip = false;
     uint16 best_c0 = 0;
     uint16 best_c1 = 0;
-    Vector3 best_vc0;
-    Vector3 best_vc1;
+    float3 best_vc0;
+    float3 best_vc1;
 
     for (int flip = 0; flip <= 1; flip++) {
-        Vector3 color0 = get_partition_color_average(input_colors, input_weights, !!flip, /*partition=*/0);
-        Vector3 color1 = get_partition_color_average(input_colors, input_weights, !!flip, /*partition=*/1);
+        float3 color0 = get_partition_color_average(input_colors, input_weights, !!flip, /*partition=*/0);
+        float3 color1 = get_partition_color_average(input_colors, input_weights, !!flip, /*partition=*/1);
 
         uint16 abs_c0 = U16(pack_color_444(color0));
         uint16 abs_c1 = U16(pack_color_444(color1));
-        Vector3 abs_vc0 = unpack_color_444(abs_c0);
-        Vector3 abs_vc1 = unpack_color_444(abs_c1);
+        float3 abs_vc0 = unpack_color_444(abs_c0);
+        float3 abs_vc1 = unpack_color_444(abs_c1);
         float abs_error = evaluate_mse(color0, abs_vc0, options.color_weights) + evaluate_mse(color1, abs_vc1, options.color_weights);
 
         uint16 diff_c0 = U16(pack_color_555(color0));
-        Vector3 diff_vc0 = unpack_color_555(diff_c0);
+        float3 diff_vc0 = unpack_color_555(diff_c0);
         uint16 diff_d1 = U16(pack_delta_333(color1 - diff_vc0));
-        Vector3 diff_vc1 = unpack_color_555(diff_c0, diff_d1);
+        float3 diff_vc1 = unpack_color_555(diff_c0, diff_d1);
         float diff_error = evaluate_mse(color0, diff_vc0, options.color_weights) + evaluate_mse(color1, diff_vc1, options.color_weights);
 
         if (diff_error < abs_error) {
@@ -1680,7 +1686,7 @@ static void compress_etc1_range_fit(const Vector4 input_colors[16], const float 
 #if HAVE_RGETC
 #include "nvimage/ColorBlock.h"
 
-void compress_etc1_rg(const Vector4 input_colors[16], const float input_weights[16], const ETC_Options & options, ETC_Solution * result) {
+void compress_etc1_rg(const float4 input_colors[16], const float input_weights[16], const ETC_Options & options, ETC_Solution * result) {
 
     rg_etc1::etc1_pack_params pack_params;
     //pack_params.m_quality = rg_etc1::cLowQuality;
@@ -1701,13 +1707,13 @@ void compress_etc1_rg(const Vector4 input_colors[16], const float input_weights[
 }
 #endif
 
-static void compress_etc2_planar_solid(const Vector4 input_colors[16], const float input_weights[16], const ETC_Options & options, ETC_Solution * result) {
+static void compress_etc2_planar_solid(const float4 input_colors[16], const float input_weights[16], const ETC_Options & options, ETC_Solution * result) {
 
-    Vector3 C(0);
+    float3 C(0);
     float W = 0;
 
     for (int i = 0; i < 16; i++) {
-        C += input_colors[i].xyz() * input_weights[i];
+        C += input_colors[i].xyz * input_weights[i];
         W += input_weights[i];
     }
 
@@ -1732,7 +1738,7 @@ static void compress_etc2_planar_solid(const Vector4 input_colors[16], const flo
 }
 
 // Least squares optimization of planar endpoints.
-static void compress_etc2_planar_lsqr(const Vector4 input_colors[16], const float input_weights[16], const ETC_Options & options, ETC_Solution * result) {
+static void compress_etc2_planar_lsqr(const float4 input_colors[16], const float input_weights[16], const ETC_Options & options, ETC_Solution * result) {
 
     // Isn't this a simple least squares problem?
     // - Yes, but that doesn't take clamping and quantization into account.
@@ -1807,7 +1813,7 @@ static void compress_etc2_planar_lsqr(const Vector4 input_colors[16], const floa
     }
 
     // Compute right side:
-    Vector3 Ca(0), Cb(0), Cc(0);
+    float3 Ca(0), Cb(0), Cc(0);
 
     for (int y = 0; y < 4; y++) {
         for (int x = 0; x < 4; x++) {
@@ -1815,7 +1821,7 @@ static void compress_etc2_planar_lsqr(const Vector4 input_colors[16], const floa
             float b = float(y) / 4;
             float c = 1 - a - b;
 
-            Vector3 C = input_colors[4*y+x].xyz() - Vector3(0.5f / 255);
+            float3 C = input_colors[4*y+x].xyz - float3(0.5f / 255);
 
             Ca += C * a;
             Cb += C * b;
@@ -1825,11 +1831,11 @@ static void compress_etc2_planar_lsqr(const Vector4 input_colors[16], const floa
 
     // Now we have 3 equations (one for each color component).
 
-    Vector3 R(Ca.x, Cb.x, Cc.x);
-    Vector3 G(Ca.y, Cb.y, Cc.y);
-    Vector3 B(Ca.z, Cb.z, Cc.z);
+    float3 R = make_float3(Ca.x, Cb.x, Cc.x);
+    float3 G = make_float3(Ca.y, Cb.y, Cc.y);
+    float3 B = make_float3(Ca.z, Cb.z, Cc.z);
 
-    Vector3 r, g, b;
+    float3 r, g, b;
 
     if (!solveLU(m, R, &r)) {
         result->error = NV_FLOAT_MAX;
@@ -1844,9 +1850,9 @@ static void compress_etc2_planar_lsqr(const Vector4 input_colors[16], const floa
         return;
     }
 
-    Vector3 Ch(r.x, g.x, b.x);
-    Vector3 Cv(r.y, g.y, b.y);
-    Vector3 Co(r.z, g.z, b.z);
+    float3 Ch = make_float3(r.x, g.x, b.x);
+    float3 Cv = make_float3(r.y, g.y, b.y);
+    float3 Co = make_float3(r.z, g.z, b.z);
 
     // Convert colors to 676
     result->data.mode = ETC_Data::Mode_Planar;
@@ -1912,7 +1918,7 @@ static void compress_etc2_planar_lsqr(const Vector4 input_colors[16], const floa
 }
 
 
-static void process_input_colors(Vector4 input_colors[16]) {
+static void process_input_colors(float4 input_colors[16]) {
     for (int i = 0; i < 16; i++) {
         input_colors[i] = saturate(input_colors[i]);
         
@@ -1923,9 +1929,9 @@ static void process_input_colors(Vector4 input_colors[16]) {
     }
 }
 
-static void process_input_alphas(Vector4 input_colors[16], int input_channel) {
+static void process_input_alphas(float4 input_colors[16], int input_channel) {
     for (int i = 0; i < 16; i++) {
-        input_colors[i].component[input_channel] = saturate(input_colors[i].component[input_channel]);
+        input_colors[i][input_channel] = saturate(input_colors[i][input_channel]);
     }
 }
 
@@ -1960,7 +1966,7 @@ static void process_input_weights(float input_weights[16]) {
 
 
 
-static float compress_etc_a1(Vector4 input_colors[16], float input_weights[16], const ETC_Options & options, void * output) {
+static float compress_etc_a1(float4 input_colors[16], float input_weights[16], const ETC_Options & options, void * output) {
     assert(options.onebit_alpha == true);
 
     // Classify block.
@@ -1996,7 +2002,7 @@ static float compress_etc_a1(Vector4 input_colors[16], float input_weights[16], 
 //uint planar_blocks = 0;
 //#include "nvthread/Atomic.h"
 
-static float compress_etc(Vector4 input_colors[16], float input_weights[16], const ETC_Options & options, void * output) {
+static float compress_etc(float4 input_colors[16], float input_weights[16], const ETC_Options & options, void * output) {
     assert(options.onebit_alpha == false);
     
     ETC_Solution result;
@@ -2042,13 +2048,13 @@ static float compress_etc(Vector4 input_colors[16], float input_weights[16], con
 
 
 // Range search EAC compressor, slightly modified from ETCLib.
-float compress_eac_range_search(Vector4 input_colors[16], float input_weights[16], int input_channel, const EAC_Options & options, void * output) {
+float compress_eac_range_search(float4 input_colors[16], float input_weights[16], int input_channel, const EAC_Options & options, void * output) {
 
     // Find alpha range
     float min_a = 1.0f;
     float max_a = 0.0f;
     for (uint i = 0; i < 16; i++) {
-        float a = input_colors[i].component[input_channel];
+        float a = input_colors[i][input_channel];
         min_a = nv::min(min_a, a);
         max_a = nv::max(max_a, a);
     }
@@ -2096,7 +2102,7 @@ float compress_eac_range_search(Vector4 input_colors[16], float input_weights[16
                             alpha = get_alpha8(base, t, multiplier, s);
                         }
                     
-                        float error_a = alpha - input_colors[i].component[input_channel];
+                        float error_a = alpha - input_colors[i][input_channel];
                         error_a = error_a * error_a;
                     
                         if (error_a < best_error_a) {
@@ -2136,7 +2142,7 @@ float compress_eac_range_search(Vector4 input_colors[16], float input_weights[16
 
 // Public API:
 
-void nv::decompress_etc(const void * input_block, Vector4 output_colors[16]) {
+void nv::decompress_etc(const void * input_block, float4 output_colors[16]) {
 #if 1 // Our code
     ETC_Data data;
     unpack_etc2_block((const BlockETC *)input_block, &data);
@@ -2172,7 +2178,7 @@ void nv::decompress_etc(const void * input_block, Vector4 output_colors[16]) {
 #endif
 }
 
-void nv::decompress_eac(const void * input_block, Vector4 output_colors[16], int output_channel) {
+void nv::decompress_eac(const void * input_block, float4 output_colors[16], int output_channel) {
     nvCheck(output_channel >= 0 && output_channel < 4);
     
 #if 1
@@ -2194,7 +2200,7 @@ void nv::decompress_eac(const void * input_block, Vector4 output_colors[16], int
 #endif
 }
 
-void nv::decompress_etc_eac(const void * input, Vector4 output_colors[16]) {
+void nv::decompress_etc_eac(const void * input, float4 output_colors[16]) {
 #if 1
     BlockETC_EAC * input_block = (BlockETC_EAC *)input;
 
@@ -2220,7 +2226,7 @@ void nv::decompress_etc_eac(const void * input, Vector4 output_colors[16]) {
 #endif
 }
 
-float nv::compress_etc1(Vector4 input_colors[16], float input_weights[16], const Vector3 & color_weights, void * output) {
+float nv::compress_etc1(float4 input_colors[16], float input_weights[16], const float3 & color_weights, void * output) {
     
     process_input_colors(input_colors);
     
@@ -2236,7 +2242,7 @@ float nv::compress_etc1(Vector4 input_colors[16], float input_weights[16], const
     return compress_etc(input_colors, input_weights, options, output);
 }
 
-float nv::compress_etc2(Vector4 input_colors[16], float input_weights[16], const Vector3 & color_weights, void * output) {
+float nv::compress_etc2(float4 input_colors[16], float input_weights[16], const float3 & color_weights, void * output) {
     
     process_input_colors(input_colors);
     process_input_weights(input_weights);
@@ -2252,7 +2258,7 @@ float nv::compress_etc2(Vector4 input_colors[16], float input_weights[16], const
     return compress_etc(input_colors, input_weights, options, output);
 }
 
-float nv::compress_etc2_a1(Vector4 input_colors[16], float input_weights[16], const Vector3 & color_weights, void * output) {
+float nv::compress_etc2_a1(float4 input_colors[16], float input_weights[16], const float3 & color_weights, void * output) {
     
     process_input_colors(input_colors);
     process_input_weights(input_weights);
@@ -2270,7 +2276,7 @@ float nv::compress_etc2_a1(Vector4 input_colors[16], float input_weights[16], co
 }
 
 
-float nv::compress_eac(Vector4 input_colors[16], float input_weights[16], int input_channel, int search_radius, bool use_11bit_mode, void * output) {
+float nv::compress_eac(float4 input_colors[16], float input_weights[16], int input_channel, int search_radius, bool use_11bit_mode, void * output) {
     nvCheck(input_channel >= 0 && input_channel < 4);
     
     process_input_alphas(input_colors, input_channel);
@@ -2283,7 +2289,7 @@ float nv::compress_eac(Vector4 input_colors[16], float input_weights[16], int in
     return compress_eac_range_search(input_colors, input_weights, input_channel, options, output);
 }
 
-float nv::compress_etc2_eac(Vector4 input_colors[16], float input_weights[16], const Vector3 & color_weights, void * output) {
+float nv::compress_etc2_eac(float4 input_colors[16], float input_weights[16], const float3 & color_weights, void * output) {
     BlockETC_EAC * output_block = (BlockETC_EAC *)output;
     float error = compress_etc2(input_colors, input_weights, color_weights, &output_block->etc);
     error += compress_eac(input_colors, input_weights, /*input_channel=*/3, /*search_radius=*/1, /*use_11bit_mode=*/false, &output_block->eac);

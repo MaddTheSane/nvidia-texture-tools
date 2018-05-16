@@ -12,6 +12,10 @@
 #endif
 
 using namespace nv;
+using simd::float2;
+using simd::float3;
+using simd::float4;
+using simd::make_float4;
 
 
 // Given a matrix a[1..n][1..n], this routine replaces it by the LU decomposition of a rowwise
@@ -122,7 +126,7 @@ static void lubksb(float **a, int n, int *indx, float b[])
 }
 
 
-bool nv::solveLU(const Matrix & A, const Vector4 & b, Vector4 * x)
+bool nv::solveLU(const Matrix & A, const float4 & b, float4 * x)
 {
     nvDebugCheck(x != NULL);
 
@@ -147,7 +151,7 @@ bool nv::solveLU(const Matrix & A, const Vector4 & b, Vector4 * x)
     *x = b;
 
     // Do back substitution.
-    lubksb(a, 4, idx, x->component);
+    lubksb(a, 4, idx, (float*)x);
 
     return true;
 }
@@ -155,19 +159,19 @@ bool nv::solveLU(const Matrix & A, const Vector4 & b, Vector4 * x)
 // @@ Not tested.
 Matrix nv::inverseLU(const Matrix & A)
 {
-    Vector4 Ai[4];
+    float4 Ai[4];
 
-    solveLU(A, Vector4(1, 0, 0, 0), &Ai[0]);
-    solveLU(A, Vector4(0, 1, 0, 0), &Ai[1]);
-    solveLU(A, Vector4(0, 0, 1, 0), &Ai[2]);
-    solveLU(A, Vector4(0, 0, 0, 1), &Ai[3]);
+    solveLU(A, make_float4(1, 0, 0, 0), &Ai[0]);
+    solveLU(A, make_float4(0, 1, 0, 0), &Ai[1]);
+    solveLU(A, make_float4(0, 0, 1, 0), &Ai[2]);
+    solveLU(A, make_float4(0, 0, 0, 1), &Ai[3]);
 
     return Matrix(Ai[0], Ai[1], Ai[2], Ai[3]);
 }
 
 
 
-bool nv::solveLU(const Matrix3 & A, const Vector3 & b, Vector3 * x)
+bool nv::solveLU(const Matrix3 & A, const float3 & b, float3 * x)
 {
     nvDebugCheck(x != NULL);
 
@@ -192,12 +196,12 @@ bool nv::solveLU(const Matrix3 & A, const Vector3 & b, Vector3 * x)
     *x = b;
 
     // Do back substitution.
-    lubksb(a, 3, idx, x->component);
+    lubksb(a, 3, idx, (float*)x);
 
     return true;
 }
 
-bool nv::solveLU(const Matrix2 & A, const Vector2 & b, Vector2 * x)
+bool nv::solveLU(const Matrix2 & A, const float2 & b, float2 * x)
 {
     nvDebugCheck(x != NULL);
     
@@ -222,13 +226,13 @@ bool nv::solveLU(const Matrix2 & A, const Vector2 & b, Vector2 * x)
     *x = b;
     
     // Do back substitution.
-    lubksb(a, 2, idx, x->component);
+    lubksb(a, 2, idx, (float*)x);
     
     return true;
 }
 
 
-bool nv::solveCramer(const Matrix & A, const Vector4 & b, Vector4 * x)
+bool nv::solveCramer(const Matrix & A, const float4 & b, float4 * x)
 {
     nvDebugCheck(x != NULL);
 
@@ -237,7 +241,7 @@ bool nv::solveCramer(const Matrix & A, const Vector4 & b, Vector4 * x)
     return true; // @@ Return false if determinant(A) == 0 !
 }
 
-bool nv::solveCramer(const Matrix3 & A, const Vector3 & b, Vector3 * x)
+bool nv::solveCramer(const Matrix3 & A, const float3 & b, float3 * x)
 {
     nvDebugCheck(x != NULL);
 
@@ -253,7 +257,7 @@ bool nv::solveCramer(const Matrix3 & A, const Vector3 & b, Vector3 * x)
     return true;
 }
 
-bool nv::solveCramer(const Matrix2 & A, const Vector2 & b, Vector2 * x)
+bool nv::solveCramer(const Matrix2 & A, const float2 & b, float2 * x)
 {
     nvDebugCheck(x != NULL);
     

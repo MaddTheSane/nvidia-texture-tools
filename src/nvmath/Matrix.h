@@ -4,6 +4,7 @@
 #ifndef NV_MATH_MATRIX_H
 #define NV_MATH_MATRIX_H
 
+#include "Vector.h"
 #include <simd/simd.h>
 
 // - Matrices are stored in memory in *column major* order.
@@ -148,6 +149,7 @@ namespace nv
 
     // Compute inverse using Gaussian elimination and partial pivoting.
     extern Matrix inverse(const Matrix & m);
+    extern Matrix3 inverse(const Matrix3 & m);
 
 } // nv namespace
 

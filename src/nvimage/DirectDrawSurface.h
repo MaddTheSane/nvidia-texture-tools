@@ -95,6 +95,8 @@ namespace nv
         D3DFMT_R32F = 114,
         D3DFMT_G32R32F = 115,
         D3DFMT_A32B32G32R32F = 116,
+
+        D3DFMT_NONE,
     };
 
     enum FOURCC
@@ -119,6 +121,7 @@ namespace nv
         FOURCC_PVR1 = NV_MAKEFOURCC('P', 'V', 'R', '1'),
         FOURCC_PVR2 = NV_MAKEFOURCC('P', 'V', 'R', '2'),
         FOURCC_PVR3 = NV_MAKEFOURCC('P', 'V', 'R', '3'),
+        FOURCC_NONE = NV_MAKEFOURCC('\0', '\0', '\0', '\0'),
     };
 
 

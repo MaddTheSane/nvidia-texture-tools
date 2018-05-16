@@ -19,6 +19,7 @@
 
 using namespace nv;
 using simd::dot;
+using simd::float2;
 using simd::float3;
 using simd::float4;
 using simd::make_float3;
@@ -807,8 +808,8 @@ inline static void fit_colors_bbox(const float3 * colors, int count, float3 * re
     *c1 = float3(255);
 
     for (int i = 0; i < count; i++) {
-        *c0 = max(*c0, colors[i]);
-        *c1 = min(*c1, colors[i]);
+        *c0 = simd::max(*c0, colors[i]);
+        *c1 = simd::min(*c1, colors[i]);
     }
 }
 
@@ -816,7 +817,7 @@ inline static void select_diagonal(const float3 * colors, int count, float3 * re
 {
     float3 center = (*c0 + *c1) * 0.5f;
 
-    float2 covariance = Vector2(0);
+    float2 covariance = float2(0);
     for (int i = 0; i < count; i++) {
         float3 t = colors[i] - center;
         covariance += t.xy * t.z;
@@ -828,10 +829,10 @@ inline static void select_diagonal(const float3 * colors, int count, float3 * re
     float y1 = c1->y;
 
     if (covariance.x < 0) {
-        swap(x0, x1);
+        std::swap(x0, x1);
     }
     if (covariance.y < 0) {
-        swap(y0, y1);
+        std::swap(y0, y1);
     }
 
     *c0 = make_float3(x0, y0, c0->z);
