@@ -6,8 +6,8 @@
 #include "nvmath/Color.inl"
 #include "nvcore/Utils.h"    // clamp
 
-#define HAVE_RGETC NV_OS_OSX
-#define HAVE_ETCPACK 0 // Only enable in OSX for debugging.
+//#define HAVE_RGETC 0
+//#define HAVE_ETCPACK 0 // Only enable in OSX for debugging.
 
 #if HAVE_RGETC
 #include "rg_etc1.h"
@@ -196,7 +196,7 @@ static const float midpoints5[32] = {
 // ETC2 Modes:
 // - ETC1:
 //  - two partitions (flip modes): 2*(4x2, 2x4)
-//  - two base colors sotred as 444+444 or 555+333
+//  - two base colors stored as 444+444 or 555+333
 //  - two 3 bit intensity modifiers
 // - T Mode. 2 colors 444, 3 bit intensity modifiers, 2 bit indices.
 // - H Mode. 2 colors 444, 3 bit intensity modifiers, 2 bit indices.

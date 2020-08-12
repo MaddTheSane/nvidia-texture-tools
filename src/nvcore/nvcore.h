@@ -1,4 +1,4 @@
-// This code is in the public domain -- Ignacio Castaño <castano@gmail.com>
+// This code is in the public domain -- Ignacio Castano <castano@gmail.com>
 
 #pragma once
 #ifndef NV_CORE_H
@@ -97,7 +97,8 @@
 // NV_CPU_X86_64
 // NV_CPU_PPC
 // NV_CPU_ARM
-// NV_CPU_ARM_64
+// NV_CPU_AARCH64
+// NV_CPU_E2K
 
 #define NV_CPU_STRING   POSH_CPU_STRING
 
@@ -111,7 +112,9 @@
 #elif defined POSH_CPU_STRONGARM
 #   define NV_CPU_ARM 1
 #elif defined POSH_CPU_AARCH64
-#   define NV_CPU_ARM_64 1
+#   define NV_CPU_AARCH64 1
+#elif defined POSH_CPU_E2K
+#   define NV_CPU_E2K 1
 #else
 #   error "Unsupported CPU"
 #endif
@@ -323,14 +326,13 @@ namespace nv {
         F f;
     };
 
-    template <typename F>
-    ScopeExit<F> MakeScopeExit(F f) {
-        return ScopeExit<F>(f);
+    struct ExitScopeHelp {
+        template<typename T>
+        ScopeExit<T> operator+(T t) { return t; }
     };
 }
 
-#define NV_ON_RETURN(code) \
-    auto NV_STRING_JOIN2(scope_exit_, __LINE__) = nv::MakeScopeExit([=](){code;})
+#define defer const auto& __attribute__((unused)) NV_STRING_JOIN2(defer__, __LINE__) = nv::ExitScopeHelp() + [&]()
 
 
 // Indicate the compiler that the parameter is not used to suppress compier warnings.

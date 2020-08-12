@@ -10,20 +10,11 @@ SET(MATH_SRCS
     Matrix.h Matrix.inl Matrix.cpp
     Plane.h Plane.inl Plane.cpp
     SphericalHarmonic.h SphericalHarmonic.cpp
-    SimdVector.h
     Vector.h Vector.inl)
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
-# targets
-ADD_DEFINITIONS(-DNVMATH_EXPORTS)
-
-IF(NVMATH_SHARED)
-    ADD_DEFINITIONS(-DNVMATH_SHARED=1)
-    ADD_LIBRARY(nvmath SHARED ${MATH_SRCS})
-ELSE(NVMATH_SHARED)
-    ADD_LIBRARY(nvmath ${MATH_SRCS})
-ENDIF(NVMATH_SHARED)
+ADD_LIBRARY(nvmath ${MATH_SRCS})
 
 TARGET_LINK_LIBRARIES(nvmath ${LIBS} nvcore)
 

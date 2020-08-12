@@ -1,10 +1,10 @@
 // This code is in the public domain -- castanyo@yahoo.es
 
 #pragma once
-#ifndef NV_MATH_VECTOR_INL
-#define NV_MATH_VECTOR_INL
 
 #include "Vector.h"
+#include "nvmath.h"
+
 #include "nvcore/Utils.h" // min, max
 #include "nvcore/Hash.h" // hash
 
@@ -94,5 +94,3 @@ namespace nv
     }
 
 } // nv namespace
-
-#endif // NV_MATH_VECTOR_INL

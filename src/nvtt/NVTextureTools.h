@@ -229,10 +229,6 @@
 #include <NVTT/CompressorDX11.h>
 #endif
 
-#ifndef NVTT_COMPRESSORDXT_H
-#include <NVTT/CompressorDXT1.h>
-#endif
-
 #ifndef NVTT_COMPRESSORRGB_H
 #include <NVTT/CompressorRGB.h>
 #endif

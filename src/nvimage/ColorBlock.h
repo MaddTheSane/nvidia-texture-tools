@@ -10,9 +10,6 @@
 
 namespace nv
 {
-    class Image;
-    class FloatImage;
-
 
     /// Uncompressed 4x4 color block.
     struct ColorBlock
@@ -20,9 +17,7 @@ namespace nv
         ColorBlock();
         ColorBlock(const uint * linearImage);
         ColorBlock(const ColorBlock & block);
-        ColorBlock(const Image * img, uint x, uint y);
 
-        void init(const Image * img, uint x, uint y);
         void init(uint w, uint h, const uint * data, uint x, uint y);
         void init(uint w, uint h, const float * data, uint x, uint y);
 

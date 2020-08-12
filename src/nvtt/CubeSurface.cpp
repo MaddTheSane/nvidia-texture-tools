@@ -42,7 +42,7 @@ using simd::dot;
 // Solid angle of an axis aligned quad from (0,0,1) to (x,y,1)
 // See: http://www.fizzmoll11.com/thesis/ for a derivation of this formula.
 static float areaElement(float x, float y) {
-    return atan2(x*y, sqrtf(x*x + y*y + 1));
+    return atan2f(x*y, sqrtf(x*x + y*y + 1));
 }
 
 // Solid angle of a hemicube texel.
@@ -209,19 +209,19 @@ static const float3 faceV[6] = {
 
 static float2 toPolar(const float3 & v) {
     float2 p;
-    p.x = atan2(v.x, v.y);  // theta
+    p.x = atan2f(v.x, v.y);  // theta
     p.y = acosf(v.z);       // phi
     return p;
 }
 
 static float2 toPlane(float theta, float phi) {
-    float x = sin(phi) * cos(theta);
-    float y = sin(phi) * sin(theta);
-    float z = cos(phi);
+    float x = sinf(phi) * cosf(theta);
+    float y = sinf(phi) * sinf(theta);
+    float z = cosf(phi);
 
     float2 p;
-    p.x = x / fabs(z);
-    p.y = y / fabs(z);
+    p.x = x / fabsf(z);
+    p.y = y / fabsf(z);
     //p.x = tan(phi) * cos(theta);
     //p.y = tan(phi) * sin(theta);
 
@@ -230,8 +230,8 @@ static float2 toPlane(float theta, float phi) {
 
 static float2 toPlane(const float3 & v) {
     float2 p;
-    p.x = v.x / fabs(v.z);
-    p.y = v.y / fabs(v.z);
+    p.x = v.x / fabsf(v.z);
+    p.y = v.y / fabsf(v.z);
     return p;
 }
 
@@ -306,7 +306,10 @@ const Surface & CubeSurface::face(int f) const
 bool CubeSurface::load(const char * fileName, int mipmap)
 {
     if (strEqual(Path::extension(fileName), ".dds")) {
-        nv::DirectDrawSurface dds(fileName);
+        nv::DirectDrawSurface dds;
+        if (!dds.load(fileName)) {
+            return false;
+        }
 
         if (!dds.isValid()/* || !dds.isSupported()*/) {
             return false;
@@ -532,6 +535,24 @@ void CubeSurface::clamp(int channel, float low/*= 0.0f*/, float high/*= 1.0f*/) 
 
 CubeSurface CubeSurface::irradianceFilter(int size, EdgeFixup fixupMethod) const
 {
+    // Evaluate spherical harmonic for each output texel.
+    CubeSurface output;
+    output.m->allocate(size);
+
+    Sh2 shr, shg, shb;
+
+    computeIrradianceSH3(0, shr.coef);
+    computeIrradianceSH3(1, shg.coef);
+    computeIrradianceSH3(2, shb.coef);
+
+    // @@ Sample spherical harmonic from every direction.
+
+    return CubeSurface();
+}
+
+
+void CubeSurface::computeLuminanceIrradianceSH3(float coef[9]) const{
+
     m->allocateTexelTable();
 
     // Transform this cube to spherical harmonic basis
@@ -540,6 +561,10 @@ CubeSurface CubeSurface::irradianceFilter(int size, EdgeFixup fixupMethod) const
     // For each texel of the input cube.
     const uint edgeLength = m->edgeLength;
     for (uint f = 0; f < 6; f++) {
+
+        const Surface & inputFace = m->face[f];
+        const FloatImage * inputImage = inputFace.m->image;
+
         for (uint y = 0; y < edgeLength; y++) {
             for (uint x = 0; x < edgeLength; x++) {
 
@@ -549,30 +574,62 @@ CubeSurface CubeSurface::irradianceFilter(int size, EdgeFixup fixupMethod) const
                 Sh2 shDir;
                 shDir.eval(dir);
 
-                sh.addScaled(sh, solidAngle);
+                float r = inputImage->pixel(0, x, y, 0);
+                float g = inputImage->pixel(1, x, y, 0);
+                float b = inputImage->pixel(2, x, y, 0);
+                float lum = 0.333f * (r + g + b);  // @@ use the proper luminance formula.
+
+                sh.addScaled(shDir, lum * solidAngle);
             }
         }
     }
 
-
-    // Evaluate spherical harmonic for each output texel.
-    CubeSurface output;
-    output.m->allocate(size);
-
-
-
-
-    // @@ TODO
-    return CubeSurface();
+    for (int i = 0; i < 9; i++) {
+        coef[i] = sh.coef[i];
+    }
 }
 
 
+void CubeSurface::computeIrradianceSH3(int channel, float coef[9]) const {
+
+    m->allocateTexelTable();
+
+    // Transform this cube to spherical harmonic basis
+    Sh2 sh;
+
+    // For each texel of the input cube.
+    const uint edgeLength = m->edgeLength;
+    for (uint f = 0; f < 6; f++) {
+
+        const Surface & inputFace = m->face[f];
+        const FloatImage * inputImage = inputFace.m->image;
+
+        for (uint y = 0; y < edgeLength; y++) {
+            for (uint x = 0; x < edgeLength; x++) {
+
+                Vector3 dir = m->texelTable->direction(f, x, y);
+                float solidAngle = m->texelTable->solidAngle(f, x, y);
+
+                Sh2 shDir;
+                shDir.eval(dir);
+
+                float c = inputImage->pixel(channel, x, y, 0);
+
+                sh.addScaled(shDir, c * solidAngle);
+            }
+        }
+    }
+
+    for (int i = 0; i < 9; i++) {
+        coef[i] = sh.elemAt(i);
+    }
+}
 
 
 // Convolve filter against this cube.
 float3 CubeSurface::Private::applyAngularFilter(const float3 & filterDir, float coneAngle, float * filterTable, int tableSize)
 {
-    const float cosineConeAngle = cos(coneAngle);
+    const float cosineConeAngle = cosf(coneAngle);
     nvDebugCheck(cosineConeAngle >= 0);
 
     float3 color(0);
@@ -693,7 +750,7 @@ float3 CubeSurface::Private::applyAngularFilter(const float3 & filterDir, float 
 // Convolve filter against this cube.
 float3 CubeSurface::Private::applyCosinePowerFilter(const float3 & filterDir, float coneAngle, float cosinePower)
 {
-    const float cosineConeAngle = cos(coneAngle);
+    const float cosineConeAngle = cosf(coneAngle);
     nvDebugCheck(cosineConeAngle >= 0);
 
     float3 color(0);
@@ -793,6 +850,8 @@ float3 CubeSurface::Private::applyCosinePowerFilter(const float3 & filterDir, fl
     return color;
 }
 
+
+
 #include "nvthread/ParallelFor.h"
 
 struct ApplyAngularFilterContext {
@@ -835,7 +894,7 @@ CubeSurface CubeSurface::cosinePowerFilter(int size, float cosinePower, EdgeFixu
     CubeSurface filteredCube;
     filteredCube.m->allocate(size);
 
-    // Texel table is stored along with the surface so that it's compute only once.
+    // Texel table is stored along with the surface so that it's computed only once.
     m->allocateTexelTable();
 
     const float threshold = 0.001f;
@@ -970,6 +1029,20 @@ CubeSurface CubeSurface::fastResample(int size, EdgeFixup fixupMethod) const
 
     return resampledCube;
 }
+
+
+void CubeSurface::_irradianceFilter(int size, EdgeFixup fixupMethod) {
+    *this = irradianceFilter(size, fixupMethod);
+}
+
+void CubeSurface::_cosinePowerFilter(int size, float cosinePower, EdgeFixup fixupMethod) {
+    *this = cosinePowerFilter(size, cosinePower, fixupMethod);
+}
+
+void CubeSurface::_fastResample(int size, EdgeFixup fixupMethod) {
+    *this = fastResample(size, fixupMethod);
+}
+
 
 
 void CubeSurface::toLinear(float gamma)

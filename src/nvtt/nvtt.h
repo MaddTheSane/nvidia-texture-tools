@@ -529,7 +529,9 @@ namespace nvtt
         NVTT_API void toLinear(int channel, float gamma);
         NVTT_API void toGamma(int channel, float gamma);
         NVTT_API void toSrgb();
+        NVTT_API void toSrgbFast();
         NVTT_API void toLinearFromSrgb();
+        NVTT_API void toLinearFromSrgbFast();
         NVTT_API void toXenonSrgb();
         NVTT_API void transform(const float w0[4], const float w1[4], const float w2[4], const float w3[4], const float offset[4]);
         NVTT_API void swizzle(int r, int g, int b, int a);
@@ -662,6 +664,14 @@ namespace nvtt
 
         NVTT_API CubeSurface fastResample(int size, EdgeFixup fixupMethod) const;
 
+        // Jai doesn't support non-pod structs as return types, so expose some other function to do the same, but operate in place:
+        NVTT_API void _irradianceFilter(int size, EdgeFixup fixupMethod);
+        NVTT_API void _cosinePowerFilter(int size, float cosinePower, EdgeFixup fixupMethod);
+        NVTT_API void _fastResample(int size, EdgeFixup fixupMethod);
+
+        // Spherical Harmonics:
+        NVTT_API void computeLuminanceIrradianceSH3(float sh[9]) const;
+        NVTT_API void computeIrradianceSH3(int channel, float sh[9]) const;
 
         /*
         NVTT_API void resize(int w, int h, ResizeFilter filter);

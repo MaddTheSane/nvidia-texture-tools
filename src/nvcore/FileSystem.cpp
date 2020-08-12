@@ -6,7 +6,7 @@
 #define _CRT_NONSTDC_NO_WARNINGS // _chdir is defined deprecated, but that's a bug, chdir is deprecated, _chdir is *not*.
 //#include <shlwapi.h> // PathFileExists
 #include <windows.h> // GetFileAttributes
-#include <direct.h> // _mkdir
+#include <direct.h> // _mkdir, _chdir
 #elif NV_OS_XBOX
 #include <Xtl.h>
 #elif NV_OS_ORBIS
@@ -81,11 +81,11 @@ bool FileSystem::copyFile(const char * src, const char * dst) {
 
     FILE * fsrc = fileOpen(src, "rb");
     if (fsrc == NULL) return false;
-    NV_ON_RETURN(fclose(fsrc));
+    defer{ fclose(fsrc); };
 
     FILE * fdst = fileOpen(dst, "wb");
     if (fdst == NULL) return false;
-    NV_ON_RETURN(fclose(fdst));
+    defer{ fclose(fdst); };
     
     char buffer[1024];
     size_t n;

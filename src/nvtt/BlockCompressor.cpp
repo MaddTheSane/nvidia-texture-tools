@@ -207,15 +207,18 @@ void FloatColorCompressor::compress(AlphaMode alphaMode, uint w, uint h, uint d,
 
 
 // BC1
-#include "CompressorDXT1.h"
+#include "icbc.h"
 
 void FastCompressorDXT1::compressBlock(float4 colors[16], float weights[16], const CompressionOptions::Private & compressionOptions, void * output)
 {
-    compress_dxt1_fast(colors, weights, compressionOptions.colorWeight.xyz, (BlockDXT1 *)output);
+    float tmpWeight[] = {compressionOptions.colorWeight.x, compressionOptions.colorWeight.y, compressionOptions.colorWeight.z};
+    icbc::compress_dxt1(icbc::Quality_Fast, (float*)colors, weights, tmpWeight, /*three_color_mode*/true, /*three_color_black*/true, output);
 }
 void CompressorDXT1::compressBlock(float4 colors[16], float weights[16], const CompressionOptions::Private & compressionOptions, void * output)
 {
-    compress_dxt1(colors, weights, compressionOptions.colorWeight.xyz, /*three_color_mode*/true, (BlockDXT1 *)output);
+    auto quality_level = compressionOptions.quality > Quality_Normal ? icbc::Quality_Max : icbc::Quality_Default;
+    float tmpWeight[] = {compressionOptions.colorWeight.x, compressionOptions.colorWeight.y, compressionOptions.colorWeight.z};
+    icbc::compress_dxt1(quality_level, (float*)colors, weights, tmpWeight, /*three_color_mode*/true, /*three_color_black*/true, output);
 }
 
 
@@ -569,7 +572,7 @@ void EtcLibCompressor::compress(AlphaMode alphaMode, uint w, uint h, uint d, con
 #if defined(HAVE_RGETC)
 #include "rg_etc1.h"
 
-NV_AT_STARTUP(rg_etc1::pack_etc1_block_init());
+NV_AT_STARTUP(rg_etc1::pack_etc1_block_init()); // @@ Do this in context init.
 
 void RgEtcCompressor::compressBlock(ColorBlock & rgba, AlphaMode alphaMode, const CompressionOptions::Private & compressionOptions, void * output)
 {
@@ -591,6 +594,60 @@ void RgEtcCompressor::compressBlock(ColorBlock & rgba, AlphaMode alphaMode, cons
 
 #endif
 
+#if defined(HAVE_ETCPACK)
+
+void EtcPackCompressor::compress(nvtt::AlphaMode alphaMode, uint w, uint h, uint d, const float * data, nvtt::TaskDispatcher * dispatcher, const nvtt::CompressionOptions::Private & compressionOptions, const nvtt::OutputOptions::Private & outputOptions) 
+{
+    uint8 *imgdec = (uint8 *)malloc(expandedwidth*expandedheight * 3);
+
+    uint32 block1, block2;
+
+    if (compressionOptions.quality == Quality_Fastest) {
+        compressBlockDiffFlipFast(img, imgdec, expandedwidth, expandedheight, 4 * x, 4 * y, block1, block2);
+    }
+    else {
+        compressBlockETC1Exhaustive(img, imgdec, expandedwidth, expandedheight, 4 * x, 4 * y, block1, block2);
+    }
+}
+
+#endif
+
+#if defined(HAVE_ETCINTEL)
+#include "kernel_ispc.h"
+
+void EtcIntelCompressor::compress(nvtt::AlphaMode alphaMode, uint w, uint h, uint d, const float * data, nvtt::TaskDispatcher * dispatcher, const nvtt::CompressionOptions::Private & compressionOptions, const nvtt::OutputOptions::Private & outputOptions)
+{
+    nvCheck(d == 1);
+
+    // Allocate and convert input.
+    nv::Array<uint8> src;
+    const uint count = w * h;
+    src.resize(4 * count);
+
+    for (uint i = 0; i < count; i++) {
+        src[4 * i + 0] = data[count * 0 + i]; // @@ Scale by 256?
+        src[4 * i + 1] = data[count * 1 + i];
+        src[4 * i + 2] = data[count * 2 + i];
+        src[4 * i + 3] = data[count * 3 + i];
+    }
+
+    int bw = (w + 3) / 4;
+    int bw = (w + 3) / 4;
+
+    // Allocate output.
+    nv::Array<uint8> dst;
+    dst.resize(bw * bh * 4);
+
+    ispc::rgba_surface surface;
+    surface.ptr = src.buffer();
+    surface.width = w;
+    surface.height = h;
+    surface.stride = w * 4;
+
+    ispc::CompressBlocksBC1_ispc(&surface, dst)
+}
+
+#endif
 
 #if defined(HAVE_PVRTEXTOOL)
 
@@ -604,7 +661,7 @@ void CompressorPVR::compress(AlphaMode alphaMode, uint w, uint h, uint d, const 
 
     //pvrtexture::PixelType src_pixel_type = pvrtexture::PixelType('b','g','r','a',8,8,8,8);
     pvrtexture::PixelType src_pixel_type = pvrtexture::PixelType('r','g','b',0,8,8,8,0);
-    pvrtexture::CPVRTextureHeader header(src_pixel_type.PixelTypeID, w, h, d, 1/*num mips*/, 1/*num array*/, 1/*num faces*/, color_space, ePVRTVarTypeUnsignedByteNorm);
+    pvrtexture::CPVRTextureHeader header(src_pixel_type.PixelTypeID, h, w, d, 1/*num mips*/, 1/*num array*/, 1/*num faces*/, color_space, ePVRTVarTypeUnsignedByteNorm);
 
     /*
     uint count = w * h * d;

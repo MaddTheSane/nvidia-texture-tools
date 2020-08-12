@@ -1,8 +1,6 @@
 // This code is in the public domain -- Ignacio Castaño <castano@gmail.com>
 
 #pragma once
-#ifndef NV_MATH_PLANE_H
-#define NV_MATH_PLANE_H
 
 #include "nvmath.h"
 #include <simd/simd.h>
@@ -11,7 +9,7 @@ namespace nv
 {
     class Matrix;
 
-    class NVMATH_CLASS Plane
+    class Plane
     {
     public:
         Plane();
@@ -38,5 +36,3 @@ namespace nv
 
 
 } // nv namespace
-
-#endif // NV_MATH_PLANE_H

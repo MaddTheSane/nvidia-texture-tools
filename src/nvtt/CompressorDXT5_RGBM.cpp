@@ -1,5 +1,5 @@
 #include "CompressorDXT5_RGBM.h"
-#include "CompressorDXT1.h"
+#include "icbc.h"
 
 #include "OptimalCompressDXT.h"
 #include "QuickCompressDXT.h"
@@ -63,8 +63,10 @@ float nv::compress_dxt5_rgbm(const float4 input_colors[16], const float input_we
     float rgb_weights[16];
     convert_to_rgbm(input_colors, input_weights, min_m, input_colors_rgbm, rgb_weights);
 
+    float color_weights[3] = { 1.0f,1.0f,1.0f };
+
     // Compress RGB.
-    compress_dxt1(input_colors_rgbm, rgb_weights, 1, /*three_color_mode=*/false, &output->color);
+    icbc::compress_dxt1(icbc::Quality_Default, (float *)input_colors_rgbm, rgb_weights, color_weights, /*three_color_mode=*/false, /*hq=*/false, &output->color);
 
     // Decompress RGB/M block.
     nv::ColorBlock RGB;

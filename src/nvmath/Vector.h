@@ -1,8 +1,6 @@
 // This code is in the public domain -- castanyo@yahoo.es
 
 #pragma once
-#ifndef NV_MATH_VECTOR_H
-#define NV_MATH_VECTOR_H
 
 #include "nvmath.h"
 #include <simd/simd.h>
@@ -25,5 +23,3 @@ namespace nv
 //template <typename T> T to(const nv::Vector2 & v) { NV_COMPILER_CHECK(sizeof(T) == sizeof(nv::Vector2)); return T(v.x, v.y); }
 //template <typename T> T to(const nv::Vector3 & v) { NV_COMPILER_CHECK(sizeof(T) == sizeof(nv::Vector3)); return T(v.x, v.y, v.z); }
 //template <typename T> T to(const nv::Vector4 & v) { NV_COMPILER_CHECK(sizeof(T) == sizeof(nv::Vector4)); return T(v.x, v.y, v.z, v.w); }
-
-#endif // NV_MATH_VECTOR_H

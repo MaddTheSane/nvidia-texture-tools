@@ -1,8 +1,6 @@
 // This code is in the public domain -- castanyo@yahoo.es
 
 #pragma once
-#ifndef NV_MATH_MATRIX_H
-#define NV_MATH_MATRIX_H
 
 #include "Vector.h"
 #include <simd/simd.h>
@@ -16,7 +14,7 @@ namespace nv
     enum identity_t { identity };
 
     // 2x2 matrix.
-    class NVMATH_CLASS Matrix2
+    class Matrix2
     {
     public:
         Matrix2();
@@ -56,7 +54,7 @@ namespace nv
     
     
     // 3x3 matrix.
-    class NVMATH_CLASS Matrix3
+    class Matrix3
     {
     public:
         Matrix3();
@@ -97,7 +95,7 @@ namespace nv
     
 
     // 4x4 matrix.
-    class NVMATH_CLASS Matrix
+    class Matrix
     {
     public:
         typedef Matrix const & Arg;
@@ -152,5 +150,3 @@ namespace nv
     extern Matrix3 inverse(const Matrix3 & m);
 
 } // nv namespace
-
-#endif // NV_MATH_MATRIX_H

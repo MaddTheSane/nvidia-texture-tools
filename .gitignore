@@ -13,3 +13,5 @@
 *.sdf
 *.suo
 .DS_Store
+build
+.vs
