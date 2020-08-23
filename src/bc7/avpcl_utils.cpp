@@ -141,7 +141,7 @@ float Utils::metric4(const float4 & a, const float4 & b)
 		err.z *= bwt;
 	}
 
-    return length_squared(err);
+	return length_squared(err);
 }
 
 // WORK -- implement rotatemode for the below -- that changes where the rwt, gwt, and bwt's go.
@@ -178,7 +178,7 @@ float Utils::metric3(const float3 & a, const float3 & b, int rotatemode)
 		err.z *= bwt;
 	}
 
-    return length_squared(err);
+	return length_squared(err);
 }
 
 float Utils::metric1(const float a, const float b, int rotatemode)
@@ -267,7 +267,7 @@ float Utils::metric4premult(const float4 & a, const float4 & b)
 		err.z *= bwt;
 	}
 
-    return length_squared(err);
+	return length_squared(err);
 }
 
 float Utils::metric3premult_alphaout(const float3 & rgb0, float a0, const float3 & rgb1, float a1)
@@ -298,7 +298,7 @@ float Utils::metric3premult_alphaout(const float3 & rgb0, float a0, const float3
 		err.z *= bwt;
 	}
 
-    return length_squared(err);
+	return length_squared(err);
 }
 
 float Utils::metric3premult_alphain(const float3 & rgb0, const float3 & rgb1, int rotatemode)
@@ -353,7 +353,7 @@ float Utils::metric3premult_alphain(const float3 & rgb0, const float3 & rgb1, in
 		err.z *= bwt;
 	}
 
-    return length_squared(err);
+	return length_squared(err);
 }
 
 float Utils::metric1premult(float rgb0, float a0, float rgb1, float a1, int rotatemode)

@@ -54,7 +54,7 @@ public:
 
 	// lerping
 	static int lerp(int a, int b, int i, int bias, int denom);
-    static simd::float4 lerp(const simd::float4 & a, const simd::float4 & b, int i, int bias, int denom);
+	static simd::float4 lerp(const simd::float4 & a, const simd::float4 & b, int i, int bias, int denom);
 };
 
 }

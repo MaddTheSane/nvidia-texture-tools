@@ -266,7 +266,7 @@ int Utils::unquantize(int q, int prec)
 float Utils::norm(const float3 &a, const float3 &b)
 {
 #ifdef	NORM_EUCLIDEAN
-    return simd::length_squared(a - b);
+	return simd::length_squared(a - b);
 #endif
 #ifdef	NORM_ABS
 	float3 err = a - b;

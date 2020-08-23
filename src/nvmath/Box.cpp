@@ -9,6 +9,7 @@ using simd::float3;
 
 
 
+
 // Clip the given segment against this box.
 bool Box::clipSegment(const float3 & origin, const float3 & dir, float * t_near, float * t_far) const {
 

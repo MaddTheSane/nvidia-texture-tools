@@ -982,7 +982,7 @@ static float rough(const Tile &tile, int shapeindex, FltEndpts endpts[NREGIONS])
 		float minp = FLT_MAX, maxp = -FLT_MAX;
 		for (int i = 0; i < np; i++) 
 		{
-            float dp = simd::dot(colors[i]-mean.xyz, direction);
+			float dp = simd::dot(colors[i]-mean.xyz, direction);
 			if (dp < minp) minp = dp;
 			if (dp > maxp) maxp = dp;
 		}
