@@ -294,7 +294,7 @@ uint32 _uint32_nlz( uint32 x ) {
 // Count Leading Zeros
 static inline uint32 _uint32_cntlz( uint32 x )
 {
-#if NV_CC_GCC
+#if NV_CC_GNUC
     /* On PowerPC, this will map to insn: cntlzw */
     /* On Pentium, this will map to insn: clz    */
     uint32 is_x_nez_msb = _uint32_neg( x );
