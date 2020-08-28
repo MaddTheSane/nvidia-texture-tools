@@ -9,66 +9,75 @@ namespace nv
 {
     inline Matrix2::Matrix2() {}
     
-    inline Matrix2::Matrix2(float f)
-    {
-        for(int i = 0; i < 4; i++) {
-            m_data[i] = f;
-        }
-    }
+    inline Matrix2::Matrix2(float f): simd::float2x2(f) {}
     
-    inline Matrix2::Matrix2(identity_t)
-    {
-        for(int i = 0; i < 2; i++) {
-            for(int j = 0; j < 2; j++) {
-                m_data[2*j+i] = (i == j) ? 1.0f : 0.0f;
-            }
-        }
-    }
+    inline Matrix2::Matrix2(identity_t): simd::float2x2(matrix_identity_float2x2) {}
     
     inline Matrix2::Matrix2(const Matrix2 & m)
     {
-        for(int i = 0; i < 4; i++) {
-            m_data[i] = m.m_data[i];
-        }
+        columns[0] = m.columns[0];
+        columns[1] = m.columns[1];
     }
-    
+
+    inline Matrix2::Matrix2(const simd::float2x2 & val): simd::float2x2(val) {}
+
     inline Matrix2::Matrix2(const simd::float2 & v0, const simd::float2 & v1)
     {
-        m_data[0] = v0.x; m_data[1] = v0.y;
-        m_data[2] = v1.x; m_data[3] = v1.y;
+        columns[0] = v0;
+        columns[1] = v1;
     }
     
     inline Matrix2::Matrix2(float a, float b, float c, float d)
     {
-        m_data[0] = a; m_data[1] = b;
-        m_data[2] = c; m_data[3] = d;
+        columns[0][0] = a; columns[0][1] = b;
+        columns[1][0] = c; columns[1][1] = d;
     }
     
     inline float Matrix2::data(uint idx) const
     {
         nvDebugCheck(idx < 4);
-        return m_data[idx];
+        switch (idx) {
+            case 0:
+                return columns[0][0];
+                break;
+                
+            case 1:
+                return columns[0][1];
+                break;
+                
+            case 2:
+                return columns[1][0];
+                break;
+                
+            case 3:
+                return columns[1][1];
+                break;
+                
+            default:
+                nvUnreachable();
+                break;
+        }
     }
-    inline float & Matrix2::data(uint idx)
-    {
-        nvDebugCheck(idx < 4);
-        return m_data[idx];
-    }
+//    inline float & Matrix2::data(uint idx)
+//    {
+//        nvDebugCheck(idx < 4);
+//        return m_data[idx];
+//    }
     inline float Matrix2::get(uint row, uint col) const
     {
         nvDebugCheck(row < 2 && col < 2);
-        return m_data[col * 2 + row];
+        return columns[col][row];
     }
     inline float Matrix2::operator()(uint row, uint col) const
     {
         nvDebugCheck(row < 2 && col < 2);
-        return m_data[col * 2 + row];
+        return columns[col][row];
     }
-    inline float & Matrix2::operator()(uint row, uint col)
-    {
-        nvDebugCheck(row < 2 && col < 2);
-        return m_data[col * 2 + row];
-    }
+//    inline float & Matrix2::operator()(uint row, uint col)
+//    {
+//        nvDebugCheck(row < 2 && col < 2);
+//        return m_data[col * 2 + row];
+//    }
     
 	inline simd::float2 Matrix2::row(uint i) const
     {
@@ -78,65 +87,62 @@ namespace nv
     inline simd::float2 Matrix2::column(uint i) const
     {
         nvDebugCheck(i < 2);
-		return simd::make_float2(get(0, i), get(1, i));
+        return columns[i];
     }
     
-    inline void Matrix2::operator*=(float s)
-    {
-        for(int i = 0; i < 4; i++) {
-            m_data[i] *= s;
-        }
-    }
+//    inline void Matrix2::operator*=(float s)
+//    {
+//        *this = static_cast<Matrix2>(simd::float2x2(simd_mul(s, *this)));
+//    }
     
     inline void Matrix2::operator/=(float s)
     {
         float is = 1.0f /s;
-        for(int i = 0; i < 4; i++) {
-            m_data[i] *= is;
-        }
+        Matrix2 iThis = (*this) * is;
+        *this = iThis;
     }
     
-    inline void Matrix2::operator+=(const Matrix2 & m)
-    {
-        for(int i = 0; i < 4; i++) {
-            m_data[i] += m.m_data[i];
-        }
-    }
+//    inline void Matrix2::operator+=(const Matrix2 & m)
+//    {
+//        for(int i = 0; i < 4; i++) {
+//            m_data[i] += m.m_data[i];
+//        }
+//    }
+//
+//    inline void Matrix2::operator-=(const Matrix2 & m)
+//    {
+//        for(int i = 0; i < 4; i++) {
+//            m_data[i] -= m.m_data[i];
+//        }
+//    }
     
-    inline void Matrix2::operator-=(const Matrix2 & m)
-    {
-        for(int i = 0; i < 4; i++) {
-            m_data[i] -= m.m_data[i];
-        }
-    }
-    
-    inline Matrix2 operator+(const Matrix2 & a, const Matrix2 & b)
-    {
-        Matrix2 m = a;
-        m += b;
-        return m;
-    }
-    
-    inline Matrix2 operator-(const Matrix2 & a, const Matrix2 & b)
-    {
-        Matrix2 m = a;
-        m -= b;
-        return m;
-    }
-    
-    inline Matrix2 operator*(const Matrix2 & a, float s)
-    {
-        Matrix2 m = a;
-        m *= s;
-        return m;
-    }
-    
-    inline Matrix2 operator*(float s, const Matrix2 & a)
-    {
-        Matrix2 m = a;
-        m *= s;
-        return m;
-    }
+//    inline Matrix2 operator+(const Matrix2 & a, const Matrix2 & b)
+//    {
+//        Matrix2 m = a;
+//        m += b;
+//        return m;
+//    }
+//
+//    inline Matrix2 operator-(const Matrix2 & a, const Matrix2 & b)
+//    {
+//        Matrix2 m = a;
+//        m -= b;
+//        return m;
+//    }
+//
+//    inline Matrix2 operator*(const Matrix2 & a, float s)
+//    {
+//        Matrix2 m = a;
+//        m *= s;
+//        return m;
+//    }
+//
+//    inline Matrix2 operator*(float s, const Matrix2 & a)
+//    {
+//        Matrix2 m = a;
+//        m *= s;
+//        return m;
+//    }
     
     inline Matrix2 operator/(const Matrix2 & a, float s)
     {
@@ -147,21 +153,13 @@ namespace nv
     
     inline Matrix2 mul(const Matrix2 & a, const Matrix2 & b)
     {
-        Matrix2 m;
-        
-        for(int i = 0; i < 2; i++) {
-            const float ai0 = a(i,0), ai1 = a(i,1);
-            m(i, 0) = ai0 * b(0,0) + ai1 * b(1,0);
-            m(i, 1) = ai0 * b(0,1) + ai1 * b(1,1);
-        }
-        
-        return m;
+        return a * b;
     }
     
-    inline Matrix2 operator*(const Matrix2 & a, const Matrix2 & b)
-    {
-        return mul(a, b);
-    }
+//    inline Matrix2 operator*(const Matrix2 & a, const Matrix2 & b)
+//    {
+//        return mul(a, b);
+//    }
     
     // Transform the given 3d vector with the given matrix.
 	inline simd::float2 transform(const Matrix2 & m, const simd::float2 & p)
@@ -172,20 +170,21 @@ namespace nv
     
     inline void Matrix2::scale(float s)
     {
-        for (int i = 0; i < 4; i++) {
-            m_data[i] *= s;
-        }
+        Matrix2 scaled = (*this) * s;
+        (*this) = scaled;
     }
     
     inline void Matrix2::scale(const simd::float2 & s)
     {
-        m_data[0] *= s.x; m_data[1] *= s.x;
-        m_data[2] *= s.y; m_data[3] *= s.y;
+        simd::float2 col1 = columns[0] * s;
+        simd::float2 col2 = columns[1] * s;
+        columns[0] = col1;
+        columns[1] = col2;
     }
     
     inline float Matrix2::determinant() const
     {
-        return get(0,0) * get(1,1) - get(0,1) * get(1,0);
+        return simd::determinant(*this);
     }
     
     // Inverse using Cramer's rule.
@@ -202,60 +201,75 @@ namespace nv
     
     inline Matrix3::Matrix3() {}
     
-    inline Matrix3::Matrix3(float f)
-    {
-        for(int i = 0; i < 9; i++) {
-            m_data[i] = f;
-        }
-    }
+    inline Matrix3::Matrix3(float f): simd::float3x3(f) {}
     
-    inline Matrix3::Matrix3(identity_t)
-    {
-        for(int i = 0; i < 3; i++) {
-            for(int j = 0; j < 3; j++) {
-                m_data[3*j+i] = (i == j) ? 1.0f : 0.0f;
-            }
-        }
-    }
+    inline Matrix3::Matrix3(identity_t): simd::float3x3(matrix_identity_float3x3) {}
+    
+    inline Matrix3::Matrix3(const simd::float3x3 & val): simd::float3x3(val) {}
 
     inline Matrix3::Matrix3(const Matrix3 & m)
     {
-        for(int i = 0; i < 9; i++) {
-            m_data[i] = m.m_data[i];
-        }
+        columns[0] = m.columns[0];
+        columns[1] = m.columns[1];
+        columns[2] = m.columns[2];
     }
     
-    inline Matrix3::Matrix3(const simd::float3 & v0, const simd::float3 & v1, const simd::float3 & v2)
-    {
-        m_data[0] = v0.x; m_data[1] = v0.y; m_data[2] = v0.z;
-        m_data[3] = v1.x; m_data[4] = v1.y; m_data[5] = v1.z;
-        m_data[6] = v2.x; m_data[7] = v2.y; m_data[8] = v2.z;
-    }
+    inline Matrix3::Matrix3(const simd::float3 & v0, const simd::float3 & v1, const simd::float3 & v2): simd::float3x3(v0, v1, v2) {}
 
     inline float Matrix3::data(uint idx) const
     {
         nvDebugCheck(idx < 9);
-        return m_data[idx];
-    }
-    inline float & Matrix3::data(uint idx)
-    {
-        nvDebugCheck(idx < 9);
-        return m_data[idx];
+        switch (idx) {
+            case 0:
+                return columns[0][0];
+                break;
+
+            case 1:
+                return columns[0][1];
+                break;
+
+            case 2:
+                return columns[0][2];
+                break;
+
+            case 3:
+                return columns[1][0];
+                break;
+
+            case 4:
+                return columns[1][1];
+                break;
+
+            case 5:
+                return columns[1][2];
+                break;
+
+            case 6:
+                return columns[2][0];
+                break;
+
+            case 7:
+                return columns[2][1];
+                break;
+                     
+            case 8:
+                return columns[2][2];
+                break;
+
+            default:
+                nvUnreachable();
+                break;
+        }
     }
     inline float Matrix3::get(uint row, uint col) const
     {
         nvDebugCheck(row < 3 && col < 3);
-        return m_data[col * 3 + row];
+        return columns[col][row];
     }
     inline float Matrix3::operator()(uint row, uint col) const
     {
         nvDebugCheck(row < 3 && col < 3);
-        return m_data[col * 3 + row];
-    }
-    inline float & Matrix3::operator()(uint row, uint col)
-    {
-        nvDebugCheck(row < 3 && col < 3);
-        return m_data[col * 3 + row];
+        return columns[col][row];
     }
 
     inline simd::float3 Matrix3::row(uint i) const
@@ -266,64 +280,26 @@ namespace nv
     inline simd::float3 Matrix3::column(uint i) const
     {
         nvDebugCheck(i < 3);
-        return simd::make_float3(get(0, i), get(1, i), get(2, i));
-    }
-
-    inline void Matrix3::operator*=(float s)
-    {
-        for(int i = 0; i < 9; i++) {
-            m_data[i] *= s;
-        }
+        return columns[i];
     }
 
     inline void Matrix3::operator/=(float s)
     {
         float is = 1.0f /s;
-        for(int i = 0; i < 9; i++) {
-            m_data[i] *= is;
-        }
+        Matrix3 iThis = (*this) *is;
+        *this = iThis;
     }
 
     inline void Matrix3::operator+=(const Matrix3 & m)
     {
-        for(int i = 0; i < 9; i++) {
-            m_data[i] += m.m_data[i];
-        }
+        Matrix3 added = (*this) + m;
+        *this = added;
     }
 
     inline void Matrix3::operator-=(const Matrix3 & m)
     {
-        for(int i = 0; i < 9; i++) {
-            m_data[i] -= m.m_data[i];
-        }
-    }
-
-    inline Matrix3 operator+(const Matrix3 & a, const Matrix3 & b)
-    {
-        Matrix3 m = a;
-        m += b;
-        return m;
-    }
-
-    inline Matrix3 operator-(const Matrix3 & a, const Matrix3 & b)
-    {
-        Matrix3 m = a;
-        m -= b;
-        return m;
-    }
-
-    inline Matrix3 operator*(const Matrix3 & a, float s)
-    {
-        Matrix3 m = a;
-        m *= s;
-        return m;
-    }
-
-    inline Matrix3 operator*(float s, const Matrix3 & a)
-    {
-        Matrix3 m = a;
-        m *= s;
-        return m;
+        Matrix3 added = (*this) - m;
+        *this = added;
     }
 
     inline Matrix3 operator/(const Matrix3 & a, float s)
@@ -335,21 +311,9 @@ namespace nv
 
     inline Matrix3 mul(const Matrix3 & a, const Matrix3 & b)
     {
-        Matrix3 m;
-
-        for(int i = 0; i < 3; i++) {
-            const float ai0 = a(i,0), ai1 = a(i,1), ai2 = a(i,2);
-            m(i, 0) = ai0 * b(0,0) + ai1 * b(1,0) + ai2 * b(2,0);
-            m(i, 1) = ai0 * b(0,1) + ai1 * b(1,1) + ai2 * b(2,1);
-            m(i, 2) = ai0 * b(0,2) + ai1 * b(1,2) + ai2 * b(2,2);
-        }
+        Matrix3 m = a * b;
 
         return m;
-    }
-
-    inline Matrix3 operator*(const Matrix3 & a, const Matrix3 & b)
-    {
-        return mul(a, b);
     }
 
     // Transform the given 3d vector with the given matrix.
@@ -363,27 +327,21 @@ namespace nv
 
     inline void Matrix3::scale(float s)
     {
-        for (int i = 0; i < 9; i++) {
-            m_data[i] *= s;
-        }
+        Matrix3 scaled = (*this) * s;
+        *this = scaled;
     }
 
     inline void Matrix3::scale(const simd::float3 & s)
     {
-        m_data[0] *= s.x; m_data[1] *= s.x; m_data[2] *= s.x;
-        m_data[3] *= s.y; m_data[4] *= s.y; m_data[5] *= s.y;
-        m_data[6] *= s.z; m_data[7] *= s.z; m_data[8] *= s.z;
+        simd::float3 c1 = columns[0] * s;
+        simd::float3 c2 = columns[1] * s;
+        simd::float3 c3 = columns[2] * s;
+        *this = Matrix3(c1, c2, c3);
     }
 
     inline float Matrix3::determinant() const
     {
-        return 
-            get(0,0) * get(1,1) * get(2,2) + 
-            get(0,1) * get(1,2) * get(2,0) + 
-            get(0,2) * get(1,0) * get(2,1) -
-            get(0,2) * get(1,1) * get(2,0) - 
-            get(0,1) * get(1,0) * get(2,2) -
-            get(0,0) * get(1,2) * get(2,1);
+        return simd::determinant(*this);
     }
 
     // Inverse using Cramer's rule.
@@ -396,17 +354,17 @@ namespace nv
 
         Matrix3 r;
 
-        r.data(0) =  - m.data(5) * m.data(7) + m.data(4) * m.data(8);
-        r.data(1) =  + m.data(5) * m.data(6) - m.data(3) * m.data(8);
-        r.data(2) =  - m.data(4) * m.data(6) + m.data(3) * m.data(7);
+        r.columns[0][0] =  - m.data(5) * m.data(7) + m.data(4) * m.data(8);
+        r.columns[0][1] =  + m.data(5) * m.data(6) - m.data(3) * m.data(8);
+        r.columns[0][2] =  - m.data(4) * m.data(6) + m.data(3) * m.data(7);
 
-        r.data(3) =  + m.data(2) * m.data(7) - m.data(1) * m.data(8);
-        r.data(4) =  - m.data(2) * m.data(6) + m.data(0) * m.data(8);
-        r.data(5) =  + m.data(1) * m.data(6) - m.data(0) * m.data(7);
+        r.columns[1][0] =  + m.data(2) * m.data(7) - m.data(1) * m.data(8);
+        r.columns[1][1] =  - m.data(2) * m.data(6) + m.data(0) * m.data(8);
+        r.columns[1][2] =  + m.data(1) * m.data(6) - m.data(0) * m.data(7);
 
-        r.data(6) =  - m.data(2) * m.data(4) + m.data(1) * m.data(5);
-        r.data(7) =  + m.data(2) * m.data(3) - m.data(0) * m.data(5);
-        r.data(8) =  - m.data(1) * m.data(3) + m.data(0) * m.data(4);
+        r.columns[2][0] =  - m.data(2) * m.data(4) + m.data(1) * m.data(5);
+        r.columns[2][1] =  + m.data(2) * m.data(3) - m.data(0) * m.data(5);
+        r.columns[2][2] =  - m.data(1) * m.data(3) + m.data(0) * m.data(4);
 
         r.scale(1.0f / det);
 

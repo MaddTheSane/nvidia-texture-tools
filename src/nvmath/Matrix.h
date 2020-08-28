@@ -14,36 +14,29 @@ namespace nv
     enum identity_t { identity };
 
     // 2x2 matrix.
-    class Matrix2
+    class Matrix2: public simd::float2x2
     {
     public:
         Matrix2();
         explicit Matrix2(float f);
         explicit Matrix2(identity_t);
+        Matrix2(const simd::float2x2 & val);
         Matrix2(const Matrix2 & m);
         Matrix2(const simd::float2 & v0, const simd::float2 & v1);
         Matrix2(float a, float b, float c, float d);
         
         float data(uint idx) const;
-        float & data(uint idx);
         float get(uint row, uint col) const;
         float operator()(uint row, uint col) const;
-        float & operator()(uint row, uint col);
         
         simd::float2 row(uint i) const;
         simd::float2 column(uint i) const;
         
-        void operator*=(float s);
         void operator/=(float s);
-        void operator+=(const Matrix2 & m);
-        void operator-=(const Matrix2 & m);
         
         void scale(float s);
         void scale(const simd::float2 & s);
         float determinant() const;
-        
-    private:
-        float m_data[4];
     };
     
     // Solve equation system using LU decomposition and back-substitution.
@@ -54,25 +47,23 @@ namespace nv
     
     
     // 3x3 matrix.
-    class Matrix3
+    class Matrix3: public simd::float3x3
     {
     public:
         Matrix3();
         explicit Matrix3(float f);
         explicit Matrix3(identity_t);
+        Matrix3(const simd::float3x3 & val);
         Matrix3(const Matrix3 & m);
         Matrix3(const simd::float3 & v0, const simd::float3 & v1, const simd::float3 & v2);
 
         float data(uint idx) const;
-        float & data(uint idx);
         float get(uint row, uint col) const;
         float operator()(uint row, uint col) const;
-        float & operator()(uint row, uint col);
 
         simd::float3 row(uint i) const;
         simd::float3 column(uint i) const;
 
-        void operator*=(float s);
         void operator/=(float s);
         void operator+=(const Matrix3 & m);
         void operator-=(const Matrix3 & m);
@@ -80,9 +71,6 @@ namespace nv
         void scale(float s);
         void scale(const simd::float3 & s);
         float determinant() const;
-
-    private:
-        float m_data[9];
     };
 
     // Solve equation system using LU decomposition and back-substitution.
@@ -95,7 +83,7 @@ namespace nv
     
 
     // 4x4 matrix.
-    class Matrix
+    class Matrix: public simd::float4x4
     {
     public:
         typedef Matrix const & Arg;
