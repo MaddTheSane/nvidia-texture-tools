@@ -42,12 +42,12 @@ static int FloatToInt( float a, int limit )
 	return i;
 }
 
-static int FloatTo565( Vec3::Arg colour )
+static int FloatTo565( Vec3 const & colour )
 {
 	// get the components in the correct range
-	int r = FloatToInt( 31.0f*colour.X(), 31 );
-	int g = FloatToInt( 63.0f*colour.Y(), 63 );
-	int b = FloatToInt( 31.0f*colour.Z(), 31 );
+	int r = FloatToInt( 31.0f*colour.x, 31 );
+	int g = FloatToInt( 63.0f*colour.y, 63 );
+	int b = FloatToInt( 31.0f*colour.z, 31 );
 	
 	// pack into a single value
 	return ( r << 11 ) | ( g << 5 ) | b;
@@ -72,7 +72,7 @@ static void WriteColourBlock( int a, int b, u8* indices, void* block )
 	}
 }
 
-void WriteColourBlock3( Vec3::Arg start, Vec3::Arg end, u8 const* indices, void* block )
+void WriteColourBlock3( Vec3 const & start, Vec3 const & end, u8 const* indices, void* block )
 {
 	// get the packed values
 	int a = FloatTo565( start );
@@ -105,7 +105,7 @@ void WriteColourBlock3( Vec3::Arg start, Vec3::Arg end, u8 const* indices, void*
 	WriteColourBlock( a, b, remapped, block );
 }
 
-void WriteColourBlock4( Vec3::Arg start, Vec3::Arg end, u8 const* indices, void* block )
+void WriteColourBlock4( Vec3 const & start, Vec3 const & end, u8 const* indices, void* block )
 {
 	// get the packed values
 	int a = FloatTo565( start );

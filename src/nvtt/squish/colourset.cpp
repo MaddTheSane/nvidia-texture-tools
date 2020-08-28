@@ -68,7 +68,7 @@ ColourSet::ColourSet( u8 const* rgba, int flags, bool createMinimalSet/*=false*/
 					float w = ( float )( rgba[4*i + 3] + 1 ) / 256.0f;
 
 					// add the point
-					m_points[m_count] = Vec3( x, y, z );
+					m_points[m_count] = simd_make_float3( x, y, z );
 					m_weights[m_count] = ( weightByAlpha ? w : 1.0f );
 					m_remap[i] = m_count;
 					
@@ -120,7 +120,7 @@ ColourSet::ColourSet( u8 const* rgba, int flags, bool createMinimalSet/*=false*/
 			float w = ( float )( rgba[4*i + 3] + 1 ) / 256.0f;
 
 			// add the point
-			m_points[m_count] = Vec3( x, y, z );
+			m_points[m_count] = simd_make_float3( x, y, z );
 			m_weights[m_count] = ( weightByAlpha ? w : 1.0f );
 			
 			// advance
@@ -132,7 +132,7 @@ ColourSet::ColourSet( u8 const* rgba, int flags, bool createMinimalSet/*=false*/
 	// generate vector values
 	for( int i = 0; i < m_count; ++i )
 	{
-		m_points_simd[i] = Vec4(m_points[i].X(), m_points[i].Y(), m_points[i].Z(), 1);
+		m_points_simd[i] = simd_make_float4(m_points[i], 1);
 		m_weights_simd[i] = VEC4_CONST(m_weights[i]);
 	}
 #endif

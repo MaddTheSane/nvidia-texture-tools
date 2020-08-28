@@ -29,7 +29,7 @@
 
 namespace nvsquish {
 
-Sym3x3 ComputeWeightedCovariance( int n, Vec3 const* points, float const* weights, Vec3::Arg metric )
+Sym3x3 ComputeWeightedCovariance( int n, Vec3 const* points, float const* weights, const Vec3 & metric )
 {
 	// compute the centroid
 	float total = 0.0f;
@@ -48,12 +48,12 @@ Sym3x3 ComputeWeightedCovariance( int n, Vec3 const* points, float const* weight
 		Vec3 a = (points[i] - centroid) * metric;
 		Vec3 b = weights[i]*a;
 		
-		covariance[0] += a.X()*b.X();
-		covariance[1] += a.X()*b.Y();
-		covariance[2] += a.X()*b.Z();
-		covariance[3] += a.Y()*b.Y();
-		covariance[4] += a.Y()*b.Z();
-		covariance[5] += a.Z()*b.Z();
+		covariance[0] += a.x*b.x;
+		covariance[1] += a.x*b.y;
+		covariance[2] += a.x*b.z;
+		covariance[3] += a.y*b.y;
+		covariance[4] += a.y*b.z;
+		covariance[5] += a.z*b.z;
 	}
 	
 	// return it
@@ -63,13 +63,13 @@ Sym3x3 ComputeWeightedCovariance( int n, Vec3 const* points, float const* weight
 
 static Vec3 EstimatePrincipleComponent( Sym3x3 const& matrix )
 {
-	Vec3 const row0(matrix[0], matrix[1], matrix[2]);
-	Vec3 const row1(matrix[1], matrix[3], matrix[4]);
-	Vec3 const row2(matrix[2], matrix[4], matrix[5]);
+	Vec3 const row0 = simd_make_float3(matrix[0], matrix[1], matrix[2]);
+	Vec3 const row1 = simd_make_float3(matrix[1], matrix[3], matrix[4]);
+	Vec3 const row2 = simd_make_float3(matrix[2], matrix[4], matrix[5]);
 
-	float r0 = Dot(row0, row0);
-	float r1 = Dot(row1, row1);
-	float r2 = Dot(row2, row2);
+	float r0 = simd::dot(row0, row0);
+	float r1 = simd::dot(row1, row1);
+	float r2 = simd::dot(row2, row2);
 
 	if (r0 > r1 && r0 > r2) return row0;
 	if (r1 > r2) return row1;
@@ -83,30 +83,30 @@ static Vec3 EstimatePrincipleComponent( Sym3x3 const& matrix )
 
 Vec3 ComputePrincipleComponent( Sym3x3 const& matrix )
 {
-	Vec4 const row0( matrix[0], matrix[1], matrix[2], 0.0f );
-	Vec4 const row1( matrix[1], matrix[3], matrix[4], 0.0f );
-	Vec4 const row2( matrix[2], matrix[4], matrix[5], 0.0f );
+	Vec4 const row0 = simd_make_float4( matrix[0], matrix[1], matrix[2], 0.0f );
+	Vec4 const row1 = simd_make_float4( matrix[1], matrix[3], matrix[4], 0.0f );
+	Vec4 const row2 = simd_make_float4( matrix[2], matrix[4], matrix[5], 0.0f );
 
 	//Vec4 v = VEC4_CONST( 1.0f );
 	//Vec4 v = row0; // row1, row2
 
 	Vec3 v3 = EstimatePrincipleComponent( matrix );
-	Vec4 v( v3.X(), v3.Y(), v3.Z(), 0.0f );
+	Vec4 v= simd_make_float4( v3, 0.0f );
 
 	for( int i = 0; i < POWER_ITERATION_COUNT; ++i )
 	{
 		// matrix multiply
-		Vec4 w = row0*v.SplatX();
-		w = MultiplyAdd(row1, v.SplatY(), w);
-		w = MultiplyAdd(row2, v.SplatZ(), w);
+		Vec4 w = row0*simd::make_float4(v.x);
+		w = MultiplyAdd(row1, simd::make_float4(v.y), w);
+		w = MultiplyAdd(row2, simd::make_float4(v.z), w);
 
 		// get max component from xyz in all channels
-		Vec4 a = Max(w.SplatX(), Max(w.SplatY(), w.SplatZ()));
+		Vec4 a = simd::max(simd::make_float4(w.x), simd::max(simd::make_float4(w.y), simd::make_float4(w.z)));
 
 		// divide through and advance
 		v = w*Reciprocal(a);
 	}
-	return v.GetVec3();
+	return v.xyz;
 }
 
 #else

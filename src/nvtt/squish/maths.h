@@ -32,6 +32,7 @@
 
 #include <cmath>
 #include <algorithm>
+#include <simd/simd.h>
 #include "config.h"
 
 #if NV_USE_ALTIVEC
@@ -40,176 +41,11 @@
 
 namespace nvsquish {
 
-class Vec3
+typedef simd::float3 Vec3;
+
+inline float LengthSquared( const Vec3 &v )
 {
-public:
-	typedef Vec3 const& Arg;
-
-	Vec3()
-	{
-	}
-
-	explicit Vec3( float a )
-	{
-		m_x = a;
-		m_y = a;
-		m_z = a;
-	}
-
-	Vec3( float a, float b, float c )
-	{
-		m_x = a;
-		m_y = b;
-		m_z = c;
-	}
-	
-	float X() const { return m_x; }
-	float Y() const { return m_y; }
-	float Z() const { return m_z; }
-	
-	Vec3 operator-() const
-	{
-		return Vec3( -m_x, -m_y, -m_z );
-	}
-	
-	Vec3& operator+=( Arg v )
-	{
-		m_x += v.m_x;
-		m_y += v.m_y;
-		m_z += v.m_z;
-		return *this;
-	}
-	
-	Vec3& operator-=( Arg v )
-	{
-		m_x -= v.m_x;
-		m_y -= v.m_y;
-		m_z -= v.m_z;
-		return *this;
-	}
-	
-	Vec3& operator*=( Arg v )
-	{
-		m_x *= v.m_x;
-		m_y *= v.m_y;
-		m_z *= v.m_z;
-		return *this;
-	}
-	
-	Vec3& operator*=( float s )
-	{
-		m_x *= s;
-		m_y *= s;
-		m_z *= s;
-		return *this;
-	}
-	
-	Vec3& operator/=( Arg v )
-	{
-		m_x /= v.m_x;
-		m_y /= v.m_y;
-		m_z /= v.m_z;
-		return *this;
-	}
-	
-	Vec3& operator/=( float s )
-	{
-		float t = 1.0f/s;
-		m_x *= t;
-		m_y *= t;
-		m_z *= t;
-		return *this;
-	}
-	
-	friend Vec3 operator+( Arg left, Arg right )
-	{
-		Vec3 copy( left );
-		return copy += right;
-	}
-
-	friend Vec3 operator+( Arg left, float right )
-	{
-		Vec3 copy( left );
-		return copy += Vec3(right);
-	}
-
-	friend Vec3 operator-( Arg left, Arg right )
-	{
-		Vec3 copy( left );
-		return copy -= right;
-	}
-	
-	friend Vec3 operator*( Arg left, Arg right )
-	{
-		Vec3 copy( left );
-		return copy *= right;
-	}
-	
-	friend Vec3 operator*( Arg left, float right )
-	{
-		Vec3 copy( left );
-		return copy *= right;
-	}
-	
-	friend Vec3 operator*( float left, Arg right )
-	{
-		Vec3 copy( right );
-		return copy *= left;
-	}
-	
-	friend Vec3 operator/( Arg left, Arg right )
-	{
-		Vec3 copy( left );
-		return copy /= right;
-	}
-	
-	friend Vec3 operator/( Arg left, float right )
-	{
-		Vec3 copy( left );
-		return copy /= right;
-	}
-	
-	friend float Dot( Arg left, Arg right )
-	{
-		return left.m_x*right.m_x + left.m_y*right.m_y + left.m_z*right.m_z;
-	}
-	
-	friend Vec3 Min( Arg left, Arg right )
-	{
-		return Vec3(
-			std::min( left.m_x, right.m_x ), 
-			std::min( left.m_y, right.m_y ), 
-			std::min( left.m_z, right.m_z )
-		);
-	}
-
-	friend Vec3 Max( Arg left, Arg right )
-	{
-		return Vec3(
-			std::max( left.m_x, right.m_x ), 
-			std::max( left.m_y, right.m_y ), 
-			std::max( left.m_z, right.m_z )
-		);
-	}
-
-	friend Vec3 Floor( Arg v )
-	{
-		return Vec3(
-			std::floor( v.m_x ), 
-			std::floor( v.m_y ), 
-			std::floor( v.m_z )
-		);
-	}
-
-private:
-	float m_x;
-	float m_y;
-	float m_z;
-};
-
-inline float LengthSquared( Vec3::Arg v )
-{
-	return Dot( v, v );
+	return simd::length_squared(v);
 }
 
 class Sym3x3
@@ -239,7 +75,7 @@ private:
 	float m_x[6];
 };
 
-Sym3x3 ComputeWeightedCovariance( int n, Vec3 const* points, float const* weights, Vec3::Arg metric );
+Sym3x3 ComputeWeightedCovariance( int n, Vec3 const* points, float const* weights, const Vec3 &metric );
 Vec3 ComputePrincipleComponent( Sym3x3 const& matrix );
 
 } // namespace nvsquish

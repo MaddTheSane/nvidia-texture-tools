@@ -29,6 +29,8 @@
 #include "colourblock.h"
 #include <cfloat>
 
+using simd::min;
+using simd::max;
 
 namespace nvsquish {
 
@@ -43,7 +45,7 @@ void WeightedClusterFit::SetColourSet( ColourSet const* colours, int flags )
 	// initialise the best error
 #if SQUISH_USE_SIMD
 	m_besterror = VEC4_CONST( FLT_MAX );
-	Vec3 metric = m_metric.GetVec3();
+	Vec3 metric = m_metric.xyz;
 #else
 	m_besterror = FLT_MAX;
 	Vec3 metric = m_metric;
@@ -63,7 +65,7 @@ void WeightedClusterFit::SetColourSet( ColourSet const* colours, int flags )
 	float dps[16];
 	for( int i = 0; i < count; ++i )
 	{
-		dps[i] = Dot( values[i], principle );
+		dps[i] = simd::dot( values[i], principle );
 		m_order[i] = i;
 	}
 	
@@ -108,7 +110,7 @@ void WeightedClusterFit::SetColourSet( ColourSet const* colours, int flags )
 void WeightedClusterFit::SetMetric(float r, float g, float b)
 {
 #if SQUISH_USE_SIMD
-	m_metric = Vec4(r, g, b, 0);
+	m_metric = simd_make_float4(r, g, b, 0);
 #else
 	m_metric = Vec3(r, g, b);
 #endif
@@ -119,10 +121,10 @@ float WeightedClusterFit::GetBestError() const
 {
 #if SQUISH_USE_SIMD
 	Vec4 x = m_xxsum * m_metricSqr;
-	Vec4 error = m_besterror + x.SplatX() + x.SplatY() + x.SplatZ();
-	return error.GetX();
+	Vec4 error = m_besterror + simd_make_float4(x.x) + simd_make_float4(x.y) + simd_make_float4(x.z);
+    return error.x;
 #else
-	return m_besterror + Dot(m_xxsum, m_metricSqr);
+	return m_besterror + dot(m_xxsum, m_metricSqr);
 #endif
 
 }
@@ -134,10 +136,10 @@ void WeightedClusterFit::Compress3( void* block )
     int const count = m_colours->GetCount();
 	Vec4 const one = VEC4_CONST(1.0f);
 	Vec4 const zero = VEC4_CONST(0.0f);
-	Vec4 const half(0.5f, 0.5f, 0.5f, 0.25f);
+	Vec4 const half = simd_make_float4(0.5f, 0.5f, 0.5f, 0.25f);
 	Vec4 const two = VEC4_CONST(2.0);
-	Vec4 const grid( 31.0f, 63.0f, 31.0f, 0.0f );
-	Vec4 const gridrcp( 1.0f/31.0f, 1.0f/63.0f, 1.0f/31.0f, 0.0f );
+	Vec4 const grid = simd_make_float4( 31.0f, 63.0f, 31.0f, 0.0f );
+	Vec4 const gridrcp = simd_make_float4( 1.0f/31.0f, 1.0f/63.0f, 1.0f/31.0f, 0.0f );
 	 
 	// declare variables
 	Vec4 beststart = VEC4_CONST( 0.0f );
@@ -160,15 +162,15 @@ void WeightedClusterFit::Compress3( void* block )
 			//Vec3 const alphax_sum = x0 + x1 * 0.5f;
 			//float const alpha2_sum = w0 + w1 * 0.25f;
 			Vec4 const alphax_sum = MultiplyAdd(x1, half, x0); // alphax_sum, alpha2_sum
-			Vec4 const alpha2_sum = alphax_sum.SplatW();
+			Vec4 const alpha2_sum = simd_make_float4(alphax_sum.w);
 			
 			//Vec3 const betax_sum = x2 + x1 * 0.5f;
 			//float const beta2_sum = w2 + w1 * 0.25f;
 			Vec4 const betax_sum = MultiplyAdd(x1, half, x2); // betax_sum, beta2_sum
-			Vec4 const beta2_sum = betax_sum.SplatW();
+			Vec4 const beta2_sum = simd_make_float4(betax_sum.w);
 			
 			//float const alphabeta_sum = w1 * 0.25f;
-			Vec4 const alphabeta_sum = (x1 * half).SplatW(); // alphabeta_sum
+			Vec4 const alphabeta_sum = simd_make_float4((x1 * half).w); // alphabeta_sum
 			
 			// float const factor = 1.0f / (alpha2_sum * beta2_sum - alphabeta_sum * alphabeta_sum);
 			Vec4 const factor = Reciprocal( NegativeMultiplySubtract(alphabeta_sum, alphabeta_sum, alpha2_sum*beta2_sum) );
@@ -177,8 +179,8 @@ void WeightedClusterFit::Compress3( void* block )
 			Vec4 b = NegativeMultiplySubtract(alphax_sum, alphabeta_sum, betax_sum*alpha2_sum) * factor;
 			
 			// clamp to the grid
-			a = Min( one, Max( zero, a ) );
-			b = Min( one, Max( zero, b ) );
+            a = simd::min( one, simd::max( zero, a ) );
+            b = simd::min( one, simd::max( zero, b ) );
 			a = Truncate( MultiplyAdd( grid, a, half ) ) * gridrcp;
 			b = Truncate( MultiplyAdd( grid, b, half ) ) * gridrcp;
 			
@@ -190,7 +192,7 @@ void WeightedClusterFit::Compress3( void* block )
 
 			// apply the metric to the error term
 			Vec4 e5 = e4 * m_metricSqr;
-			Vec4 error = e5.SplatX() + e5.SplatY() + e5.SplatZ();
+			Vec4 error = simd_make_float4(e5.x) + simd_make_float4(e5.y) + simd_make_float4(e5.z);
 			
 			// keep the solution if it wins
 			if( CompareAnyLessThan( error, besterror ) )
@@ -235,7 +237,7 @@ void WeightedClusterFit::Compress3( void* block )
 
 
 		// save the block
-		WriteColourBlock3( beststart.GetVec3(), bestend.GetVec3(), bestindices, block );
+		WriteColourBlock3( beststart.xyz, bestend.xyz, bestindices, block );
 		
 		// save the error
 		m_besterror = besterror;
@@ -249,11 +251,11 @@ void WeightedClusterFit::Compress4( void* block )
 	Vec4 const zero = VEC4_CONST(0.0f);
 	Vec4 const half = VEC4_CONST(0.5f);
 	Vec4 const two = VEC4_CONST(2.0);
-	Vec4 const onethird( 1.0f/3.0f, 1.0f/3.0f, 1.0f/3.0f, 1.0f/9.0f );
-	Vec4 const twothirds( 2.0f/3.0f, 2.0f/3.0f, 2.0f/3.0f, 4.0f/9.0f );
+	Vec4 const onethird = simd_make_float4( 1.0f/3.0f, 1.0f/3.0f, 1.0f/3.0f, 1.0f/9.0f );
+	Vec4 const twothirds = simd_make_float4( 2.0f/3.0f, 2.0f/3.0f, 2.0f/3.0f, 4.0f/9.0f );
     Vec4 const twonineths = VEC4_CONST( 2.0f/9.0f );
-	Vec4 const grid( 31.0f, 63.0f, 31.0f, 0.0f );
-	Vec4 const gridrcp( 1.0f/31.0f, 1.0f/63.0f, 1.0f/31.0f, 0.0f );
+	Vec4 const grid = simd_make_float4( 31.0f, 63.0f, 31.0f, 0.0f );
+	Vec4 const gridrcp = simd_make_float4( 1.0f/31.0f, 1.0f/63.0f, 1.0f/31.0f, 0.0f );
 	
 	// declare variables
 	Vec4 beststart = VEC4_CONST( 0.0f );
@@ -279,15 +281,15 @@ void WeightedClusterFit::Compress4( void* block )
 				//Vec3 const alphax_sum = x0 + x1 * (2.0f / 3.0f) + x2 * (1.0f / 3.0f);
 				//float const alpha2_sum = w0 + w1 * (4.0f/9.0f) + w2 * (1.0f/9.0f);
                 Vec4 const alphax_sum = MultiplyAdd(x2, onethird, MultiplyAdd(x1, twothirds, x0)); // alphax_sum, alpha2_sum
-				Vec4 const alpha2_sum = alphax_sum.SplatW();
+				Vec4 const alpha2_sum = simd::make_float4(alphax_sum.w);
 				
 				//Vec3 const betax_sum = x3 + x2 * (2.0f / 3.0f) + x1 * (1.0f / 3.0f);
 				//float const beta2_sum = w3 + w2 * (4.0f/9.0f) + w1 * (1.0f/9.0f);
 				Vec4 const betax_sum = MultiplyAdd(x2, twothirds, MultiplyAdd(x1, onethird, x3)); // betax_sum, beta2_sum
-				Vec4 const beta2_sum = betax_sum.SplatW();
+				Vec4 const beta2_sum = simd::make_float4(betax_sum.w);
 				
 				//float const alphabeta_sum = (w1 + w2) * (2.0f/9.0f);
-                Vec4 const alphabeta_sum = twonineths*( x1 + x2 ).SplatW(); // alphabeta_sum
+                Vec4 const alphabeta_sum = twonineths*(simd::make_float4(( x1 + x2 ).w)); // alphabeta_sum
 				
 				// float const factor = 1.0f / (alpha2_sum * beta2_sum - alphabeta_sum * alphabeta_sum);
 				Vec4 const factor = Reciprocal( NegativeMultiplySubtract(alphabeta_sum, alphabeta_sum, alpha2_sum*beta2_sum) );
@@ -296,8 +298,8 @@ void WeightedClusterFit::Compress4( void* block )
 				Vec4 b = NegativeMultiplySubtract(alphax_sum, alphabeta_sum, betax_sum*alpha2_sum) * factor;
 				
 				// clamp to the grid
-				a = Min( one, Max( zero, a ) );
-				b = Min( one, Max( zero, b ) );
+                a = simd::min( one, simd::max( zero, a ) );
+                b = simd::min( one, simd::max( zero, b ) );
 				a = Truncate( MultiplyAdd( grid, a, half ) ) * gridrcp;
 				b = Truncate( MultiplyAdd( grid, b, half ) ) * gridrcp;
 				
@@ -309,7 +311,7 @@ void WeightedClusterFit::Compress4( void* block )
 
 				// apply the metric to the error term
 				Vec4 e5 = e4 * m_metricSqr;
-				Vec4 error = e5.SplatX() + e5.SplatY() + e5.SplatZ();
+				Vec4 error = simd::make_float4(e5.x) + simd::make_float4(e5.y) + simd::make_float4(e5.z);
 				
 				// keep the solution if it wins
 				if( CompareAnyLessThan( error, besterror ) )
@@ -360,7 +362,7 @@ void WeightedClusterFit::Compress4( void* block )
         m_colours->RemapIndices( ordered, bestindices );
 
 		// save the block
-		WriteColourBlock4( beststart.GetVec3(), bestend.GetVec3(), bestindices, block );
+		WriteColourBlock4( beststart.xyz, bestend.xyz, bestindices, block );
 		
 		// save the error
 		m_besterror = besterror;
@@ -375,8 +377,8 @@ void WeightedClusterFit::Compress3( void* block )
 	Vec3 const one( 1.0f );
 	Vec3 const zero( 0.0f );
 	Vec3 const half( 0.5f );
-    Vec3 const grid( 31.0f, 63.0f, 31.0f );
-    Vec3 const gridrcp( 1.0f/31.0f, 1.0f/63.0f, 1.0f/31.0f );
+    Vec3 const grid = simd::make_float4( 31.0f, 63.0f, 31.0f );
+    Vec3 const gridrcp = simd::make_float4( 1.0f/31.0f, 1.0f/63.0f, 1.0f/31.0f );
 
 	// declare variables
 	Vec3 beststart( 0.0f );
@@ -411,8 +413,8 @@ void WeightedClusterFit::Compress3( void* block )
 			Vec3 b = (betax_sum*alpha2_sum - alphax_sum*alphabeta_sum) * factor;
 			
 			// clamp to the grid
-			a = Min( one, Max( zero, a ) );
-			b = Min( one, Max( zero, b ) );
+			a = simd::min( one, simd::max( zero, a ) );
+			b = simd::min( one, simd::max( zero, b ) );
 			a = Floor( grid*a + half )*gridrcp;
 			b = Floor( grid*b + half )*gridrcp;
 			
@@ -479,8 +481,8 @@ void WeightedClusterFit::Compress4( void* block )
 	Vec3 const one( 1.0f );
 	Vec3 const zero( 0.0f );
 	Vec3 const half( 0.5f );
-	Vec3 const grid( 31.0f, 63.0f, 31.0f );
-	Vec3 const gridrcp( 1.0f/31.0f, 1.0f/63.0f, 1.0f/31.0f );
+	Vec3 const grid = simd::make_float4( 31.0f, 63.0f, 31.0f );
+	Vec3 const gridrcp = simd::make_float4( 1.0f/31.0f, 1.0f/63.0f, 1.0f/31.0f );
 
 	// declare variables
 	Vec3 beststart( 0.0f );
@@ -518,8 +520,8 @@ void WeightedClusterFit::Compress4( void* block )
 				Vec3 b = ( betax_sum*alpha2_sum - alphax_sum*alphabeta_sum )*factor;
 				
 				// clamp to the grid
-				a = Min( one, Max( zero, a ) );
-				b = Min( one, Max( zero, b ) );
+				a = simd::min( one, simd::max( zero, a ) );
+				b = simd::min( one, simd::max( zero, b ) );
 				a = Floor( grid*a + half )*gridrcp;
 				b = Floor( grid*b + half )*gridrcp;
 				

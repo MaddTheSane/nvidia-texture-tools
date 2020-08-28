@@ -26,6 +26,8 @@
 #ifndef NV_SQUISH_SIMD_H
 #define NV_SQUISH_SIMD_H
 
+#include <simd/simd.h>
+#include <cassert>
 #include "maths.h"
 
 #ifdef __GNUC__
@@ -34,12 +36,47 @@
 #	define SQUISH_ALIGN_16 __declspec(align(16))
 #endif
 
-#if SQUISH_USE_ALTIVEC
-#include "simd_ve.h"
-#endif
+#define SQUISH_SSE_SPLAT( a )										\
+	( ( a ) | ( ( a ) << 2 ) | ( ( a ) << 4 ) | ( ( a ) << 6 ) )
 
-#if SQUISH_USE_SSE
-#include "simd_sse.h"
-#endif
+namespace nvsquish {
 
-#endif // ndef SQUISH_SIMD_H
+#define VEC4_CONST( X ) simd::make_float4( X )
+
+	typedef simd::float4 Vec4;
+	//! Returns a*b + c
+    inline Vec4 MultiplyAdd( Vec4 const & a, Vec4 const & b, Vec4 const & c )
+	{
+		return a*b + c;
+	}
+
+	//! Returns -( a*b - c )
+    inline Vec4 NegativeMultiplySubtract( Vec4 const & a, Vec4 const & b, Vec4 const & c )
+	{
+		return  -( a * b - c );
+	}
+
+    inline Vec4 Reciprocal( Vec4 const &  v )
+	{
+		// get the reciprocal estimate
+		simd::float4 estimate = 1 / v ;
+
+		// one round of Newton-Rhaphson refinement
+		simd::float4 diff = simd_make_float4( 1.0f ) - estimate * v;
+		return diff * estimate + estimate;
+	}
+
+	inline Vec4 Truncate( Vec4 const & v )
+	{
+        return simd::trunc(v);
+	}
+
+	inline bool CompareAnyLessThan( Vec4 const & left, Vec4 const & right )
+	{
+		simd::int4 bits = left < right;
+		return simd::any( bits );
+	}
+
+} // namespace squish
+
+#endif // ndef SQUISH_SIMD_SSE_H

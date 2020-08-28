@@ -44,7 +44,7 @@ void FastClusterFit::SetColourSet( ColourSet const* colours, int flags )
 	// initialise the best error
 #if SQUISH_USE_SIMD
 	m_besterror = VEC4_CONST( FLT_MAX );
-	Vec3 metric = m_metric.GetVec3();
+	Vec3 metric = m_metric.xyz;
 #else
 	m_besterror = FLT_MAX;
 	Vec3 metric = m_metric;
@@ -64,7 +64,7 @@ void FastClusterFit::SetColourSet( ColourSet const* colours, int flags )
 	float dps[16];
 	for( int i = 0; i < count; ++i )
 	{
-		dps[i] = Dot( values[i], principle );
+		dps[i] = simd::dot( values[i], principle );
 		m_order[i] = i;
 	}
 	
@@ -102,7 +102,7 @@ void FastClusterFit::SetColourSet( ColourSet const* colours, int flags )
 void FastClusterFit::SetMetric(float r, float g, float b)
 {
 #if SQUISH_USE_SIMD
-	m_metric = Vec4(r, g, b, 0);
+	m_metric = simd_make_float4(r, g, b, 0);
 #else
 	m_metric = Vec3(r, g, b);
 #endif
@@ -113,8 +113,8 @@ float FastClusterFit::GetBestError() const
 {
 #if SQUISH_USE_SIMD
 	Vec4 x = m_xxsum * m_metricSqr;
-	Vec4 error = m_besterror + x.SplatX() + x.SplatY() + x.SplatZ();
-	return error.GetVec3().X();
+	Vec4 error = m_besterror + simd::make_float4(x.x) + simd::make_float4(x.y) + simd::make_float4(x.z);
+	return error.x;
 #else
 	return m_besterror + Dot(m_xxsum, m_metricSqr);
 #endif
@@ -129,8 +129,8 @@ void FastClusterFit::Compress3( void* block )
 	Vec4 const zero = VEC4_CONST(0.0f);
 	Vec4 const half = VEC4_CONST(0.5f);
 	Vec4 const two = VEC4_CONST(2.0);
-	Vec4 const grid( 31.0f, 63.0f, 31.0f, 0.0f );
-	Vec4 const gridrcp( 1.0f/31.0f, 1.0f/63.0f, 1.0f/31.0f, 0.0f );
+	Vec4 const grid = simd_make_float4( 31.0f, 63.0f, 31.0f, 0.0f );
+	Vec4 const gridrcp = simd_make_float4( 1.0f/31.0f, 1.0f/63.0f, 1.0f/31.0f, 0.0f );
 	 
 	// declare variables
 	Vec4 beststart = VEC4_CONST( 0.0f );
@@ -149,22 +149,22 @@ void FastClusterFit::Compress3( void* block )
 		
 		for( int c1 = 0; c1 <= 16-c0; c1++)
 		{
-			Vec4 const constants = Vec4((const float *)&s_threeElement[i]);
-			Vec4 const alpha2_sum = constants.SplatX();
-			Vec4 const beta2_sum = constants.SplatY();
-			Vec4 const alphabeta_sum = constants.SplatZ();
-			Vec4 const factor = constants.SplatW();
+			Vec4 const constants = simd_make_float4(s_threeElement[i].alpha2_sum, s_threeElement[i].beta2_sum, s_threeElement[i].alphabeta_sum, s_threeElement[i].factor);
+			Vec4 const alpha2_sum = simd::make_float4(constants.x);
+			Vec4 const beta2_sum = simd::make_float4(constants.y);
+			Vec4 const alphabeta_sum = simd::make_float4(constants.z);
+			Vec4 const factor = simd::make_float4(constants.w);
 			i++;
 			
-			Vec4 const alphax_sum = MultiplyAdd(half, x1, x0);
+			Vec4 const alphax_sum = half * x1 + x0;
 			Vec4 const betax_sum = m_xsum - alphax_sum;
 			
 			Vec4 a = NegativeMultiplySubtract(betax_sum, alphabeta_sum, alphax_sum*beta2_sum) * factor;
 			Vec4 b = NegativeMultiplySubtract(alphax_sum, alphabeta_sum, betax_sum*alpha2_sum) * factor;
 			
 			// clamp to the grid
-			a = Min( one, Max( zero, a ) );
-			b = Min( one, Max( zero, b ) );
+			a = simd::min( one, simd::max( zero, a ) );
+			b = simd::min( one, simd::max( zero, b ) );
 			a = Truncate( MultiplyAdd( grid, a, half ) ) * gridrcp;
 			b = Truncate( MultiplyAdd( grid, b, half ) ) * gridrcp;
 			
@@ -176,7 +176,7 @@ void FastClusterFit::Compress3( void* block )
 
 			// apply the metric to the error term
 			Vec4 e5 = e4 * m_metricSqr;
-			Vec4 error = e5.SplatX() + e5.SplatY() + e5.SplatZ();
+			Vec4 error = simd::make_float4(e5.x) + simd::make_float4(e5.y) + simd::make_float4(e5.z);
 
 			// keep the solution if it wins
 			if( CompareAnyLessThan( error, besterror ) )
@@ -230,7 +230,7 @@ void FastClusterFit::Compress3( void* block )
 		m_colours->RemapIndices( ordered, bestindices ); // Set alpha indices.
 
 		// save the block
-		WriteColourBlock3( beststart.GetVec3(), bestend.GetVec3(), ordered, block );
+		WriteColourBlock3( beststart.xyz, bestend.xyz, ordered, block );
 		
 		// save the error
 		m_besterror = besterror;
@@ -266,11 +266,11 @@ void FastClusterFit::Compress4( void* block )
 			
 			for( int c2 = 0; c2 <= 16-c0-c1; c2++)
 			{
-				Vec4 const constants = Vec4((const float *)&s_fourElement[i]);
-				Vec4 const alpha2_sum = constants.SplatX();
-				Vec4 const beta2_sum = constants.SplatY();
-				Vec4 const alphabeta_sum = constants.SplatZ();
-				Vec4 const factor = constants.SplatW();
+				Vec4 const constants = simd_make_float4(s_fourElement[i].alpha2_sum, s_fourElement[i].beta2_sum, s_fourElement[i].alphabeta_sum, s_fourElement[i].factor);
+				Vec4 const alpha2_sum = simd::make_float4(constants.x);
+				Vec4 const beta2_sum = simd::make_float4(constants.y);
+				Vec4 const alphabeta_sum = simd::make_float4(constants.z);
+				Vec4 const factor = simd::make_float4(constants.w);
 				i++;
 				
 				Vec4 const alphax_sum = MultiplyAdd(x2, onethird, MultiplyAdd(x1, twothirds, x0));
@@ -280,12 +280,12 @@ void FastClusterFit::Compress4( void* block )
 				Vec4 b = NegativeMultiplySubtract(alphax_sum, alphabeta_sum, betax_sum*alpha2_sum) * factor;
 				
 				// clamp the output to [0, 1]
-				a = Min( one, Max( zero, a ) );
-				b = Min( one, Max( zero, b ) );
+				a = simd::min( one, simd::max( zero, a ) );
+				b = simd::min( one, simd::max( zero, b ) );
 				
 				// clamp to the grid
-				Vec4 const grid( 31.0f, 63.0f, 31.0f, 0.0f );
-				Vec4 const gridrcp( 1.0f/31.0f, 1.0f/63.0f, 1.0f/31.0f, 0.0f );
+				Vec4 const grid = simd::make_float4( 31.0f, 63.0f, 31.0f, 0.0f );
+				Vec4 const gridrcp = simd::make_float4( 1.0f/31.0f, 1.0f/63.0f, 1.0f/31.0f, 0.0f );
 				a = Truncate( MultiplyAdd( grid, a, half ) ) * gridrcp;
 				b = Truncate( MultiplyAdd( grid, b, half ) ) * gridrcp;
 				
@@ -297,7 +297,7 @@ void FastClusterFit::Compress4( void* block )
 
 				// apply the metric to the error term
 				Vec4 e5 = e4 * m_metricSqr;
-				Vec4 error = e5.SplatX() + e5.SplatY() + e5.SplatZ();
+				Vec4 error = simd::make_float4(e5.x) + simd::make_float4(e5.y) + simd::make_float4(e5.z);
 				
 				// keep the solution if it wins
 				if( CompareAnyLessThan( error, besterror ) )
@@ -359,7 +359,7 @@ void FastClusterFit::Compress4( void* block )
 			ordered[m_order[i]] = bestindices[i];
 		
 		// save the block
-		WriteColourBlock4( beststart.GetVec3(), bestend.GetVec3(), ordered, block );
+		WriteColourBlock4( beststart.xyz, bestend.xyz, ordered, block );
 		
 		// save the error
 		m_besterror = besterror;

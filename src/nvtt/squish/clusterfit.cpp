@@ -41,7 +41,7 @@ void ClusterFit::SetColourSet( ColourSet const* colours, int flags )
 	// initialise the best error
 #if SQUISH_USE_SIMD
 	m_besterror = VEC4_CONST( FLT_MAX );
-	Vec3 metric = m_metric.GetVec3();
+	Vec3 metric = m_metric.xyz;
 #else
 	m_besterror = FLT_MAX;
 	Vec3 metric = m_metric;
@@ -61,7 +61,7 @@ void ClusterFit::SetColourSet( ColourSet const* colours, int flags )
 	float dps[16];
 	for( int i = 0; i < count; ++i )
 	{
-		dps[i] = Dot( values[i], principle );
+		dps[i] = simd::dot( values[i], principle );
 		m_order[i] = i;
 	}
 	
@@ -99,7 +99,7 @@ void ClusterFit::SetColourSet( ColourSet const* colours, int flags )
 void ClusterFit::SetMetric(float r, float g, float b)
 {
 #if SQUISH_USE_SIMD
-	m_metric = Vec4(r, g, b, 0);
+	m_metric = simd_make_float4(r, g, b, 0);
 #else
 	m_metric = Vec3(r, g, b);
 #endif
@@ -109,7 +109,7 @@ void ClusterFit::SetMetric(float r, float g, float b)
 float ClusterFit::GetBestError() const
 {
 #if SQUISH_USE_SIMD
-	return m_besterror.GetX();
+	return m_besterror.x;
 #else
 	return m_besterror;
 #endif
@@ -203,7 +203,7 @@ void ClusterFit::Compress3( void* block )
 		
 		// save the block
 #if SQUISH_USE_SIMD
-		WriteColourBlock3( beststart.GetVec3(), bestend.GetVec3(), bestindices, block );
+		WriteColourBlock3( beststart.xyz, bestend.xyz, bestindices, block );
 #else
 		WriteColourBlock3( beststart, bestend, bestindices, block );
 #endif
@@ -321,7 +321,7 @@ void ClusterFit::Compress4( void* block )
 		
 		// save the block
 #if SQUISH_USE_SIMD
-		WriteColourBlock4( beststart.GetVec3(), bestend.GetVec3(), bestindices, block );
+		WriteColourBlock4( beststart.xyz, bestend.xyz, bestindices, block );
 #else
 		WriteColourBlock4( beststart, bestend, bestindices, block );
 #endif
@@ -356,8 +356,8 @@ Vec4 ClusterFit::SolveLeastSquares( Vec4& start, Vec4& end ) const
 
 	// select the results
 	Vec4 const zero = VEC4_CONST( 0.0f );
-	Vec4 beta2_sum_zero = CompareEqual( beta2_sum, zero );
-	Vec4 alpha2_sum_zero = CompareEqual( alpha2_sum, zero );
+	simd::int4 beta2_sum_zero = beta2_sum == zero;
+	simd::int4 alpha2_sum_zero = alpha2_sum == zero;
 	
 	Vec4 a1 = alphax_sum*Reciprocal( alpha2_sum );
 	Vec4 b1 = betax_sum*Reciprocal( beta2_sum );
@@ -372,18 +372,18 @@ Vec4 ClusterFit::SolveLeastSquares( Vec4& start, Vec4& end ) const
 		alphax_sum, alphabeta_sum, betax_sum*alpha2_sum
 	)*factor;
 	
-	Vec4 a = Select( Select( a2, a1, beta2_sum_zero ), zero, alpha2_sum_zero );
-	Vec4 b = Select( Select( b2, b1, alpha2_sum_zero ), zero, beta2_sum_zero );
+	Vec4 a = simd::select( simd::select( a2, a1, beta2_sum_zero ), zero, alpha2_sum_zero );
+	Vec4 b = simd::select( simd::select( b2, b1, alpha2_sum_zero ), zero, beta2_sum_zero );
 
 	// clamp the output to [0, 1]
 	Vec4 const one = VEC4_CONST( 1.0f );
 	Vec4 const half = VEC4_CONST( 0.5f );
-	a = Min( one, Max( zero, a ) );
-	b = Min( one, Max( zero, b ) );
+	a = simd::min( one, simd::max( zero, a ) );
+	b = simd::min( one, simd::max( zero, b ) );
 
 	// clamp to the grid
-	Vec4 const grid( 31.0f, 63.0f, 31.0f, 0.0f );
-	Vec4 const gridrcp( 1.0f/31.0f, 1.0f/63.0f, 1.0f/31.0f, 0.0f );
+	Vec4 const grid = simd_make_float4( 31.0f, 63.0f, 31.0f, 0.0f );
+	Vec4 const gridrcp = simd_make_float4( 1.0f/31.0f, 1.0f/63.0f, 1.0f/31.0f, 0.0f );
 	Vec4 const onethird = VEC4_CONST( 1.0f/3.0f );
 	Vec4 const twothirds = VEC4_CONST( 2.0f/3.0f );
 	a = Truncate( MultiplyAdd( grid, a, half ) )*gridrcp;
@@ -398,7 +398,7 @@ Vec4 ClusterFit::SolveLeastSquares( Vec4& start, Vec4& end ) const
 
 	// apply the metric to the error term
 	Vec4 e5 = e4*m_metricSqr;
-	Vec4 error = e5.SplatX() + e5.SplatY() + e5.SplatZ();
+	Vec4 error = simd::make_float4(e5.x) + simd::make_float4(e5.y) + simd::make_float4(e5.z);
 	
 	// save the start and end
 	start = a;

@@ -47,7 +47,7 @@ private:
 	virtual void Compress3( void* block );
 	virtual void Compress4( void* block );
 
-	void Reorder( Vec3::Arg principle );
+	void Reorder( Vec3 const & principle );
 
 	Vec3 m_principle;
 #if SQUISH_USE_SIMD

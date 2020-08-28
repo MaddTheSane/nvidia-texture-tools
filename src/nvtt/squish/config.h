@@ -48,7 +48,7 @@
 #if SQUISH_USE_ALTIVEC && SQUISH_USE_SSE
 #	error "Cannot enable both altivec and sse!"
 #endif
-#if SQUISH_USE_ALTIVEC || SQUISH_USE_SSE
+#if SQUISH_USE_ALTIVEC || SQUISH_USE_SSE || __has_include(<simd/simd.h>)
 #	define SQUISH_USE_SIMD 1
 #else
 #	define SQUISH_USE_SIMD 0
