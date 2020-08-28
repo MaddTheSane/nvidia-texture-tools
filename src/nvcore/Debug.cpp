@@ -604,7 +604,7 @@ namespace
 #    elif NV_CPU_X86
         ucontext_t * ucp = (ucontext_t *)secret;
         return (void *) ucp->uc_mcontext->__ss.__eip;
-#    elif NV_CPU_ARM
+#    elif NV_CPU_ARM || NV_CPU_AARCH64
         ucontext_t * ucp = (ucontext_t *)secret;
         return (void *) ucp->uc_mcontext->__ss.__pc;
 #    else
@@ -668,6 +668,13 @@ namespace
 #    elif NV_CPU_AARCH64
         ucontext_t * ucp = (ucontext_t *)secret;
         return (void *) ucp->uc_mcontext.pc;
+#   elif NV_CPU_E2K /* MCST Elbrus 2000 */
+        // e2k has 3 stacks - Procedure Stack (PS), Procedure Chain Stack (PCS) and User Stack (US)
+        // CR0 and CR1 (Chain Register) are the 128-bit registers of the Procedure Chain Stack (PCS)
+        // CR's divided into _HI and _LO 64-bit parts (as in x86, for example, AX is divided into AH and AL)
+        // CR0_HI stores an Instruction Pointer
+        ucontext_t * ucp = (ucontext_t *)secret;
+        return (void *) ucp->uc_mcontext.cr0_hi;
 #    else
 #      error "Unknown CPU"
 #    endif
@@ -1008,8 +1015,7 @@ void debug::dumpInfo()
 #endif
 }
 
-/// Dump callstack using the specified handler.
-void debug::dumpCallstack(MessageHandler *messageHandler, int callstackLevelsToSkip /*= 0*/)
+static void dumpCallstackImpl(MessageHandler *messageHandler, int callstackLevelsToSkip, ...)
 {
 #if (NV_OS_WIN32 && NV_CC_MSVC) || (defined(HAVE_SIGNAL_H) && defined(HAVE_EXECINFO_H))
     if (hasStackTrace())
@@ -1020,12 +1026,22 @@ void debug::dumpCallstack(MessageHandler *messageHandler, int callstackLevelsToS
         Array<const char *> lines;
         writeStackTrace(trace, size, callstackLevelsToSkip + 1, lines);     // + 1 to skip the call to dumpCallstack
 
+        va_list empty;
+        va_start(empty, callstackLevelsToSkip);
+        va_end(empty);
+
         for (uint i = 0; i < lines.count(); i++) {
-            messageHandler->log(lines[i], NULL);
+            messageHandler->log(lines[i], empty);
             delete lines[i];
         }
     }
 #endif
+}
+
+/// Dump callstack using the specified handler.
+void debug::dumpCallstack(MessageHandler *messageHandler, int callstackLevelsToSkip /*= 0*/)
+{
+    dumpCallstackImpl(messageHandler, callstackLevelsToSkip);
 }
 
 

@@ -6,7 +6,7 @@
 #define _CRT_NONSTDC_NO_WARNINGS // _chdir is defined deprecated, but that's a bug, chdir is deprecated, _chdir is *not*.
 //#include <shlwapi.h> // PathFileExists
 #include <windows.h> // GetFileAttributes
-#include <direct.h> // _mkdir
+#include <direct.h> // _mkdir, _chdir
 #elif NV_OS_XBOX
 #include <Xtl.h>
 #elif NV_OS_ORBIS
@@ -31,11 +31,6 @@ bool FileSystem::exists(const char * path)
     // PathFileExists requires linking to shlwapi.lib
     //return PathFileExists(path) != 0;
     return GetFileAttributesA(path) != INVALID_FILE_ATTRIBUTES;
-#elif NV_OS_ORBIS
-    const int BUFFER_SIZE = 2048;
-    char file_fullpath[BUFFER_SIZE];
-    snprintf(file_fullpath, BUFFER_SIZE, "/app0/%s", path);
-    return sceFiosExistsSync(NULL, file_fullpath);
 #else
 	if (FILE * fp = fopen(path, "r"))
 	{
@@ -78,3 +73,31 @@ bool FileSystem::removeFile(const char * path)
     // @@ Use unlink or remove?
     return remove(path) == 0;
 }
+
+
+#include "StdStream.h" // for fileOpen
+
+bool FileSystem::copyFile(const char * src, const char * dst) {
+
+    FILE * fsrc = fileOpen(src, "rb");
+    if (fsrc == NULL) return false;
+    defer{ fclose(fsrc); };
+
+    FILE * fdst = fileOpen(dst, "wb");
+    if (fdst == NULL) return false;
+    defer{ fclose(fdst); };
+    
+    char buffer[1024];
+    size_t n;
+
+    while ((n = fread(buffer, sizeof(char), sizeof(buffer), fsrc)) > 0) {
+        if (fwrite(buffer, sizeof(char), n, fdst) != n) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+
+

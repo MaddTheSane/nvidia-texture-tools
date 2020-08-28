@@ -36,6 +36,7 @@ namespace nv
     struct AlphaBlock4x4;
     class Stream;
     class Vector3;
+    class Vector4;
 
 
     /// DXT1 block.
@@ -220,7 +221,7 @@ namespace nv
 	struct BlockBC6
 	{
 		uint8 data[16];		// Not even going to try to write a union for this thing.
-		void decodeBlock(Vector3 colors[16]) const;
+        void decodeBlock(Vector4 colors[16]) const;
 	};
 
 	/// BC7 block.
@@ -233,16 +234,16 @@ namespace nv
 
 
     // Serialization functions.
-    NVIMAGE_API Stream & operator<<(Stream & stream, BlockDXT1 & block);
-    NVIMAGE_API Stream & operator<<(Stream & stream, AlphaBlockDXT3 & block);
-    NVIMAGE_API Stream & operator<<(Stream & stream, BlockDXT3 & block);
-    NVIMAGE_API Stream & operator<<(Stream & stream, AlphaBlockDXT5 & block);
-    NVIMAGE_API Stream & operator<<(Stream & stream, BlockDXT5 & block);
-    NVIMAGE_API Stream & operator<<(Stream & stream, BlockATI1 & block);
-    NVIMAGE_API Stream & operator<<(Stream & stream, BlockATI2 & block);
-    NVIMAGE_API Stream & operator<<(Stream & stream, BlockCTX1 & block);
-    NVIMAGE_API Stream & operator<<(Stream & stream, BlockBC6 & block);
-    NVIMAGE_API Stream & operator<<(Stream & stream, BlockBC7 & block);
+    Stream & operator<<(Stream & stream, BlockDXT1 & block);
+    Stream & operator<<(Stream & stream, AlphaBlockDXT3 & block);
+    Stream & operator<<(Stream & stream, BlockDXT3 & block);
+    Stream & operator<<(Stream & stream, AlphaBlockDXT5 & block);
+    Stream & operator<<(Stream & stream, BlockDXT5 & block);
+    Stream & operator<<(Stream & stream, BlockATI1 & block);
+    Stream & operator<<(Stream & stream, BlockATI2 & block);
+    Stream & operator<<(Stream & stream, BlockCTX1 & block);
+    Stream & operator<<(Stream & stream, BlockBC6 & block);
+    Stream & operator<<(Stream & stream, BlockBC7 & block);
 
 } // nv namespace
 

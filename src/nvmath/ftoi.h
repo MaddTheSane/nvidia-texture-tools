@@ -1,10 +1,12 @@
 // This code is in the public domain -- castano@gmail.com
 
 #pragma once
-#ifndef NV_MATH_FTOI_H
-#define NV_MATH_FTOI_H
 
 #include "nvmath/nvmath.h"
+
+#if NV_USE_SSE
+    #include <xmmintrin.h>
+#endif
 
 #include <math.h>
 
@@ -53,7 +55,7 @@ namespace nv
         return (val<0) ? ftoi_ceil_xs(val) : ftoi_floor_xs(val);
     }
 
-#if NV_CPU_X86 || NV_CPU_X86_64
+#if NV_USE_SSE
 
     NV_FORCEINLINE int ftoi_round_sse(float f) {
         return _mm_cvt_ss2si(_mm_set_ss(f));
@@ -62,12 +64,6 @@ namespace nv
     NV_FORCEINLINE int ftoi_trunc_sse(float f) {
       return _mm_cvtt_ss2si(_mm_set_ss(f));
     }
-
-#endif
-
-
-
-#if NV_USE_SSE
 
     NV_FORCEINLINE int ftoi_round(float val) {
         return ftoi_round_sse(val);
@@ -252,5 +248,3 @@ namespace nv
 
 
 } // nv
-
-#endif // NV_MATH_FTOI_H

@@ -1,8 +1,6 @@
 // This code is in the public domain -- castanyo@yahoo.es
 
 #pragma once
-#ifndef NV_MATH_MATRIX_H
-#define NV_MATH_MATRIX_H
 
 #include "Vector.h"
 
@@ -14,8 +12,48 @@ namespace nv
 {
     enum identity_t { identity };
 
+    // 2x2 matrix.
+    class Matrix2
+    {
+    public:
+        Matrix2();
+        explicit Matrix2(float f);
+        explicit Matrix2(identity_t);
+        Matrix2(const Matrix2 & m);
+        Matrix2(Vector2::Arg v0, Vector2::Arg v1);
+        Matrix2(float a, float b, float c, float d);
+        
+        float data(uint idx) const;
+        float & data(uint idx);
+        float get(uint row, uint col) const;
+        float operator()(uint row, uint col) const;
+        float & operator()(uint row, uint col);
+        
+        Vector2 row(uint i) const;
+        Vector2 column(uint i) const;
+        
+        void operator*=(float s);
+        void operator/=(float s);
+        void operator+=(const Matrix2 & m);
+        void operator-=(const Matrix2 & m);
+        
+        void scale(float s);
+        void scale(Vector2::Arg s);
+        float determinant() const;
+        
+    private:
+        float m_data[4];
+    };
+    
+    // Solve equation system using LU decomposition and back-substitution.
+    extern bool solveLU(const Matrix2 & m, const Vector2 & b, Vector2 * x);
+    
+    // Solve equation system using Cramer's inverse.
+    extern bool solveCramer(const Matrix2 & A, const Vector2 & b, Vector2 * x);
+    
+    
     // 3x3 matrix.
-    class NVMATH_CLASS Matrix3
+    class Matrix3
     {
     public:
         Matrix3();
@@ -52,9 +90,11 @@ namespace nv
     // Solve equation system using Cramer's inverse.
     extern bool solveCramer(const Matrix3 & A, const Vector3 & b, Vector3 * x);
 
+    extern Matrix3 inverse(const Matrix3 & m);
+    
 
     // 4x4 matrix.
-    class NVMATH_CLASS Matrix
+    class Matrix
     {
     public:
         typedef Matrix const & Arg;
@@ -106,8 +146,5 @@ namespace nv
 
     // Compute inverse using Gaussian elimination and partial pivoting.
     extern Matrix inverse(const Matrix & m);
-    extern Matrix3 inverse(const Matrix3 & m);
 
 } // nv namespace
-
-#endif // NV_MATH_MATRIX_H

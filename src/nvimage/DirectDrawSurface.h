@@ -1,43 +1,17 @@
-// Copyright NVIDIA Corporation 2007 -- Ignacio Castano <icastano@nvidia.com>
-// 
-// Permission is hereby granted, free of charge, to any person
-// obtaining a copy of this software and associated documentation
-// files (the "Software"), to deal in the Software without
-// restriction, including without limitation the rights to use,
-// copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the
-// Software is furnished to do so, subject to the following
-// conditions:
-// 
-// The above copyright notice and this permission notice shall be
-// included in all copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-// OTHER DEALINGS IN THE SOFTWARE.
-
+// MIT license see full LICENSE text at end of file
 #pragma once
-#ifndef NV_IMAGE_DIRECTDRAWSURFACE_H
-#define NV_IMAGE_DIRECTDRAWSURFACE_H
 
 #include "nvimage.h"
 
-#if !defined(MAKEFOURCC)
-#define MAKEFOURCC(ch0, ch1, ch2, ch3) \
+#define NV_MAKEFOURCC(ch0, ch1, ch2, ch3) \
     (uint(uint8(ch0)) | (uint(uint8(ch1)) << 8) | \
     (uint(uint8(ch2)) << 16) | (uint(uint8(ch3)) << 24 ))
-#endif
 
 namespace nv
 {
     class Image;
+    class FloatImage;
     class Stream;
-    struct ColorBlock;
 
     enum DDPF
     {
@@ -103,20 +77,27 @@ namespace nv
 
     enum FOURCC
     {
-        FOURCC_NVTT = MAKEFOURCC('N', 'V', 'T', 'T'),
-        FOURCC_DDS = MAKEFOURCC('D', 'D', 'S', ' '),
-        FOURCC_DXT1 = MAKEFOURCC('D', 'X', 'T', '1'),
-        FOURCC_DXT2 = MAKEFOURCC('D', 'X', 'T', '2'),
-        FOURCC_DXT3 = MAKEFOURCC('D', 'X', 'T', '3'),
-        FOURCC_DXT4 = MAKEFOURCC('D', 'X', 'T', '4'),
-        FOURCC_DXT5 = MAKEFOURCC('D', 'X', 'T', '5'),
-        FOURCC_RXGB = MAKEFOURCC('R', 'X', 'G', 'B'),
-        FOURCC_ATI1 = MAKEFOURCC('A', 'T', 'I', '1'),
-        FOURCC_ATI2 = MAKEFOURCC('A', 'T', 'I', '2'),
-        FOURCC_A2XY = MAKEFOURCC('A', '2', 'X', 'Y'),
-        FOURCC_DX10 = MAKEFOURCC('D', 'X', '1', '0'),
-        FOURCC_UVER = MAKEFOURCC('U', 'V', 'E', 'R'),
-        FOURCC_NONE = MAKEFOURCC('\0', '\0', '\0', '\0'),
+        FOURCC_NVTT = NV_MAKEFOURCC('N', 'V', 'T', 'T'),
+        FOURCC_DDS = NV_MAKEFOURCC('D', 'D', 'S', ' '),
+        FOURCC_DXT1 = NV_MAKEFOURCC('D', 'X', 'T', '1'),
+        FOURCC_DXT2 = NV_MAKEFOURCC('D', 'X', 'T', '2'),
+        FOURCC_DXT3 = NV_MAKEFOURCC('D', 'X', 'T', '3'),
+        FOURCC_DXT4 = NV_MAKEFOURCC('D', 'X', 'T', '4'),
+        FOURCC_DXT5 = NV_MAKEFOURCC('D', 'X', 'T', '5'),
+        FOURCC_RXGB = NV_MAKEFOURCC('R', 'X', 'G', 'B'),
+        FOURCC_ATI1 = NV_MAKEFOURCC('A', 'T', 'I', '1'),
+        FOURCC_ATI2 = NV_MAKEFOURCC('A', 'T', 'I', '2'),
+        FOURCC_A2XY = NV_MAKEFOURCC('A', '2', 'X', 'Y'),
+        FOURCC_DX10 = NV_MAKEFOURCC('D', 'X', '1', '0'),
+        FOURCC_UVER = NV_MAKEFOURCC('U', 'V', 'E', 'R'),
+        FOURCC_BC6H = NV_MAKEFOURCC('B', 'C', '6', 'H'),
+        FOURCC_BC7L = NV_MAKEFOURCC('B', 'C', '7', 'L'),
+        
+        FOURCC_PVR0 = NV_MAKEFOURCC('P', 'V', 'R', '0'),
+        FOURCC_PVR1 = NV_MAKEFOURCC('P', 'V', 'R', '1'),
+        FOURCC_PVR2 = NV_MAKEFOURCC('P', 'V', 'R', '2'),
+        FOURCC_PVR3 = NV_MAKEFOURCC('P', 'V', 'R', '3'),
+        FOURCC_NONE = NV_MAKEFOURCC('\0', '\0', '\0', '\0'),
     };
 
 
@@ -267,7 +248,6 @@ namespace nv
     };
 
     extern uint findD3D9Format(uint bitcount, uint rmask, uint gmask, uint bmask, uint amask);
-
     extern uint findDXGIFormat(uint bitcount, uint rmask, uint gmask, uint bmask, uint amask);
 
     struct RGBAPixelFormat
@@ -279,9 +259,10 @@ namespace nv
         uint amask;
     };
 
+    extern const RGBAPixelFormat *findD3D9PixelFormat(uint dxgiFormat);
     extern const RGBAPixelFormat *findDXGIPixelFormat(uint dxgiFormat);
 
-    struct NVIMAGE_CLASS DDSPixelFormat
+    struct DDSPixelFormat
     {
         uint size;
         uint flags;
@@ -293,7 +274,7 @@ namespace nv
         uint amask;
     };
 
-    struct NVIMAGE_CLASS DDSCaps
+    struct DDSCaps
     {
         uint caps1;
         uint caps2;
@@ -302,7 +283,7 @@ namespace nv
     };
 
     /// DDS file header for DX10.
-    struct NVIMAGE_CLASS DDSHeader10
+    struct DDSHeader10
     {
         uint dxgiFormat;
         uint resourceDimension;
@@ -312,7 +293,7 @@ namespace nv
     };
 
     /// DDS file header.
-    struct NVIMAGE_CLASS DDSHeader
+    struct DDSHeader
     {
         uint fourcc;
         uint size;
@@ -368,16 +349,14 @@ namespace nv
         bool isBlockFormat() const;
     };
 
-    NVIMAGE_API Stream & operator<< (Stream & s, DDSHeader & header);
+    Stream & operator<< (Stream & s, DDSHeader & header);
 
 
     /// DirectDraw Surface. (DDS)
-    class NVIMAGE_CLASS DirectDrawSurface
+    class DirectDrawSurface
     {
     public:
         DirectDrawSurface();
-        DirectDrawSurface(const char * file);
-        DirectDrawSurface(Stream * stream);
         ~DirectDrawSurface();
 
         bool load(const char * filename);
@@ -387,6 +366,7 @@ namespace nv
         bool isSupported() const;
 
         bool hasAlpha() const;
+        bool isColorsRGB() const;
 
         uint mipmapCount() const;
         uint width() const;
@@ -398,12 +378,11 @@ namespace nv
         bool isTexture3D() const;
         bool isTextureCube() const;
         bool isTextureArray() const;
+        bool isBlockFormat() const;
 
         void setNormalFlag(bool b);
         void setHasAlphaFlag(bool b);
         void setUserVersion(int version);
-
-        void mipmap(Image * img, uint f, uint m);
 
         uint surfaceWidth(uint mipmap) const;
         uint surfaceHeight(uint mipmap) const;
@@ -421,15 +400,35 @@ namespace nv
         uint faceSize() const;
         uint offset(uint face, uint mipmap);
 
-        void readLinearImage(Image * img, uint bitcount, uint rmask, uint gmask, uint bmask, uint amask);
-        void readBlockImage(Image * img);
-        void readBlock(ColorBlock * rgba);
-
-
-    private:
         Stream * stream;
+        //void * data;
     };
+
+    bool imageFromDDS(Image * img, DirectDrawSurface & dds, uint face, uint mipmap);
+    bool imageFromDDS(FloatImage * img, DirectDrawSurface & dds, uint face, uint mipmap);
 
 } // nv namespace
 
-#endif // NV_IMAGE_DIRECTDRAWSURFACE_H
+// Copyright NVIDIA Corporation 2007 -- Ignacio Castano <icastano@nvidia.com>
+// Copyright (c) 2008-2020 -- Ignacio Castano <castano@gmail.com>
+// 
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation
+// files (the "Software"), to deal in the Software without
+// restriction, including without limitation the rights to use,
+// copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following
+// conditions:
+// 
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.

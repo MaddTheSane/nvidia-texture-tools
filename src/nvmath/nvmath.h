@@ -1,39 +1,18 @@
 // This code is in the public domain -- castanyo@yahoo.es
 
 #pragma once
-#ifndef NV_MATH_H
-#define NV_MATH_H
 
 #include "nvcore/nvcore.h"
 #include "nvcore/Debug.h"   // nvDebugCheck
 #include "nvcore/Utils.h"   // max, clamp
 
+// Both cmath and math for C++11 and C function definitions.
+#include <cmath>
 #include <math.h>
 
 #if NV_OS_WIN32 || NV_OS_XBOX
 #include <float.h>  // finite, isnan
 #endif
-
-#if NV_CPU_X86 || NV_CPU_X86_64
-    //#include <intrin.h>
-    #include <xmmintrin.h>
-#endif
-
-
-
-// Function linkage
-#if NVMATH_SHARED
-#ifdef NVMATH_EXPORTS
-#define NVMATH_API DLL_EXPORT
-#define NVMATH_CLASS DLL_EXPORT_CLASS
-#else
-#define NVMATH_API DLL_IMPORT
-#define NVMATH_CLASS DLL_IMPORT
-#endif
-#else // NVMATH_SHARED
-#define NVMATH_API
-#define NVMATH_CLASS
-#endif // NVMATH_SHARED
 
 // Set some reasonable defaults.
 #ifndef NV_USE_ALTIVEC
@@ -42,24 +21,21 @@
 #endif
 
 #ifndef NV_USE_SSE
+    // 1=SSE, 2=SSE2
 #   if NV_CPU_X86_64
         // x64 always supports at least SSE2
 #       define NV_USE_SSE 2
 #   elif NV_CC_MSVC && defined(_M_IX86_FP)
         // Also on x86 with the /arch:SSE flag in MSVC.
-#       define NV_USE_SSE _M_IX86_FP       // 1=SSE, 2=SS2
-#   elif defined(__SSE__)
-#       define NV_USE_SSE 1
+#       define NV_USE_SSE _M_IX86_FP
 #   elif defined(__SSE2__)
 #       define NV_USE_SSE 2
+#   elif defined(__SSE__)
+#       define NV_USE_SSE 1
 #   else
         // Otherwise we assume no SSE.
 #       define NV_USE_SSE 0
 #   endif
-#endif
-
-#if defined(__APPLE__) && defined(__clang__)
-#define NV_USE_LIBSIMD 1
 #endif
 
 // Internally set NV_USE_SIMD when either altivec or sse is available.
@@ -107,7 +83,7 @@ inline float sqrtf_assert(const float f)
     return sqrtf(f);
 }
 
-extern "C" inline double acos_assert(const double f) 
+extern "C" inline double acos_assert(const double f)
 {
     nvDebugCheck(f >= -1.0f && f <= 1.0f);
     return acos(f);
@@ -188,24 +164,29 @@ namespace nv
 
     inline bool isNan(const float f)
     {
-#if NV_OS_WIN32 || NV_OS_XBOX
+#if __cplusplus >= 199711L
+       return std::isnan(f);
+#elif NV_OS_WIN32 || NV_OS_XBOX
         return _isnan(f) != 0;
-#elif NV_OS_DARWIN || NV_OS_FREEBSD || NV_OS_NETBSD || NV_OS_OPENBSD || NV_OS_ORBIS
+#elif NV_OS_DARWIN || NV_OS_FREEBSD || NV_OS_NETBSD || NV_OS_OPENBSD || NV_OS_ORBIS || NV_OS_LINUX
         return isnan(f);
-#elif NV_OS_LINUX
-        return isnanf(f);
 #else
 #   error "isNan not supported"
 #endif
     }
 
-    inline uint log2(uint i)
+    inline uint log2(uint32 i)
     {
-        uint value = 0;
-        while( i >>= 1 ) {
-            value++;
-        }
+        uint32 value = 0;
+        while( i >>= 1 ) value++;
         return value;
+    }
+
+    inline uint log2(uint64 i)
+    {
+        uint64 value = 0;
+        while (i >>= 1) value++;
+        return U32(value);
     }
 
     inline float lerp(float f0, float f1, float t)
@@ -222,7 +203,7 @@ namespace nv
 
     inline float frac(float f)
     {
-        return f - floor(f);
+        return f - floorf(f);
     }
 
     inline float floatRound(float f)
@@ -250,7 +231,7 @@ namespace nv
     }
 
     inline float smoothstep(float edge0, float edge1, float x) {
-        x = linearstep(edge0, edge1, x); 
+        x = linearstep(edge0, edge1, x);
 
         // Evaluate polynomial
         return x*x*(3 - 2*x);
@@ -331,5 +312,3 @@ namespace nv
 
 
 } // nv
-
-#endif // NV_MATH_H

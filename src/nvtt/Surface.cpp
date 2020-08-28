@@ -23,12 +23,14 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 
 #include "Surface.h"
+#include "CompressorETC.h" // for ETC decoder.
 
 #include "nvmath/Vector.inl"
 #include "nvmath/Matrix.inl"
 #include "nvmath/Color.h"
 #include "nvmath/Half.h"
 #include "nvmath/ftoi.h"
+#include "nvmath/PackedFloat.h"
 
 #include "nvimage/Filter.h"
 #include "nvimage/ImageIO.h"
@@ -39,8 +41,14 @@
 #include "nvimage/ErrorMetric.h"
 #include "nvimage/DirectDrawSurface.h"
 
+#include "nvthread/ParallelFor.h"
+
+#include "nvcore/Array.inl"
+#include "nvcore/StrLib.h"
+
 #include <float.h>
 #include <string.h> // memset, memcpy
+//#include <stdio.h> // printf?
 
 #if NV_CC_GNUC
 #include <math.h> // exp2f and log2f
@@ -123,6 +131,18 @@ namespace
         else if (format == Format_BC7) {
             return 16;
         }
+        else if (format == Format_ETC1 || format == Format_ETC2_R || format == Format_ETC2_RGB) {
+            return 8;
+        }
+        else if (format == Format_ETC2_RG || format == Format_ETC2_RGBA || format == Format_ETC2_RGBM) {
+            return 16;
+        }
+        else if (format == Format_PVR_2BPP_RGB || format == Format_PVR_2BPP_RGBA) {
+            return 4;
+        }
+        else if (format == Format_PVR_4BPP_RGB || format == Format_PVR_4BPP_RGBA) {
+            return 8;
+        }
         return 0;
     }
 
@@ -197,7 +217,7 @@ uint nv::computeImageSize(uint w, uint h, uint d, uint bitCount, uint pitchAlign
     }
 }
 
-void nv::getTargetExtent(int * width, int * height, int * depth, int maxExtent, RoundMode roundMode, TextureType textureType) {
+void nv::getTargetExtent(int * width, int * height, int * depth, int maxExtent, RoundMode roundMode, TextureType textureType, nvtt::ShapeRestriction shapeRestriction /*= nvtt::ShapeRestriction_None*/) {
     nvDebugCheck(width != NULL && *width > 0);
     nvDebugCheck(height != NULL && *height > 0);
     nvDebugCheck(depth != NULL && *depth > 0);
@@ -234,21 +254,21 @@ void nv::getTargetExtent(int * width, int * height, int * depth, int maxExtent, 
     // Round to power of two.
     if (roundMode == RoundMode_ToNextPowerOfTwo)
     {
-        w = nextPowerOfTwo(w);
-        h = nextPowerOfTwo(h);
-        d = nextPowerOfTwo(d);
+        w = nextPowerOfTwo(U32(w));
+        h = nextPowerOfTwo(U32(h));
+        d = nextPowerOfTwo(U32(d));
     }
     else if (roundMode == RoundMode_ToNearestPowerOfTwo)
     {
-        w = nearestPowerOfTwo(w);
-        h = nearestPowerOfTwo(h);
-        d = nearestPowerOfTwo(d);
+        w = nearestPowerOfTwo(U32(w));
+        h = nearestPowerOfTwo(U32(h));
+        d = nearestPowerOfTwo(U32(d));
     }
     else if (roundMode == RoundMode_ToPreviousPowerOfTwo)
     {
-        w = previousPowerOfTwo(w);
-        h = previousPowerOfTwo(h);
-        d = previousPowerOfTwo(d);
+        w = previousPowerOfTwo(U32(w));
+        h = previousPowerOfTwo(U32(h));
+        d = previousPowerOfTwo(U32(d));
     }
     else if (roundMode == RoundMode_ToNextMultipleOfFour)
     {
@@ -267,6 +287,38 @@ void nv::getTargetExtent(int * width, int * height, int * depth, int maxExtent, 
         w = previousMultipleOfFour(w);
         h = previousMultipleOfFour(h);
         d = previousMultipleOfFour(d);
+    }
+
+    if(shapeRestriction == ShapeRestriction_Square)
+    {
+        if (textureType == TextureType_2D)
+        {
+            int md = nv::min(w,h);
+            w = md;
+            h = md;
+            d = 1;
+        }
+        else if (textureType == TextureType_3D)
+        {
+            int md = nv::min(nv::min(w,h),d);
+            w = md;
+            h = md;
+            d = md;
+        }
+        else if (textureType == TextureType_Cube) 
+        {
+            int md = nv::min(w, h);
+            w = md;
+            h = md;
+            d = 1;
+        }
+    }
+    else 
+    {
+        if (textureType == TextureType_2D || textureType == TextureType_Cube)
+        {
+            d = 1;
+        }
     }
 
     *width = w;
@@ -509,8 +561,8 @@ void Surface::range(int channel, float * rangeMin, float * rangeMax, int alpha_c
         }
     }
 
-    *rangeMin = range.x;
-    *rangeMax = range.y;
+    if (rangeMin) *rangeMin = range.x;
+    if (rangeMax) *rangeMax = range.y;
 }
 
 bool Surface::load(const char * fileName, bool * hasAlpha/*= NULL*/)
@@ -518,62 +570,80 @@ bool Surface::load(const char * fileName, bool * hasAlpha/*= NULL*/)
     AutoPtr<FloatImage> img(ImageIO::loadFloat(fileName));
     if (img == NULL) {
         // Try loading as DDS.
-        if (nv::strEqual(nv::Path::extension(fileName), ".dds")) {
-            nv::DirectDrawSurface dds;
-            if (dds.load(fileName)) {
-                if (dds.header.isBlockFormat()) {
-                    int w = dds.surfaceWidth(0);
-                    int h = dds.surfaceHeight(0);
-                    uint size = dds.surfaceSize(0);
-
-                    void * data = malloc(size);
-                    dds.readSurface(0, 0, data, size);
-
-                    // @@ Handle all formats! @@ Get nvtt format from dds.surfaceFormat() ?
-
-                    if (dds.header.hasDX10Header()) {
-                        if (dds.header.header10.dxgiFormat == DXGI_FORMAT_BC6H_UF16) {
-                            this->setImage2D(nvtt::Format_BC6, nvtt::Decoder_D3D10, w, h, data);
-                        }
-                        else {
-                            // @@
-                            nvCheck(false);
-                        }
-                    }
-                    else {
-                        uint fourcc = dds.header.pf.fourcc;
-                        if (fourcc == FOURCC_DXT1) {
-                            this->setImage2D(nvtt::Format_BC1, nvtt::Decoder_D3D10, w, h, data);
-                        }
-                        else if (fourcc == FOURCC_DXT5) {
-                            this->setImage2D(nvtt::Format_BC3, nvtt::Decoder_D3D10, w, h, data);
-                        }
-                        else {
-                            // @@ 
-                            nvCheck(false);
-                        }
-                    }
-
-                    free(data);
-                }
-                else {
-                    Image img;
-                    dds.mipmap(&img, /*face=*/0, /*mipmap=*/0);
-
-                    int w = img.width();
-                    int h = img.height();
-                    int d = img.depth();
-
-                    // @@ Add support for all pixel formats.
-
-                    this->setImage(nvtt::InputFormat_BGRA_8UB, w, h, d, img.pixels());
-                }
-
-                return true;
-            }
+        if (!nv::strEqual(nv::Path::extension(fileName), ".dds")) {
+            return false;
         }
 
-        return false;
+        nv::DirectDrawSurface dds;
+        if (!dds.load(fileName)) {
+            return false;
+        }
+
+        if (dds.header.isBlockFormat()) {
+            int w = dds.surfaceWidth(0);
+            int h = dds.surfaceHeight(0);
+            uint size = dds.surfaceSize(0);
+
+            void * data = malloc(size);
+            dds.readSurface(0, 0, data, size);
+
+            // @@ Handle all formats! @@ Get nvtt format from dds.surfaceFormat() ?
+
+            if (dds.header.hasDX10Header()) {
+                if (dds.header.header10.dxgiFormat == DXGI_FORMAT_BC1_UNORM || dds.header.header10.dxgiFormat == DXGI_FORMAT_BC1_UNORM_SRGB) {
+                    this->setImage2D(nvtt::Format_BC1, nvtt::Decoder_D3D10, w, h, data);
+                }
+                else if (dds.header.header10.dxgiFormat == DXGI_FORMAT_BC2_UNORM || dds.header.header10.dxgiFormat == DXGI_FORMAT_BC2_UNORM_SRGB) {
+                    this->setImage2D(nvtt::Format_BC2, nvtt::Decoder_D3D10, w, h, data);
+                }
+                else if (dds.header.header10.dxgiFormat == DXGI_FORMAT_BC3_UNORM || dds.header.header10.dxgiFormat == DXGI_FORMAT_BC3_UNORM_SRGB) {
+                    this->setImage2D(nvtt::Format_BC3, nvtt::Decoder_D3D10, w, h, data);
+                }
+                else if (dds.header.header10.dxgiFormat == DXGI_FORMAT_BC6H_UF16) {
+                    this->setImage2D(nvtt::Format_BC6, nvtt::Decoder_D3D10, w, h, data);
+                }
+                else if (dds.header.header10.dxgiFormat == DXGI_FORMAT_BC7_UNORM || dds.header.header10.dxgiFormat == DXGI_FORMAT_BC7_UNORM_SRGB) {
+                    this->setImage2D(nvtt::Format_BC7, nvtt::Decoder_D3D10, w, h, data);
+                }
+                else {
+                    // @@
+                    nvCheck(false && "Format not handled with DDS10 header.");
+                }
+            }
+            else {
+                uint fourcc = dds.header.pf.fourcc;
+                if (fourcc == FOURCC_DXT1) {
+                    this->setImage2D(nvtt::Format_BC1, nvtt::Decoder_D3D10, w, h, data);
+                }
+                else if (fourcc == FOURCC_DXT3) {
+                    this->setImage2D(nvtt::Format_BC2, nvtt::Decoder_D3D10, w, h, data);
+                }
+                else if (fourcc == FOURCC_DXT5) {
+                    this->setImage2D(nvtt::Format_BC3, nvtt::Decoder_D3D10, w, h, data);
+                }
+                else {
+                    // @@ 
+                    nvCheck(false && "Format not handled with DDS9 header.");
+                }
+            }
+
+            free(data);
+        }
+        else {
+            // @@ Separate image decoder from dds reader.
+            Image img;
+            imageFromDDS(&img, dds, /*face=*/0, /*mipmap=*/0);
+
+            int w = img.width;
+            int h = img.height;
+            int d = img.depth;
+
+            // @@ Add support for all pixel formats.
+
+            this->setImage(nvtt::InputFormat_BGRA_8UB, w, h, d, img.pixels());
+        }
+
+        return true;
     }
 
     detach();
@@ -583,7 +653,7 @@ bool Surface::load(const char * fileName, bool * hasAlpha/*= NULL*/)
     }
 
     // @@ Have loadFloat allocate the image with the desired number of channels.
-    img->resizeChannelCount(4);
+    img->resizeChannelCount(4); // Block compressors expect a 4 channel texture.
 
     delete m->image;
     m->image = img.release();
@@ -601,11 +671,12 @@ bool Surface::save(const char * fileName, bool hasAlpha/*=0*/, bool hdr/*=0*/) c
         return ImageIO::saveFloat(fileName, m->image, 0, 4);
     }
     else {
-        AutoPtr<Image> image(m->image->createImage(0, 4));
+        uint c = min<uint>(m->image->componentCount(), 4);
+        AutoPtr<Image> image(m->image->createImage(0, c));
         nvCheck(image != NULL);
 
         if (hasAlpha) {
-            image->setFormat(Image::Format_ARGB);
+            image->format = Image::Format_ARGB;
         }
 
         return ImageIO::save(fileName, image.ptr());
@@ -829,16 +900,35 @@ bool Surface::setImage(InputFormat format, int w, int h, int d, const void * r, 
     return true;
 }
 
+#if defined(HAVE_PVRTEXTOOL)
+#include <PVRTDecompress.h>
+#endif
+
 // @@ Add support for compressed 3D textures.
 bool Surface::setImage2D(Format format, Decoder decoder, int w, int h, const void * data)
 {
     if (format != nvtt::Format_BC1 &&
         format != nvtt::Format_BC2 &&
         format != nvtt::Format_BC3 &&
+        format != nvtt::Format_BC3n &&
+        format != nvtt::Format_BC3_RGBM &&
         format != nvtt::Format_BC4 &&
         format != nvtt::Format_BC5 &&
         format != nvtt::Format_BC6 &&
-        format != nvtt::Format_BC7)
+        format != nvtt::Format_BC7 &&
+        format != nvtt::Format_ETC1 &&
+        format != nvtt::Format_ETC2_R &&
+        format != nvtt::Format_ETC2_RG &&
+        format != nvtt::Format_ETC2_RGB &&
+        format != nvtt::Format_ETC2_RGBA &&
+        format != nvtt::Format_ETC2_RGBM
+    #if defined(HAVE_PVRTEXTOOL)
+        && format != nvtt::Format_PVR_2BPP_RGB
+        && format != nvtt::Format_PVR_4BPP_RGB
+        && format != nvtt::Format_PVR_2BPP_RGBA
+        && format != nvtt::Format_PVR_4BPP_RGBA
+    #endif
+        )
     {
         return false;
     }
@@ -851,7 +941,7 @@ bool Surface::setImage2D(Format format, Decoder decoder, int w, int h, const voi
     m->image->allocate(4, w, h, 1);
     m->type = TextureType_2D;
 
-    const int bw = (w + 3) / 4;
+    const int bw = (w + 3) / 4;     // @@ Not if PVR 2bpp!
     const int bh = (h + 3) / 4;
 
     const uint bs = blockSize(format);
@@ -859,130 +949,166 @@ bool Surface::setImage2D(Format format, Decoder decoder, int w, int h, const voi
     const uint8 * ptr = (const uint8 *)data;
 
     TRY {
-		if (format == nvtt::Format_BC6)
-		{
-			// BC6 format - decode directly to float
+#if defined(HAVE_PVRTEXTOOL)
+        if (format >= nvtt::Format_PVR_2BPP_RGB && format <= nvtt::Format_PVR_4BPP_RGBA)
+        {
+            bool two_bit_mode = (format == nvtt::Format_PVR_2BPP_RGB || format == nvtt::Format_PVR_2BPP_RGBA);
 
-			for (int y = 0; y < bh; y++)
-			{
-				for (int x = 0; x < bw; x++)
-				{
-                    Vector3 colors[16];
-                    const BlockBC6 * block = (const BlockBC6 *)ptr;
-					block->decodeBlock(colors);
+            uint8 * output = new uint8[4 * w * h];
 
-					for (int yy = 0; yy < 4; yy++)
-					{
-						for (int xx = 0; xx < 4; xx++)
-						{
-							Vector3 rgb = colors[yy*4 + xx];
+            PVRTDecompressPVRTC(ptr, two_bit_mode, w, h, output);
 
-							if (x * 4 + xx < w && y * 4 + yy < h)
-							{
-								m->image->pixel(0, x*4 + xx, y*4 + yy, 0) = rgb.x;
-								m->image->pixel(1, x*4 + xx, y*4 + yy, 0) = rgb.y;
-								m->image->pixel(2, x*4 + xx, y*4 + yy, 0) = rgb.z;
-								m->image->pixel(3, x*4 + xx, y*4 + yy, 0) = 1.0f;
-							}
-						}
-					}
+            for (int y = 0; y < h; y++) {
+                for (int x = 0; x < w; x++) {
+                    m->image->pixel(0, x, y, 0) = output[4*(y*w + x) + 0] / 255.0f;
+                    m->image->pixel(1, x, y, 0) = output[4*(y*w + x) + 1] / 255.0f;
+                    m->image->pixel(2, x, y, 0) = output[4*(y*w + x) + 2] / 255.0f;
+                    m->image->pixel(3, x, y, 0) = output[4*(y*w + x) + 3] / 255.0f;
+                }
+            }
 
-					ptr += bs;
-				}
-			}
-		}
-		else
-		{
-			// Non-BC6 - decode to 8-bit, then convert to float
+            delete [] output;
+        }
+        else
+#endif
+        if (format == nvtt::Format_BC6 || (format >= nvtt::Format_ETC1 && format <= nvtt::Format_ETC2_RGBM))
+        {
+            // Some formats we decode directly to float:
 
-			for (int y = 0; y < bh; y++)
-			{
-				for (int x = 0; x < bw; x++)
-				{
-					ColorBlock colors;
+            for (int y = 0; y < bh; y++) {
+                for (int x = 0; x < bw; x++) {
+                    Vector4 colors[16];
 
-					if (format == nvtt::Format_BC1)
-					{
-						const BlockDXT1 * block = (const BlockDXT1 *)ptr;
+                    if (format == nvtt::Format_BC6) {
+                        const BlockBC6 * block = (const BlockBC6 *)ptr;
+                        block->decodeBlock(colors);
+                    }
+                    else if (format == nvtt::Format_ETC1 || format == nvtt::Format_ETC2_RGB) {
+                        nv::decompress_etc(ptr, colors);
+                    }
+                    else if (format == nvtt::Format_ETC2_RGBA || format == nvtt::Format_ETC2_RGBM) {
+                        nv::decompress_etc_eac(ptr, colors);
+                    }
+                    else if (format == nvtt::Format_ETC2_R) {
+                        // @@ Not implemented.
+                        //nv::decompress_eac(ptr, colors);
+                    }
+                    else if (format == nvtt::Format_ETC2_RG) {
+                        // @@ Not implemented.
+                        //nv::decompress_eac(ptr, colors);
+                    }
+                    else if (format == nvtt::Format_ETC2_RGB_A1) {
+                        // @@ Not implemented?
+                        //nv::decompress_etc(ptr, colors);
+                    }
 
-						if (decoder == Decoder_D3D10) {
-							block->decodeBlock(&colors, false);
-						}
-						else if (decoder == Decoder_D3D9) {
-							block->decodeBlock(&colors, false);
-						}
-						else if (decoder == Decoder_NV5x) {
-							block->decodeBlockNV5x(&colors);
-						}
-					}
-					else if (format == nvtt::Format_BC2)
-					{
-						const BlockDXT3 * block = (const BlockDXT3 *)ptr;
+                    for (int yy = 0; yy < 4; yy++) {
+                        for (int xx = 0; xx < 4; xx++) {
+                            Vector4 c = colors[yy*4 + xx];
 
-						if (decoder == Decoder_D3D10) {
-							block->decodeBlock(&colors, false);
-						}
-						else if (decoder == Decoder_D3D9) {
-							block->decodeBlock(&colors, false);
-						}
-						else if (decoder == Decoder_NV5x) {
-							block->decodeBlockNV5x(&colors);
-						}
-					}
-					else if (format == nvtt::Format_BC3)
-					{
-						const BlockDXT5 * block = (const BlockDXT5 *)ptr;
+                            if (x * 4 + xx < w && y * 4 + yy < h) {
+                                m->image->pixel(0, x*4 + xx, y*4 + yy, 0) = c.x;
+                                m->image->pixel(1, x*4 + xx, y*4 + yy, 0) = c.y;
+                                m->image->pixel(2, x*4 + xx, y*4 + yy, 0) = c.z;
+                                m->image->pixel(3, x*4 + xx, y*4 + yy, 0) = c.w;
+                            }
+                        }
+                    }
 
-						if (decoder == Decoder_D3D10) {
-							block->decodeBlock(&colors, false);
-						}
-						else if (decoder == Decoder_D3D9) {
-							block->decodeBlock(&colors, false);
-						}
-						else if (decoder == Decoder_NV5x) {
-							block->decodeBlockNV5x(&colors);
-						}
-					}
-					else if (format == nvtt::Format_BC4)
-					{
-						const BlockATI1 * block = (const BlockATI1 *)ptr;
-						block->decodeBlock(&colors, decoder == Decoder_D3D9);
-					}
-					else if (format == nvtt::Format_BC5)
-					{
-						const BlockATI2 * block = (const BlockATI2 *)ptr;
-						block->decodeBlock(&colors, decoder == Decoder_D3D9);
-					}
-					else if (format == nvtt::Format_BC7)
-					{
-						const BlockBC7 * block = (const BlockBC7 *)ptr;
-						block->decodeBlock(&colors);
-					}
-					else
-					{
-						nvDebugCheck(false);
-					}
+                    ptr += bs;
+                }
+            }
+        }
+        else
+        {
+            // Others, we decode to 8-bit, then convert to float
 
-					for (int yy = 0; yy < 4; yy++)
-					{
-						for (int xx = 0; xx < 4; xx++)
-						{
-							Color32 c = colors.color(xx, yy);
+            for (int y = 0; y < bh; y++) {
+                for (int x = 0; x < bw; x++) {
+                    ColorBlock colors;
 
-							if (x * 4 + xx < w && y * 4 + yy < h)
-							{
-								m->image->pixel(0, x*4 + xx, y*4 + yy, 0) = float(c.r) * 1.0f/255.0f;
-								m->image->pixel(1, x*4 + xx, y*4 + yy, 0) = float(c.g) * 1.0f/255.0f;
-								m->image->pixel(2, x*4 + xx, y*4 + yy, 0) = float(c.b) * 1.0f/255.0f;
-								m->image->pixel(3, x*4 + xx, y*4 + yy, 0) = float(c.a) * 1.0f/255.0f;
-							}
-						}
-					}
+                    if (format == nvtt::Format_BC1)
+                    {
+                        const BlockDXT1 * block = (const BlockDXT1 *)ptr;
 
-					ptr += bs;
-				}
-			}
-		}
+                        if (decoder == Decoder_D3D10) {
+                            block->decodeBlock(&colors, false);
+                        }
+                        else if (decoder == Decoder_D3D9) {
+                            block->decodeBlock(&colors, false);
+                        }
+                        else if (decoder == Decoder_NV5x) {
+                            block->decodeBlockNV5x(&colors);
+                        }
+                    }
+                    else if (format == nvtt::Format_BC2)
+                    {
+                        const BlockDXT3 * block = (const BlockDXT3 *)ptr;
+
+                        if (decoder == Decoder_D3D10) {
+                            block->decodeBlock(&colors, false);
+                        }
+                        else if (decoder == Decoder_D3D9) {
+                            block->decodeBlock(&colors, false);
+                        }
+                        else if (decoder == Decoder_NV5x) {
+                            block->decodeBlockNV5x(&colors);
+                        }
+                    }
+                    else if (format == nvtt::Format_BC3 || format == nvtt::Format_BC3n || format == nvtt::Format_BC3_RGBM)
+                    {
+                        const BlockDXT5 * block = (const BlockDXT5 *)ptr;
+
+                        if (decoder == Decoder_D3D10) {
+                            block->decodeBlock(&colors, false);
+                        }
+                        else if (decoder == Decoder_D3D9) {
+                            block->decodeBlock(&colors, false);
+                        }
+                        else if (decoder == Decoder_NV5x) {
+                            block->decodeBlockNV5x(&colors);
+                        }
+                    }
+                    else if (format == nvtt::Format_BC4)
+                    {
+                        const BlockATI1 * block = (const BlockATI1 *)ptr;
+                        block->decodeBlock(&colors, decoder == Decoder_D3D9);
+                    }
+                    else if (format == nvtt::Format_BC5)
+                    {
+                        const BlockATI2 * block = (const BlockATI2 *)ptr;
+                        block->decodeBlock(&colors, decoder == Decoder_D3D9);
+                    }
+                    else if (format == nvtt::Format_BC7)
+                    {
+                        const BlockBC7 * block = (const BlockBC7 *)ptr;
+                        block->decodeBlock(&colors);
+                    }
+                    else
+                    {
+                        nvDebugCheck(false);
+                    }
+
+                    for (int yy = 0; yy < 4; yy++)
+                    {
+                        for (int xx = 0; xx < 4; xx++)
+                        {
+                            Color32 c = colors.color(xx, yy);
+
+                            if (x * 4 + xx < w && y * 4 + yy < h)
+                            {
+                                m->image->pixel(0, x*4 + xx, y*4 + yy, 0) = float(c.r) * 1.0f/255.0f;
+                                m->image->pixel(1, x*4 + xx, y*4 + yy, 0) = float(c.g) * 1.0f/255.0f;
+                                m->image->pixel(2, x*4 + xx, y*4 + yy, 0) = float(c.b) * 1.0f/255.0f;
+                                m->image->pixel(3, x*4 + xx, y*4 + yy, 0) = float(c.a) * 1.0f/255.0f;
+                            }
+                        }
+                    }
+
+                    ptr += bs;
+                }
+            }
+        }
     }
     CATCH {
         return false;
@@ -1092,7 +1218,7 @@ void Surface::resize(int w, int h, int d, ResizeFilter filter, float filterWidth
     m->image = img;
 }
 
-void Surface::resize_make_square(int maxExtent, RoundMode roundMode, ResizeFilter filter)
+void Surface::resizeMakeSquare(int maxExtent, RoundMode roundMode, ResizeFilter filter)
 {
     if (isNull()) return;
 
@@ -1104,26 +1230,16 @@ void Surface::resize_make_square(int maxExtent, RoundMode roundMode, ResizeFilte
     int h = m->image->height();
     int d = m->image->depth();
 
-    getTargetExtent(&w, &h, &d, maxExtent, roundMode, m->type);
+    getTargetExtent(&w, &h, &d, maxExtent, roundMode, m->type, nvtt::ShapeRestriction_Square);
 
     if (m->type == TextureType_2D) 
     {
         nvDebugCheck(d==1);
-        int md = nv::min(w,h);
-        w = md;
-        h = md;
     }
     else if (m->type == TextureType_Cube)
     {
         nvDebugCheck(d==1);
         nvDebugCheck(w==h);
-    }
-    else if (m->type == TextureType_3D)
-    {
-        int md = nv::min(nv::min(w,h),d);
-        w = md;
-        h = md;
-        d = md;
     }
 
     resize(w, h, d, filter, filterWidth, params);
@@ -1149,6 +1265,63 @@ void Surface::resize(int maxExtent, RoundMode roundMode, ResizeFilter filter, fl
     getTargetExtent(&w, &h, &d, maxExtent, roundMode, m->type);
 
     resize(w, h, d, filter, filterWidth, params);
+}
+
+
+float rmsBilinearError(nvtt::Surface original, nvtt::Surface resized) {
+    return nv::rmsBilinearColorError(original.m->image, resized.m->image, (FloatImage::WrapMode)original.wrapMode(), original.alphaMode() == AlphaMode_Transparency);
+}
+
+
+void Surface::autoResize(float errorTolerance, RoundMode mode, ResizeFilter filter)
+{
+    Surface original = *this;
+    Surface resized = original;
+
+    int w = width();
+    int h = height();
+    int d = depth();
+
+    w = (w + 1) / 2;
+    h = (h + 1) / 2;
+    d = (d + 1) / 2;
+
+    while (w >= 4 && h >= 4 && d >= 1) {
+
+        // Resize always from original? This is more expensive, but should produce higher quality.
+        //resized = original;
+        
+        resized.resize(w, h, d, filter);
+
+#if 0
+        // Scale back up to original size. @@ Upscaling not implemented!
+        Surface restored = resized;
+        restored.resize(original.width(), original.height(), original.depth(), ResizeFilter_Triangle);
+
+        float error;
+        if (isNormalMap()) {
+            error = nvtt::angularError(original, restored);
+        }
+        else {
+            error = nvtt::rmsError(original, restored);
+        }
+#else
+        float error = rmsBilinearError(original, resized);
+#endif
+
+        if (error < errorTolerance) {
+            *this = resized;
+            nvDebug("image resized %dx%d -> %dx%d (error=%f)\n", original.width(), original.height(), w, h, error);
+        }
+        else {
+            nvDebug("image can't be resized further (error=%f)\n", error);
+            break;
+        }
+
+        w = (w + 1) / 2;
+        h = (h + 1) / 2;
+        d = (d + 1) / 2;
+    }
 }
 
 bool Surface::canMakeNextMipmap(int min_size /*= 1*/)
@@ -1196,7 +1369,7 @@ bool Surface::buildNextMipmap(MipmapFilter filter, float filterWidth, const floa
         {
             nvDebugCheck(filter == MipmapFilter_Kaiser);
             KaiserFilter filter(filterWidth);
-            if (params != NULL) filter.setParameters(params[0], params[1]);
+            if (params != NULL) filter.setParameters(/*alpha=*/params[0], /*stretch=*/params[1]);
             img = img->downSample(filter, wrapMode, 3);
         }
     }
@@ -1345,22 +1518,46 @@ static float toSrgb(float f) {
     return f;
 }
 
-void Surface::toSrgb()
-{
+// sRGB approximation from: http://chilliant.blogspot.com/2012/08/srgb-approximations-for-hlsl.html
+static float toSrgbFast(float f) {
+    f = saturate(f);
+    float s1 = sqrtf(f);
+    float s2 = sqrtf(s1);
+    float s3 = sqrtf(s2);
+    return 0.662002687f * s1 + 0.684122060f * s2 - 0.323583601f * s3 - 0.0225411470f * f;
+}
+
+void Surface::toSrgb() {
     if (isNull()) return;
 
     detach();
 
     FloatImage * img = m->image;
 
-    const uint count = img->pixelCount();
-    for (uint c = 0; c < 3; c++) {
-        float * channel = img->channel(c);
-        for (uint i = 0; i < count; i++) {
-            channel[i] = ::toSrgb(channel[i]);
-        }
+    const uint count = 3 * img->pixelCount();
+    float * channel = img->channel(0);
+    for (uint i = 0; i < count; i++) {
+        channel[i] = ::toSrgb(channel[i]);
     }
 }
+
+void Surface::toSrgbFast() {
+    if (isNull()) return;
+
+    detach();
+
+    FloatImage * img = m->image;
+
+    const uint count = 3 * img->pixelCount();
+    float * channel = img->channel(0);
+    for (uint i = 0; i < count; i++) {
+        channel[i] = ::toSrgbFast(channel[i]);
+    }
+    //parallel_for(count, 128, [=](int i) {
+    //    channel[i] = toSrgbFast(channel[i]);
+    //});
+}
+
 
 static float fromSrgb(float f) {
     if (f < 0.0f)           f = 0.0f;
@@ -1370,22 +1567,47 @@ static float fromSrgb(float f) {
     return f;
 }
 
-void Surface::toLinearFromSrgb()
-{
+// sRGB approximation from: http://chilliant.blogspot.com/2012/08/srgb-approximations-for-hlsl.html
+static float fromSrgbFast(float f) {
+    f = saturate(f);
+    return f * (f * (f * 0.305306011f + 0.682171111f) + 0.012522878f);
+}
+
+
+void Surface::toLinearFromSrgb() {
     if (isNull()) return;
 
     detach();
 
     FloatImage * img = m->image;
 
-    const uint count = img->pixelCount();
-    for (uint c = 0; c < 3; c++) {
-        float * channel = img->channel(c);
-        for (uint i = 0; i < count; i++) {
-            channel[i] = ::fromSrgb(channel[i]);
-        }
+    const uint count = 3  *img->pixelCount();
+    float * channel = img->channel(0);
+    for (uint i = 0; i < count; i++) {
+        channel[i] = ::fromSrgb(channel[i]);
     }
+    //parallel_for(count, 128, [=](int i) {
+    //    channel[i] = ::fromSrgb(channel[i]);
+    //});
 }
+
+void Surface::toLinearFromSrgbFast() {
+    if (isNull()) return;
+
+    detach();
+
+    FloatImage * img = m->image;
+
+    const uint count = 3 * img->pixelCount();
+    float * channel = img->channel(0);
+    for (uint i = 0; i < count; i++) {
+        channel[i] = ::fromSrgbFast(channel[i]);
+    }
+    //parallel_for(count, 128, [=](int i) {
+    //    channel[i] = ::fromSrgbFast(channel[i]);
+    //});
+}
+
 
 static float toXenonSrgb(float f) {
     if (f < 0)                  f = 0;
@@ -1790,7 +2012,7 @@ static Color32 toRgbe8(float r, float g, float b)
     }
     else {
         int e;
-        v = frexp(v, &e) * 256.0f / v;
+        v = frexpf(v, &e) * 256.0f / v;
         c.r = uint8(clamp(r * v, 0.0f, 255.0f));
         c.g = uint8(clamp(g * v, 0.0f, 255.0f));
         c.b = uint8(clamp(b * v, 0.0f, 255.0f));
@@ -2642,13 +2864,13 @@ void Surface::transformNormals(NormalTransform xform)
             float discriminant = b * b - 4.0f * a * c;
             float t = (-b + sqrtf(discriminant)) / (2.0f * a);
 
-            float d = fabs(n.z * t - (1 - n.x*n.x*t*t) * (1 - n.y*n.y*t*t));
+            float d = fabsf(n.z * t - (1 - n.x*n.x*t*t) * (1 - n.y*n.y*t*t));
 
             while (d > 0.0001) {
                 float ft = 1 - n.z * t - (n.x*n.x + n.y*n.y)*t*t + n.x*n.x*n.y*n.y*t*t*t*t;
                 float fit = - n.z - 2*(n.x*n.x + n.y*n.y)*t + 4*n.x*n.x*n.y*n.y*t*t*t;
                 t -= ft / fit;
-                d = fabs(n.z * t - (1 - n.x*n.x*t*t) * (1 - n.y*n.y*t*t));
+                d = fabsf(n.z * t - (1 - n.x*n.x*t*t) * (1 - n.y*n.y*t*t));
             };
 
             n.x = n.x * t;
@@ -2827,6 +3049,78 @@ Surface Surface::createSubImage(int x0, int x1, int y0, int y1, int z0, int z1) 
     return s;
 }
 
+
+Surface Surface::warp(int w, int h, WarpFunction * warp_function) const
+{
+    Surface s;
+
+    FloatImage * img = s.m->image = new FloatImage;
+
+    const int C = m->image->componentCount();
+    img->allocate(C, w, h, 1);
+
+#define USE_PARALLEL_FOR 0
+#if USE_PARALLEL_FOR
+    nv::parallel_for(h, 1, [=](int y) {
+#else
+    for (int y = 0; y < h; y++) {
+#endif
+        for (int x = 0; x < w; x++) {
+            float fx = (float(x) + 0.0f) / w;
+            float fy = (float(y) + 0.0f) / h;
+            float fz = 0;
+
+            warp_function(fx, fy, fz);
+
+            for (int c = 0; c < C; c++) {
+                img->pixel(c, x, y, 0) = m->image->sampleLinearClamp(c, fx, fy);
+            }
+        }
+    }
+#if USE_PARALLEL_FOR
+    );
+#endif
+
+    return s;
+}
+
+Surface Surface::warp(int w, int h, int d, WarpFunction * warp_function) const
+{
+    Surface s;
+
+    FloatImage * img = s.m->image = new FloatImage;
+
+    const int C = m->image->componentCount();
+    img->allocate(C, w, h, d);
+
+    for (int z = 0; z < d; z++) {
+#define USE_PARALLEL_FOR 0
+#if USE_PARALLEL_FOR
+        nv::parallel_for(h, 1, [=](int y) {
+#else
+        for (int y = 0; y < h; y++) {
+#endif
+            for (int x = 0; x < w; x++) {
+                float fx = (float(x) + 0.0f) / w;
+                float fy = (float(y) + 0.0f) / h;
+                float fz = (float(z) + 0.0f) / d;
+
+                warp_function(fx, fy, fz);
+
+                for (int c = 0; c < C; c++) {
+                    img->pixel(c, x, y, z) = m->image->sampleLinearClamp(c, fx, fy, fz);    // @@ 2D only.
+                }
+            }
+        }
+#if USE_PARALLEL_FOR
+        );
+#endif
+    }
+
+    return s;
+}
+
+
 bool Surface::copyChannel(const Surface & srcImage, int srcChannel)
 {
     return copyChannel(srcImage, srcChannel, srcChannel);
@@ -2953,7 +3247,7 @@ void Surface::setAtlasBorder(int aw, int ah, float r, float g, float b, float a)
         }
 
         // Vertical lines:
-        for (uint i = 0, x = 0; i < uint(ah); i++, x += tile_width)
+        for (uint i = 0, x = 0; i < uint(aw); i++, x += tile_width)
         {
             for (uint y = 0; y < h; y++)
             {
@@ -3083,9 +3377,9 @@ Surface nvtt::histogram(const Surface & img, int width, int height)
     return histogram(img, /*minRange*/0, maxRange, width, height);
 }
 
-#include "nvcore/Array.inl"
-#include "nvmath/PackedFloat.h"
-#include <stdio.h>
+//#include "nvcore/Array.inl"
+//#include "nvmath/PackedFloat.h"
+//#include <stdio.h>
 
 nvtt::Surface nvtt::histogram(const Surface & img, float minRange, float maxRange, int width, int height)
 {
@@ -3234,7 +3528,7 @@ nvtt::Surface nvtt::histogram(const Surface & img, float minRange, float maxRang
         maxh = nv::max(maxh, nv::max3(buckets[i].x, buckets[i].y, buckets[i].z));
     }
 
-    printf("maxh = %f\n", maxh);
+    //printf("maxh = %f\n", maxh);
     //maxh = 80;
     maxh = 256;
 

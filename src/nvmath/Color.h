@@ -10,7 +10,7 @@ namespace nv
 {
 
     /// 64 bit color stored as BGRA.
-    class NVMATH_CLASS Color64 
+    class Color64 
     {
     public:
         Color64() { }
@@ -46,7 +46,7 @@ namespace nv
     };
 
     /// 32 bit color stored as BGRA.
-    class NVMATH_CLASS Color32
+    class Color32
     {
     public:
         Color32() { }
@@ -96,12 +96,12 @@ namespace nv
 
 
     /// 16 bit 565 BGR color.
-    class NVMATH_CLASS Color16
+    struct Color16
     {
-    public:
         Color16() { }
         Color16(const Color16 & c) : u(c.u) { }
         explicit Color16(uint16 U) : u(U) { }
+        Color16(uint8 r, uint8 g, uint8 b) : r(r), g(g), b(b) { }
 
         union {
             struct {
@@ -120,7 +120,7 @@ namespace nv
     };
 
     /// 16 bit 4444 BGRA color.
-    class NVMATH_CLASS Color16_4444
+    class Color16_4444
     {
     public:
         Color16_4444() { }

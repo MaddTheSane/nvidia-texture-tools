@@ -27,9 +27,9 @@
 
 #include "OutputOptions.h"
 
-// An OutputHandler that sets and calls function pointers, rather than
-// requiring interfaces to derive from OutputHandler itself
-struct HandlerProxy : public nvtt::OutputHandler
+// An OutputHandler/ErrorHandler that sets and calls function pointers, rather than
+// requiring interfaces to derive from OutputHandler/ErrorHandler itself
+struct HandlerProxy : public nvtt::OutputHandler, public nvtt::ErrorHandler
 {
 public:
 
@@ -38,6 +38,8 @@ public:
     nvttBeginImageHandler beginImageHandler;
     nvttOutputHandler writeDataHandler;
     nvttEndImageHandler endImageHandler;
+
+    nvttErrorHandler errorHandler;
 
     virtual void beginImage(int size, int width, int height, int depth, int face, int miplevel)
     {
@@ -64,6 +66,14 @@ public:
             endImageHandler();
         }
     }
+
+    virtual void error(nvtt::Error e) 
+    {
+        if (errorHandler != NULL)
+        {
+            errorHandler((NvttError)e);
+        }
+    }
 };
 
 
@@ -78,9 +88,9 @@ void nvttDestroyInputOptions(NvttInputOptions * inputOptions)
     delete inputOptions;
 }
 
-void nvttSetInputOptionsTextureLayout(NvttInputOptions * inputOptions, NvttTextureType type, int w, int h, int d)
+void nvttSetInputOptionsTextureLayout(NvttInputOptions * inputOptions, NvttTextureType type, int w, int h, int d, int arraySize)
 {
-    inputOptions->setTextureLayout((nvtt::TextureType)type, w, h, d);
+    inputOptions->setTextureLayout((nvtt::TextureType)type, w, h, d, arraySize);
 }
 
 void nvttResetInputOptionsTextureLayout(NvttInputOptions * inputOptions)
@@ -233,12 +243,32 @@ void nvttSetOutputOptionsOutputHeader(NvttOutputOptions * outputOptions, NvttBoo
 {
     outputOptions->setOutputHeader(b != NVTT_False);
 }
-/*
+
+void nvttSetOutputOptionsContainer(NvttOutputOptions * outputOptions, NvttContainer containerFormat)
+{
+    outputOptions->setContainer((nvtt::Container)containerFormat);
+}
+
+void nvttSetOutputOptionsSrgbFlag(NvttOutputOptions * outputOptions, NvttBoolean b)
+{
+    outputOptions->setSrgbFlag(b != NVTT_False);
+}
+
 void nvttSetOutputOptionsErrorHandler(NvttOutputOptions * outputOptions, nvttErrorHandler errorHandler)
 {
-    outputOptions->setErrorHandler(errorHandler);
+    HandlerProxy * handler = (HandlerProxy *)outputOptions->m.wrapperProxy;
+
+    handler->errorHandler = errorHandler;
+
+    if (errorHandler == NULL) 
+    {
+        outputOptions->setErrorHandler(NULL);
+    }
+    else
+    {
+        outputOptions->setErrorHandler(handler);
+    }
 }
-*/
 
 void nvttSetOutputOptionsOutputHandler(NvttOutputOptions * outputOptions, nvttBeginImageHandler beginImageHandler, nvttOutputHandler writeDataHandler, nvttEndImageHandler endImageHandler)
 {
@@ -268,6 +298,16 @@ NvttCompressor * nvttCreateCompressor()
 void nvttDestroyCompressor(NvttCompressor * compressor)
 {
     delete compressor;
+}
+
+void nvttEnableCudaAcceleration(NvttCompressor * compressor, NvttBoolean b)
+{
+    compressor->enableCudaAcceleration(b != NVTT_False);
+}
+
+NvttBoolean nvttIsCudaAccelerationEnabled(const NvttCompressor* compressor)
+{
+    return (NvttBoolean)compressor->isCudaAccelerationEnabled();
 }
 
 NvttBoolean nvttCompress(const NvttCompressor * compressor, const NvttInputOptions * inputOptions, const NvttCompressionOptions * compressionOptions, const NvttOutputOptions * outputOptions)

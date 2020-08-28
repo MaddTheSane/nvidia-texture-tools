@@ -1,7 +1,5 @@
 /buildpkg eol=lf
 /configure eol=lf
-CMakeLists.txt eol=lf
-*.md text eol=lf
 *.sh text eol=lf
 
 *.pdf binary

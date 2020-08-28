@@ -8,7 +8,9 @@
 #include "Win32.h"
 #elif NV_OS_UNIX
 #include <sys/types.h>
+#if !NV_OS_LINUX
 #include <sys/sysctl.h>
+#endif
 #include <unistd.h>
 #elif NV_OS_DARWIN
 #import <stdio.h>
@@ -85,7 +87,9 @@ uint nv::processorCount() {
 
     return count;
 #elif NV_OS_ORBIS
-    return 6;
+	return 6;
+#elif NV_OS_DURANGO
+	return 6;
 #elif NV_OS_XBOX
     return 3; // or 6?
 #elif NV_OS_LINUX || NV_OS_NETBSD // Linux, Solaris, & AIX
