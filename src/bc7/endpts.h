@@ -28,7 +28,7 @@ static const int CHANNEL_A		= 3;
 
 struct FltEndpts
 {
-    simd::float4	A;
+	simd::float4	A;
 	simd::float4	B;
 };
 

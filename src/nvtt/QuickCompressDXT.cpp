@@ -359,7 +359,7 @@ inline static float evaluatePaletteError3(const simd::float3 block[16], const si
             continue;
         }
 
-        float3 color = set.color(i).xyz();
+        float3 color = set.color(i).xyz;
 		
 		float d0 = colorDistance(palette[0], color);
 		float d1 = colorDistance(palette[1], color);

@@ -507,7 +507,7 @@ namespace
         { "L8", D3DFMT_L8,             DXGI_FORMAT_R8_UNORM ,         { 8,  0xFF,       0,          0,          0 } },
         { "L16", D3DFMT_L16,            DXGI_FORMAT_R16_UNORM,         { 16, 0xFFFF,     0,          0,          0 } },
         { "AL88", D3DFMT_A8L8,           0,                             { 16, 0xFF,       0,          0,     0xFF00 } },
-        { "", 0,                     DXGI_FORMAT_R8G8_UNORM,        { 16, 0xFF,       0xFF00,     0,          0 } },
+        { "none", 0,                     DXGI_FORMAT_R8G8_UNORM,        { 16, 0xFF,       0xFF00,     0,          0 } },
     };
 
     static const uint s_formatCount = NV_ARRAY_SIZE(s_formats);

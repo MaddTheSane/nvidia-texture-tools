@@ -1011,7 +1011,7 @@ void ArvoSVD(int rows, int cols, float * Q, float * diag, float * R)
 				for( k = l; k < cols; k++ ) Q[i*cols+k] *= scale;
 			}
 		}
-        norm = simd::max( norm, fabsf( diag[i] ) + fabsf( temp[i] ) );
+		norm = simd::max( norm, fabsf( diag[i] ) + fabsf( temp[i] ) );
 	}
 
 
@@ -1073,7 +1073,7 @@ void ArvoSVD(int rows, int cols, float * Q, float * diag, float * R)
 	{
 		for( iter = 1; iter <= MaxIterations; iter++ ) 
 		{
-			int jump=0;
+			int jump = 0;
 
 			for( l = k; l >= 0; l-- )
 			{
