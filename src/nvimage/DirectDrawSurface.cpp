@@ -372,6 +372,8 @@ namespace
             case DXGI_FORMAT_BC7_UNORM:
             case DXGI_FORMAT_BC7_UNORM_SRGB:
                 return true;
+            default:
+                break;
         }
         return false;
     }
@@ -399,6 +401,8 @@ namespace
             case FOURCC_DXT5:
             case FOURCC_BC7L:
                 return true;
+            default:
+                break;
         }
         return false;
     }
