@@ -10,7 +10,6 @@
 
 namespace nv
 {
-    class Vector;
     class Stream;
     class Sphere;
 

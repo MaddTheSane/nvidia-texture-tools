@@ -20,31 +20,31 @@ bool Box::clipSegment(const float3 & origin, const float3 & dir, float * t_near,
 	// clip ray segment to box
 	for (int i = 0; i < 3; i++)
 	{
-		const float pos = origin.component[i] + tfar * dir.component[i];
+		const float pos = origin[i] + tfar * dir[i];
 		const float dt = tfar - tnear;
 
-		if (dir.component[i] < 0) {
+		if (dir[i] < 0) {
 			
 			// clip end point
-			if (pos < minCorner.component[i]) {
-                tfar = tnear + dt * (origin.component[i] - minCorner.component[i]) / (origin.component[i] - pos);
+			if (pos < minCorner[i]) {
+                tfar = tnear + dt * (origin[i] - minCorner[i]) / (origin[i] - pos);
 			}
 			
 			// clip start point
-			if (origin.component[i] > maxCorner.component[i]) {
-				tnear = tnear + dt * (origin.component[i] - maxCorner.component[i]) / (tfar * dir.component[i]);
+			if (origin[i] > maxCorner[i]) {
+				tnear = tnear + dt * (origin[i] - maxCorner[i]) / (tfar * dir[i]);
 			}
 		}
 		else {
 
 			// clip end point
-			if (pos > maxCorner.component[i]) {
-				tfar = tnear + dt * (maxCorner.component[i] - origin.component[i]) / (pos - origin.component[i]);
+			if (pos > maxCorner[i]) {
+				tfar = tnear + dt * (maxCorner[i] - origin[i]) / (pos - origin[i]);
 			}
 
 			// clip start point
-			if (origin.component[i] < minCorner.component[i]) {
-				tnear = tnear + dt * (minCorner.component[i] - origin.component[i]) / (tfar * dir.component[i]);
+			if (origin[i] < minCorner[i]) {
+				tnear = tnear + dt * (minCorner[i] - origin[i]) / (tfar * dir[i]);
 			}
 		}
 
@@ -76,7 +76,7 @@ float nv::distanceSquared(const Box &box, const float3 &point) {
     else if (point.z > box.maxCorner.z) closest.z = box.maxCorner.z;
     else closest.z = point.z;
 
-    return lengthSquared(point - closest);
+    return simd::length_squared(point - closest);
 }
 
 /*bool nv::overlap(const Box &box, const Sphere &sphere) {
