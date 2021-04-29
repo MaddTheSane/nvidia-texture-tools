@@ -16,8 +16,6 @@ SET(SQUISH_SRCS
 	config.h
 	maths.cpp
 	maths.h
-	simd.h
-	simd_sse.h
-	simd_ve.h)
+	simd.h)
 
 ADD_LIBRARY(nvsquish STATIC ${SQUISH_SRCS})

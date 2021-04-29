@@ -62,9 +62,6 @@ SET(SQUISH_SRCS
     rangefit.cpp
     rangefit.h
     simd.h
-    simd_float.h
-    simd_sse.h
-    simd_ve.h
     singlecolourfit.cpp
     singlecolourfit.h
     singlecolourlookup.inl
