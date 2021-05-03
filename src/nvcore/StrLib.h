@@ -1,11 +1,11 @@
-// This code is in the public domain -- Ignacio Castaño <castano@gmail.com>
+// This code is in the public domain -- Ignacio CastaÃ±o <castano@gmail.com>
 
 #pragma once
 #ifndef NV_CORE_STRING_H
 #define NV_CORE_STRING_H
 
-#include "Debug.h"
-#include "Hash.h" // hash
+#include <NVCore/Debug.h>
+#include <NVCore/Hash.h> // hash
 
 //#include <string.h> // strlen, etc.
 

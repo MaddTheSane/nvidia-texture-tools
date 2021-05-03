@@ -1,8 +1,8 @@
-// This code is in the public domain -- Ignacio Castaño <castano@gmail.com>
+// This code is in the public domain -- Ignacio CastaÃ±o <castano@gmail.com>
 
 #pragma once
 
-#include "nvmath.h"
+#include <NVMath/nvmath.h>
 #include <simd/simd.h>
 
 namespace nv

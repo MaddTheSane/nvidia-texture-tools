@@ -1,13 +1,13 @@
-// This code is in the public domain -- Ignacio Castaño <castano@gmail.com>
+// This code is in the public domain -- Ignacio CastaÃ±o <castano@gmail.com>
 
 #pragma once
 #ifndef NV_CORE_ARRAY_INL
 #define NV_CORE_ARRAY_INL
 
-#include "Array.h"
+#include <NVCore/Array.h>
 
-#include "Stream.h"
-#include "Utils.h" // swap
+#include <NVCore/Stream.h>
+#include <NVCore/Utils.h> // swap
 
 #include <string.h>	// memmove
 #include <new> // for placement new

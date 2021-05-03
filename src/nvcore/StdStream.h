@@ -4,9 +4,9 @@
 #ifndef NV_CORE_STDSTREAM_H
 #define NV_CORE_STDSTREAM_H
 
-#include "nvcore.h"
-#include "Stream.h"
-#include "Array.h"
+#include <NVCore/nvcore.h>
+#include <NVCore/Stream.h>
+#include <NVCore/Array.h>
 
 #include <stdio.h> // fopen
 #include <string.h> // memcpy

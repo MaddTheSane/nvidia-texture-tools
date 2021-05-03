@@ -25,10 +25,10 @@
 #ifndef NV_TT_OUTPUTOPTIONS_H
 #define NV_TT_OUTPUTOPTIONS_H
 
-#include "nvtt.h"
+#include <NVTT/nvtt.h>
 
-#include "nvcore/StrLib.h" // Path
-#include "nvcore/StdStream.h"
+#include <NVCore/StrLib.h> // Path
+#include <NVCore/StdStream.h>
 
 
 namespace nvtt

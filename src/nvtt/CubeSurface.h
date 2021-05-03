@@ -24,16 +24,16 @@
 #ifndef NVTT_CUBEIMAGE_H
 #define NVTT_CUBEIMAGE_H
 
-#include "nvtt.h"
-#include "Surface.h"
+#include <NVTT/nvtt.h>
+#include <NVTT/Surface.h>
 
-#include "nvimage/FloatImage.h"
+#include <NVImage/FloatImage.h>
 
-#include "nvmath/Vector.h"
+#include <NVMath/Vector.h>
 
-#include "nvcore/RefCounted.h"
-#include "nvcore/Ptr.h"
-#include "nvcore/Array.h"
+#include <NVCore/RefCounted.h>
+#include <NVCore/Ptr.h>
+#include <NVCore/Array.h>
 
 
 namespace nvtt

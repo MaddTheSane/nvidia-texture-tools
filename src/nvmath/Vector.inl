@@ -2,11 +2,11 @@
 
 #pragma once
 
-#include "Vector.h"
-#include "nvmath.h"
+#include <NVMath/Vector.h>
+#include <NVMath/nvmath.h>
 
-#include "nvcore/Utils.h" // min, max
-#include "nvcore/Hash.h" // hash
+#include <NVCore/Utils.h> // min, max
+#include <NVCore/Hash.h> // hash
 
 //Kept for legacy reasons.
 

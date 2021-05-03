@@ -1,4 +1,4 @@
-// This code is in the public domain -- Ignacio Castaño <castano@gmail.com>
+// This code is in the public domain -- Ignacio CastaÃ±o <castano@gmail.com>
 
 #pragma once
 #ifndef NV_CORE_ARRAY_H
@@ -14,9 +14,9 @@ container. This is forbidden to prevent an extra copy.
 */
 
 
-#include "Memory.h"
-#include "Debug.h"
-#include "ForEach.h" // PseudoIndex
+#include <NVCore/Memory.h>
+#include <NVCore/Debug.h>
+#include <NVCore/ForEach.h> // PseudoIndex
 
 
 namespace nv 

@@ -4,7 +4,7 @@
 #ifndef NV_THREAD_H
 #define NV_THREAD_H
 
-#include "nvcore/nvcore.h"
+#include <NVCore/nvcore.h>
 
 // Function linkage
 #if NVTHREAD_SHARED

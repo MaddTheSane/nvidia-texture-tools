@@ -1,7 +1,7 @@
 // This code is in the public domain -- castanyo@yahoo.es
 #pragma once
 
-#include "nvimage.h"
+#include <NVImage/nvimage.h>
 
 namespace nv
 {

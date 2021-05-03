@@ -2,9 +2,9 @@
 
 #pragma once
 
-#include "nvcore/nvcore.h"
-#include "nvcore/Debug.h"   // nvDebugCheck
-#include "nvcore/Utils.h"   // max, clamp
+#include <NVCore/nvcore.h>
+#include <NVCore/Debug.h>   // nvDebugCheck
+#include <NVCore/Utils.h>   // max, clamp
 
 // Both cmath and math for C++11 and C function definitions.
 #include <cmath>

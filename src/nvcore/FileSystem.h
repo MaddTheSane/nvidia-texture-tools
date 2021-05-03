@@ -4,7 +4,7 @@
 #ifndef NV_CORE_FILESYSTEM_H
 #define NV_CORE_FILESYSTEM_H
 
-#include "nvcore.h"
+#include <NVCore/nvcore.h>
 
 namespace nv
 {

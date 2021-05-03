@@ -1,8 +1,8 @@
 // This code is in the public domain -- castanyo@yahoo.es
 #pragma once
 
-#include "nvimage.h"
-#include "nvcore/Debug.h"
+#include <NVImage/nvimage.h>
+#include <NVCore/Debug.h>
 
 #if NV_USE_ALTIVEC
 #undef pixel

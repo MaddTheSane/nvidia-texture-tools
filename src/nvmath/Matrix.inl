@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "Matrix.h"
-#include "nvmath.h"
+#include <NVMath/Matrix.h>
+#include <NVMath/nvmath.h>
 
 namespace nv
 {

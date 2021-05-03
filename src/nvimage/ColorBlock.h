@@ -4,8 +4,8 @@
 #ifndef NV_IMAGE_COLORBLOCK_H
 #define NV_IMAGE_COLORBLOCK_H
 
-#include "nvmath/Color.h"
-#include "nvmath/Vector.h"
+#include <NVMath/Color.h>
+#include <NVMath/Vector.h>
 #include <simd/simd.h>
 
 namespace nv

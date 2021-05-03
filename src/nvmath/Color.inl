@@ -4,9 +4,9 @@
 #ifndef NV_MATH_COLOR_INL
 #define NV_MATH_COLOR_INL
 
-#include "Color.h"
-#include "Vector.inl"
-#include "ftoi.h"
+#include <NVMath/Color.h>
+#include <NVMath/Vector.inl>
+#include <NVMath/ftoi.h>
 
 
 namespace nv

@@ -2,7 +2,7 @@
 #ifndef NV_MATH_HALF_H
 #define NV_MATH_HALF_H
 
-#include "nvmath.h"
+#include <NVMath/nvmath.h>
 
 namespace nv {
 

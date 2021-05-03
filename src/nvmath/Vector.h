@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "nvmath.h"
+#include <NVMath/nvmath.h>
 #include <simd/simd.h>
 
 namespace nv

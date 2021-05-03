@@ -1,7 +1,7 @@
 // MIT license see full LICENSE text at end of file
 #pragma once
 
-#include "nvimage.h"
+#include <NVImage/nvimage.h>
 
 #define NV_MAKEFOURCC(ch0, ch1, ch2, ch3) \
     (uint(uint8(ch0)) | (uint(uint8(ch1)) << 8) | \

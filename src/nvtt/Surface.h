@@ -25,13 +25,13 @@
 #ifndef NVTT_TEXIMAGE_H
 #define NVTT_TEXIMAGE_H
 
-#include "nvtt.h"
+#include <NVTT/nvtt.h>
 
-#include "nvcore/RefCounted.h"
-#include "nvcore/Ptr.h"
+#include <NVCore/RefCounted.h>
+#include <NVCore/Ptr.h>
 
-#include "nvimage/Image.h"
-#include "nvimage/FloatImage.h"
+#include <NVImage/Image.h>
+#include <NVImage/FloatImage.h>
 
 namespace nvtt
 {

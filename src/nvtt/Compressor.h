@@ -25,8 +25,8 @@
 #ifndef NVTT_COMPRESSOR_H
 #define NVTT_COMPRESSOR_H
 
-#include "nvtt.h"
-#include "nvcore/nvcore.h" // uint
+#include <NVTT/nvtt.h>
+#include <NVCore/nvcore.h> // uint
 
 namespace nv
 {

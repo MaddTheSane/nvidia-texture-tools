@@ -1,4 +1,4 @@
-// This code is in the public domain -- Ignacio Castaño <castano@gmail.com>
+// This code is in the public domain -- Ignacio CastaÃ±o <castano@gmail.com>
 
 #pragma once
 #ifndef NV_CORE_FOREACH_H
@@ -8,7 +8,7 @@
 These foreach macros are very non-standard and somewhat confusing, but I like them.
 */
 
-#include "nvcore.h"
+#include <NVCore/nvcore.h>
 
 #if NV_CC_GNUC // If typeof or decltype is available:
 #if !NV_CC_CPP11

@@ -33,7 +33,7 @@
 #include <cmath>
 #include <algorithm>
 #include <simd/simd.h>
-#include "config.h"
+#include <NVTT/config.h>
 
 #if NV_USE_ALTIVEC
 #define vector __vector

@@ -1,6 +1,6 @@
 
-#include "nvimage.h"
-#include "FloatImage.h" // For FloatImage::WrapMode
+#include <NVImage/nvimage.h>
+#include <NVImage/FloatImage.h> // For FloatImage::WrapMode
 
 
 namespace nv

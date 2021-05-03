@@ -3,7 +3,7 @@
 #ifndef NV_MATH_SPHERICALHARMONIC_H
 #define NV_MATH_SPHERICALHARMONIC_H
 
-#include "nvmath.h"
+#include <NVMath/nvmath.h>
 #include <simd/simd.h>
 
 #include <string.h> // memcpy

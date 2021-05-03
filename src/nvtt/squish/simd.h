@@ -28,7 +28,7 @@
 
 #include <simd/simd.h>
 #include <cassert>
-#include "maths.h"
+#include <NVTT/maths.h>
 
 #ifdef __GNUC__
 #	define SQUISH_ALIGN_16 __attribute__ ((__aligned__ (16)))

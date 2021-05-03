@@ -25,7 +25,7 @@
 #ifndef NVTT_COMPRESSORDX9_H
 #define NVTT_COMPRESSORDX9_H
 
-#include "BlockCompressor.h"
+#include <NVTT/BlockCompressor.h>
 
 namespace nv
 {

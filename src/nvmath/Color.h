@@ -4,7 +4,7 @@
 #ifndef NV_MATH_COLOR_H
 #define NV_MATH_COLOR_H
 
-#include "nvmath.h"
+#include <NVMath/nvmath.h>
 
 namespace nv
 {

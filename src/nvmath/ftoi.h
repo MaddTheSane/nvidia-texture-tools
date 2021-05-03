@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "nvmath/nvmath.h"
+#include <nvmath/nvmath.h>
 
 #if NV_USE_SSE
     #include <xmmintrin.h>

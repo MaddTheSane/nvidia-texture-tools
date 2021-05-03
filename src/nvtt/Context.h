@@ -25,12 +25,12 @@
 #ifndef NV_TT_CONTEXT_H
 #define NV_TT_CONTEXT_H
 
-#include "nvcore/Ptr.h"
+#include <NVCore/Ptr.h>
 
-#include "nvtt/Compressor.h"
-#include "nvtt/cuda/CudaCompressorDXT.h"
-#include "nvtt.h"
-#include "TaskDispatcher.h"
+#include <NVTT/Compressor.h>
+#include <NVTT/cuda/CudaCompressorDXT.h>
+#include <NVTT/nvtt.h>
+#include <NVTT/TaskDispatcher.h>
 
 namespace nv
 {

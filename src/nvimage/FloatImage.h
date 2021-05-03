@@ -3,12 +3,12 @@
 #ifndef NV_IMAGE_FLOATIMAGE_H
 #define NV_IMAGE_FLOATIMAGE_H
 
-#include "nvimage.h"
+#include <NVImage/nvimage.h>
 
-#include "nvmath/nvmath.h" // lerp
+#include <NVMath/nvmath.h> // lerp
 
-#include "nvcore/Debug.h"
-#include "nvcore/Utils.h" // clamp
+#include <NVCore/Debug.h>
+#include <NVCore/Utils.h> // clamp
 
 #include <stdlib.h> // abs
 #include <simd/simd.h>

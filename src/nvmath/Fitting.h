@@ -1,9 +1,9 @@
 // This code is in the public domain -- Ignacio Castaño <castano@gmail.com>
 #pragma once
 
-#include "nvmath.h" // NV_EPSILON
+#include <NVMath/nvmath.h> // NV_EPSILON
 #include <simd/simd.h>
-#include "Plane.h"
+#include <NVMath/Plane.h>
 
 namespace nv
 {

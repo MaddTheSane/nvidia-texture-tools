@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "Compressor.h"
+#include <NVTT/Compressor.h>
 #include <simd/simd.h>
 
 namespace nv

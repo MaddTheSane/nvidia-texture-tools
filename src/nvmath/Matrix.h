@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Vector.h"
+#include <NVMath/Vector.h>
 #include <simd/simd.h>
 
 // - Matrices are stored in memory in *column major* order.

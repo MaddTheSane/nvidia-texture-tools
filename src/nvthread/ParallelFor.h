@@ -1,10 +1,10 @@
-// This code is in the public domain -- Ignacio Castaño <castano@gmail.com>
+// This code is in the public domain -- Ignacio CastaÃ±o <castano@gmail.com>
 
 #pragma once
 #ifndef NV_THREAD_PARALLELFOR_H
 #define NV_THREAD_PARALLELFOR_H
 
-#include "nvthread.h"
+#include <NVThread/nvthread.h>
 //#include "Atomic.h" // atomic<uint>
 
 namespace nv

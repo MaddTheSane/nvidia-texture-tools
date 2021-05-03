@@ -26,10 +26,10 @@
 #ifndef NV_SQUISH_CLUSTERFIT_H
 #define NV_SQUISH_CLUSTERFIT_H
 
-#include "squish.h"
-#include "maths.h"
-#include "simd.h"
-#include "colourfit.h"
+//#include "squish.h"
+#include <NVTT/maths.h>
+#include <NVTT/simd.h>
+#include <NVTT/colourfit.h>
 
 namespace nvsquish {
 

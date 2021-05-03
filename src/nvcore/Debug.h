@@ -1,10 +1,10 @@
-// This code is in the public domain -- Ignacio Castaño <castano@gmail.com>
+// This code is in the public domain -- Ignacio CastaÃ±o <castano@gmail.com>
 
 #pragma once
 #ifndef NV_CORE_DEBUG_H
 #define NV_CORE_DEBUG_H
 
-#include "nvcore.h"
+#include <NVCore/nvcore.h>
 
 #include <stdarg.h> // va_list
 

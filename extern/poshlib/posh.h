@@ -357,7 +357,7 @@ LCC predefines the following:
 
 //ACS if we're in xcode, look at the target conditionals to figure out if this is ios or osx
 #if defined __APPLE__
-#  include "TargetConditionals.h"
+#  include <TargetConditionals.h>
 #endif
 #if TARGET_OS_IPHONE
 #    define POSH_OS_IOS 1

@@ -1,9 +1,9 @@
 // This code is in the public domain -- castanyo@yahoo.es
 #pragma once
 
-#include "nvcore/nvcore.h"
-#include "nvcore/Debug.h" // nvDebugCheck
-#include "nvcore/Utils.h" // isPowerOfTwo
+#include <NVCore/nvcore.h>
+#include <NVCore/Debug.h> // nvDebugCheck
+#include <NVCore/Utils.h> // isPowerOfTwo
 
 namespace nv {
 

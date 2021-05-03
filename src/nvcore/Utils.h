@@ -1,10 +1,10 @@
-// This code is in the public domain -- Ignacio Castaño <castano@gmail.com>
+// This code is in the public domain -- Ignacio CastaÃ±o <castano@gmail.com>
 
 #pragma once
 #ifndef NV_CORE_UTILS_H
 #define NV_CORE_UTILS_H
 
-#include "Debug.h" // nvDebugCheck
+#include <NVCore/Debug.h> // nvDebugCheck
 
 #include <new> // for placement new
 

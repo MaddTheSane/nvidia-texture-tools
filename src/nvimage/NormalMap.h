@@ -25,10 +25,10 @@
 #ifndef NV_IMAGE_NORMALMAP_H
 #define NV_IMAGE_NORMALMAP_H
 
-#include "nvimage.h"
-#include "FloatImage.h"
+#include <NVImage/nvimage.h>
+#include <NVImage/FloatImage.h>
 
-#include "nvmath/Vector.h"
+#include <NVMath/Vector.h>
 
 
 namespace nv

@@ -25,9 +25,9 @@
 #ifndef NVTT_INPUTOPTIONS_H
 #define NVTT_INPUTOPTIONS_H
 
-#include "nvtt.h"
+#include <NVTT/nvtt.h>
 
-#include "nvmath/Vector.h"
+#include <NVMath/Vector.h>
 
 
 namespace nvtt

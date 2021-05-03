@@ -26,8 +26,8 @@
 #ifndef NV_SQUISH_COLOURFIT_H
 #define NV_SQUISH_COLOURFIT_H
 
-#include "squish.h"
-#include "maths.h"
+//#include <NVTT/squish.h>
+#include <NVTT/maths.h>
 
 namespace nvsquish {
 

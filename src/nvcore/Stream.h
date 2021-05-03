@@ -4,8 +4,8 @@
 #ifndef NV_CORE_STREAM_H
 #define NV_CORE_STREAM_H
 
-#include "nvcore.h"
-#include "Debug.h"
+#include <NVCore/nvcore.h>
+#include <NVCore/Debug.h>
 
 namespace nv
 {

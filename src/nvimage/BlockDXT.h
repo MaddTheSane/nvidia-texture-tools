@@ -25,10 +25,10 @@
 #ifndef NV_IMAGE_BLOCKDXT_H
 #define NV_IMAGE_BLOCKDXT_H
 
-#include "nvimage.h"
+#include <NVImage/nvimage.h>
 
-#include "nvmath/Color.h"
-#include "nvmath/Vector.h"
+#include <NVMath/Color.h>
+#include <NVMath/Vector.h>
 
 namespace nv
 {

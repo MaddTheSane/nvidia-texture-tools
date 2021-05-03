@@ -4,8 +4,8 @@
 #ifndef NV_MATH_BOX_INL
 #define NV_MATH_BOX_INL
 
-#include "Box.h"
-#include "Vector.inl"
+#include <NVMath/Box.h>
+#include <NVMath/Vector.inl>
 
 #include <float.h> // FLT_MAX
 

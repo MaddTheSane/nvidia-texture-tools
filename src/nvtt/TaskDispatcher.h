@@ -1,5 +1,5 @@
 
-#include "nvtt.h"
+#include <NVTT/nvtt.h>
 
 // OpenMP
 // http://en.wikipedia.org/wiki/OpenMP
@@ -27,7 +27,7 @@
 #include <tbb/parallel_for.h>
 #endif
 
-#include "nvthread/ParallelFor.h"
+#include <NVThread/ParallelFor.h>
 
 
 namespace nvtt {

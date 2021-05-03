@@ -172,7 +172,7 @@
 
 
 // cmake config
-#include "nvconfig.h"
+#include <NVCore/nvconfig.h>
 
 #if NV_OS_DARWIN
 #include <stdint.h>
@@ -372,7 +372,7 @@ namespace nv {
 #   if NV_OS_LINUX
 #       include "DefsGnucLinux.h"
 #   elif NV_OS_DARWIN || NV_OS_FREEBSD || NV_OS_NETBSD || NV_OS_OPENBSD
-#       include "DefsGnucDarwin.h"
+#       include <NVCore/DefsGnucDarwin.h>
 #   elif NV_OS_MINGW
 #       include "DefsGnucWin32.h"
 #   elif NV_OS_CYGWIN

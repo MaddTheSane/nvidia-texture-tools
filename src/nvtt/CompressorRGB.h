@@ -25,7 +25,7 @@
 #ifndef NVTT_COMPRESSORRGB_H
 #define NVTT_COMPRESSORRGB_H
 
-#include "Compressor.h"
+#include <NVTT/Compressor.h>
 
 namespace nv
 {

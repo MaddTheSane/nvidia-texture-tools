@@ -1,10 +1,10 @@
-// This code is in the public domain -- Ignacio Castaño <castano@gmail.com>
+// This code is in the public domain -- Ignacio CastaÃ±o <castano@gmail.com>
 
 #ifndef NV_CORE_REFCOUNTED_H
 #define NV_CORE_REFCOUNTED_H
 
-#include "nvcore.h"
-#include "Debug.h"
+#include <NVCore/nvcore.h>
+#include <NVCore/Debug.h>
 
 #define NV_DECLARE_PTR(Class) \
     template <class T> class SmartPtr; \

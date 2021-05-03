@@ -4,7 +4,7 @@
 #ifndef NV_CORE_TIMER_H
 #define NV_CORE_TIMER_H
 
-#include "nvcore.h"
+#include <NVCore/nvcore.h>
 
 #if NV_CC_MSVC
 #include <intrin.h>
