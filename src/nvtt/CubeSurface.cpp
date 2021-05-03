@@ -607,7 +607,7 @@ void CubeSurface::computeIrradianceSH3(int channel, float coef[9]) const {
         for (uint y = 0; y < edgeLength; y++) {
             for (uint x = 0; x < edgeLength; x++) {
 
-                Vector3 dir = m->texelTable->direction(f, x, y);
+                simd::float3 dir = m->texelTable->direction(f, x, y);
                 float solidAngle = m->texelTable->solidAngle(f, x, y);
 
                 Sh2 shDir;
@@ -1066,9 +1066,9 @@ void CubeSurface::sky(float turbidity, float albedo[3], float solarElevation) {
 
     // 700 nm (red), 546.1 nm (green) and 435.8 nm (blue).
     float channel_center[3] = {
-        700,    // Red 620–740,
-        546.1,  // Green 520–570,
-        435.8,  // Blue 450–490,
+        700,    // Red 620â€“740,
+        546.1,  // Green 520â€“570,
+        435.8,  // Blue 450â€“490,
     };
 
     // @@ For each pixel:
