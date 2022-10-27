@@ -699,7 +699,7 @@ static void EigenSolver4_Tridiagonal(float mat[4][4], float * diag, float * subd
 	// a closed-form solution for symmetric 4x4 matrices.  Based on this article:
 	// http://en.wikipedia.org/wiki/Householder_transformation#Tridiagonalization
 
-	Matrix A, Q(identity);
+	nv::Matrix A, Q(identity);
 	memcpy(&A, mat, sizeof(float)*n*n);
 
 	// We proceed from left to right, making the off-tridiagonal entries zero in
@@ -721,7 +721,7 @@ static void EigenSolver4_Tridiagonal(float mat[4][4], float * diag, float * subd
 		for (int j = k+2; j < n; ++j)
 			v[j] = 0.5f * A(j,k) / r;
 
-		Matrix P(identity);
+		nv::Matrix P(identity);
 		for (int i = 0; i < n; ++i)
 			for (int j = 0; j < n; ++j)
 				P(i,j) -= 2.0f * v[i] * v[j];
