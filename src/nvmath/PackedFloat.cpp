@@ -6,22 +6,38 @@
 using namespace nv;
 
 simd::float3 nv::rgb9e5_to_vector3(FloatRGB9E5 v) {
+    // TODO: Implement
+    return 0;
 }
 
 FloatRGB9E5 nv::vector3_to_rgb9e5(const simd::float3 & v) {
+    // TODO: Implement
+    FloatRGB9E5 toRet;
+    toRet.v = 0;
+    return toRet;
 }
 
 
 float nv::float11_to_float32(uint v) {
+    // TODO: Implement
+    return 0;
 }
 
 float nv::float10_to_float32(uint v) {
+    // TODO: Implement
+    return 0;
 }
 
 simd::float3 nv::r11g11b10_to_vector3(FloatR11G11B10 v) {
+    // TODO: Implement
+    return 0;
 }
 
 FloatR11G11B10 nv::vector3_to_r11g11b10(const simd::float3 & v) {
+    // TODO: Implement
+    FloatR11G11B10 toRet;
+    toRet.v = 0;
+    return toRet;
 }
 
 // Implementation based on on:
