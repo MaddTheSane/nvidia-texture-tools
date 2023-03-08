@@ -31,12 +31,20 @@ namespace nv
 	
     inline simd::float2 clamp(const simd::float2 & v, float min, float max)
     {
+#if !defined(OLD_VECTOR_WAY) || !OLD_VECTOR_WAY
+        return simd_min(simd_max(v, min), max);
+#else
         return simd::make_float2(clamp(v.x, min, max), clamp(v.y, min, max));
+#endif
     }
 
     inline simd::float2 saturate(const simd::float2 & v)
     {
+#if !defined(OLD_VECTOR_WAY) || !OLD_VECTOR_WAY
+        return clamp(v, 0, 1);
+#else
         return simd::make_float2(saturate(v.x), saturate(v.y));
+#endif
     }
 
     inline simd::float3 lerp(const simd::float3 & v1, const simd::float3 & v2, float t)
@@ -58,12 +66,20 @@ namespace nv
 	
     inline simd::float3 clamp(const simd::float3 & v, float min, float max)
     {
+#if !defined(OLD_VECTOR_WAY) || !OLD_VECTOR_WAY
+        return simd_min(simd_max(v, min), max);
+#else
         return simd::make_float3(clamp(v.x, min, max), clamp(v.y, min, max), clamp(v.z, min, max));
+#endif
     }
 
     inline simd::float3 saturate(const simd::float3 & v)
     {
+#if !defined(OLD_VECTOR_WAY) || !OLD_VECTOR_WAY
+        return clamp(v, 0, 1);
+#else
         return simd::make_float3(saturate(v.x), saturate(v.y), saturate(v.z));
+#endif
     }
 
     inline simd::float4 lerp(const simd::float4 & v1, const simd::float4 & v2, float t)
@@ -85,12 +101,20 @@ namespace nv
 
     inline simd::float4 clamp(const simd::float4 & v, float min, float max)
     {
+#if !defined(OLD_VECTOR_WAY) || !OLD_VECTOR_WAY
+        return simd_min(simd_max(v, min), max);
+#else
         return simd::make_float4(clamp(v.x, min, max), clamp(v.y, min, max), clamp(v.z, min, max), clamp(v.w, min, max));
+#endif
     }
 	
     inline simd::float4 saturate(const simd::float4 & v)
     {
+#if !defined(OLD_VECTOR_WAY) || !OLD_VECTOR_WAY
+        return clamp(v, 0, 1);
+#else
         return simd::make_float4(saturate(v.x), saturate(v.y), saturate(v.z), saturate(v.w));
+#endif
     }
 
 } // nv namespace

@@ -21,7 +21,11 @@ namespace nv
     // Clamp color components.
     inline simd::float3 colorClamp(const simd::float3 & c)
     {
+#if !defined(OLD_VECTOR_WAY) || !OLD_VECTOR_WAY
+        return simd_min(simd_max(c, 0), 1);
+#else
         return simd::make_float3(saturate(c.x), saturate(c.y), saturate(c.z));
+#endif
     }
 
     // Clamp without allowing the hue to change.
