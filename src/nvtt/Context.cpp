@@ -54,6 +54,7 @@
 #include "nvcore/Memory.h"
 #include "nvcore/Ptr.h"
 #include "nvcore/Array.inl"
+#include <algorithm>
 
 using namespace nv;
 using namespace nvtt;
@@ -289,9 +290,9 @@ bool Compressor::Private::compress(const InputOptions::Private & inputOptions, c
             compress(tmp, f, 0, compressionOptions, outputOptions);
 
             for (int m = 1; m < mipmapCount; m++) {
-                w = max(1, w/2);
-                h = max(1, h/2);
-                d = max(1, d/2);
+                w = std::max(1, w/2);
+                h = std::max(1, h/2);
+                d = std::max(1, d/2);
 
                 int idx = m * faceCount + f;
 
@@ -396,9 +397,9 @@ bool Compressor::Private::compress(const InputOptions::Private & inputOptions, c
         static const unsigned char padding[3] = {0, 0, 0};
         for (int m = 1; m < mipmapCount; m++)
         {
-            w = max(1, w/2);
-            h = max(1, h/2);
-            d = max(1, d/2);
+            w = std::max(1, w/2);
+            h = std::max(1, h/2);
+            d = std::max(1, d/2);
 
             // https://www.khronos.org/opengles/sdk/tools/KTX/file_format_spec/#2.16
             imageSize = estimateSize(w, h, d, 1, compressionOptions) * faceCount;
@@ -1236,9 +1237,9 @@ int Compressor::Private::estimateSize(int w, int h, int d, int mipmapCount, cons
         size += computeImageSize(w, h, d, bitCount, pitchAlignment, format);
 
         // Compute extents of next mipmap:
-        w = max(1, w / 2);
-        h = max(1, h / 2);
-        d = max(1, d / 2);
+        w = std::max(1, w / 2);
+        h = std::max(1, h / 2);
+        d = std::max(1, d / 2);
     }
 
     return size;

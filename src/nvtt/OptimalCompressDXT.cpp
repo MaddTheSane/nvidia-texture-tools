@@ -34,6 +34,7 @@
 
 #include <limits.h>     // INT_MAX
 #include <float.h>      // FLT_MAX
+#include <algorithm>
 
 using namespace nv;
 using namespace OptimalCompress;
@@ -85,9 +86,9 @@ namespace
 			const int green = rgba.color(i).g;
 			
 			int error = greenDistance(green, palette[0]);
-			error = min(error, greenDistance(green, palette[1]));
-			error = min(error, greenDistance(green, palette[2]));
-			error = min(error, greenDistance(green, palette[3]));
+			error = std::min(error, greenDistance(green, palette[1]));
+			error = std::min(error, greenDistance(green, palette[2]));
+			error = std::min(error, greenDistance(green, palette[3]));
 
 			totalError += error;
 
@@ -139,9 +140,9 @@ namespace
 	// Choose quantized color that produces less error. Used by DXT3 compressor.
 	inline static uint quantize4(uint8 a)
 	{
-		int q0 = max(int(a >> 4) - 1, 0);
+		int q0 = std::max(int(a >> 4) - 1, 0);
 		int q1 = (a >> 4);
-		int q2 = min(int(a >> 4) + 1, 0xF);
+		int q2 = std::min(int(a >> 4) + 1, 0xF);
 		
 		q0 = (q0 << 4) | q0;
 		q1 = (q1 << 4) | q1;
@@ -161,7 +162,7 @@ namespace
 		float bias = maxAlpha + float(maxAlpha - minAlpha) / (2.0f * 7.0f);
 		float scale = 7.0f / float(maxAlpha - minAlpha);
 
-		uint index = (uint)clamp((bias - float(alpha)) * scale, 0.0f, 7.0f);
+		uint index = (uint)std::clamp((bias - float(alpha)) * scale, 0.0f, 7.0f);
 
 		return (index * minAlpha + (7 - index) * maxAlpha) / 7;
 	}
@@ -201,7 +202,7 @@ namespace
 			for (uint p = 0; p < 8; p++)
 			{
 				int dist = alphaDistance(alpha, alphas[p]);
-				minDist = min(dist, minDist);
+				minDist = std::min(dist, minDist);
 			}
 
 			totalError += minDist * src.weights[i];
@@ -263,7 +264,7 @@ void OptimalCompress::compressDXT1(Color32 c, BlockDXT1 * dxtBlock)
     
     if (dxtBlock->col0.u < dxtBlock->col1.u)
     {
-        swap(dxtBlock->col0.u, dxtBlock->col1.u);
+        std::swap(dxtBlock->col0.u, dxtBlock->col1.u);
         dxtBlock->indices ^= 0x55555555;
     }
 }
@@ -284,7 +285,7 @@ void OptimalCompress::compressDXT1a(Color32 c, uint alphaMask, BlockDXT1 * dxtBl
 
         if (dxtBlock->col0.u > dxtBlock->col1.u)
         {
-	        swap(dxtBlock->col0.u, dxtBlock->col1.u);
+	        std::swap(dxtBlock->col0.u, dxtBlock->col1.u);
         }
 
         dxtBlock->indices |= alphaMask;
@@ -303,7 +304,7 @@ void OptimalCompress::compressDXT1G(uint8 g, BlockDXT1 * dxtBlock)
 
 	if (dxtBlock->col0.u < dxtBlock->col1.u)
 	{
-		swap(dxtBlock->col0.u, dxtBlock->col1.u);
+		std::swap(dxtBlock->col0.u, dxtBlock->col1.u);
 		dxtBlock->indices ^= 0x55555555;
 	}
 }
@@ -324,8 +325,8 @@ void OptimalCompress::compressDXT1G(const ColorBlock & rgba, BlockDXT1 * block)
 	for (uint i = 0; i < 16; i++)
 	{
 		uint8 green = (rgba.color(i).g + 1) >> 2;
-		ming = min(ming, green);
-		maxg = max(maxg, green);
+		ming = std::min(ming, green);
+		maxg = std::max(maxg, green);
 
 		if (rgba.color(i).g != singleColor) isSingleColor = false;
 	}
@@ -521,12 +522,12 @@ void OptimalCompress::compressDXT5A(const AlphaBlock4x4 & src, AlphaBlockDXT5 * 
 	for (uint i = 0; i < 16; i++)
 	{
 		uint8 alpha = src.alpha[i];
-		mina = min(mina, alpha);
-		maxa = max(maxa, alpha);
+		mina = std::min(mina, alpha);
+		maxa = std::max(maxa, alpha);
 
         if (alpha != 0 && alpha != 255) {
-    	    mina_no01 = min(mina_no01, alpha);
-	        maxa_no01 = max(maxa_no01, alpha);
+    	    mina_no01 = std::min(mina_no01, alpha);
+	        maxa_no01 = std::max(maxa_no01, alpha);
         }
 	}
 

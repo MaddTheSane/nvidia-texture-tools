@@ -6,6 +6,7 @@
 #include "ThreadPool.h"
 
 #include "nvcore/Utils.h" // toI32
+#include <algorithm>
 
 using namespace nv;
 
@@ -20,7 +21,7 @@ static void worker(void * arg, int tid) {
             break;
         }
 
-        const uint count = min(owner->count, new_idx + owner->step);
+        const uint count = std::min(owner->count, new_idx + owner->step);
         for (uint i = new_idx; i < count; i++) {
             owner->task(owner->context, /*tid, */i);
         }

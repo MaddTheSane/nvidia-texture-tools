@@ -30,6 +30,7 @@
 #include "nvcore/Memory.h"
 
 #include <string.h> // memcpy, memset
+#include <algorithm>
 
 
 
@@ -44,9 +45,9 @@ namespace
         uint mipmap = 0;
 
         while (w != 1 || h != 1 || d != 1) {
-            w = max(1, w / 2);
-            h = max(1, h / 2);
-            d = max(1, d / 2);
+            w = std::max(1, w / 2);
+            h = std::max(1, h / 2);
+            d = std::max(1, d / 2);
             mipmap++;
         }
 
@@ -205,9 +206,9 @@ bool InputOptions::setMipmapData(const void * data, int width, int height, int d
     int h = m.height;
     int d = m.depth;
     for (int i = 0; i < mipLevel; i++) {
-        w = max(1, w/2);
-        h = max(1, h/2);
-        d = max(1, d/2);
+        w = std::max(1, w/2);
+        h = std::max(1, h/2);
+        d = std::max(1, d/2);
     }
     if (w != width || h != height || d != depth) {
         return false;

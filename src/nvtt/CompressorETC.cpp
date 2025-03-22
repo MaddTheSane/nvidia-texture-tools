@@ -13,6 +13,8 @@
 #include "rg_etc1.h"
 #endif
 
+#include <algorithm>
+
 #if HAVE_ETCPACK
 // From etcpack.cxx
 extern void decompressBlockETC2(unsigned int block_part1, unsigned int block_part2, uint8 *img, int width, int height, int startx, int starty);
@@ -722,9 +724,9 @@ static bool unpack_color_555(uint32 packed_color, uint32 packed_delta, int * r, 
     if (static_cast<uint>(r5 | g5 | b5) > 31U)
     {
        success = false;
-       r5 = clamp(r5, 0, 31);
-       g5 = clamp(g5, 0, 31);
-       b5 = clamp(b5, 0, 31);
+       r5 = std::clamp(r5, 0, 31);
+       g5 = std::clamp(g5, 0, 31);
+       b5 = std::clamp(b5, 0, 31);
     }
 
     *r = (r5 << 3) | (r5 >> 2); // bitexpand(r5, 5, 8);
@@ -756,9 +758,9 @@ static void unpack_color_676(uint32 packed_color, int * r, int * g, int * b) {
 static uint32 pack_color_444(float3 color) {
 
     // Truncate.
-    uint r = U32(ftoi_trunc(clamp(color.x * 15.0f, 0.0f, 15.0f)));
-    uint g = U32(ftoi_trunc(clamp(color.y * 15.0f, 0.0f, 15.0f)));
-    uint b = U32(ftoi_trunc(clamp(color.z * 15.0f, 0.0f, 15.0f)));
+    uint r = U32(ftoi_trunc(std::clamp(color.x * 15.0f, 0.0f, 15.0f)));
+    uint g = U32(ftoi_trunc(std::clamp(color.y * 15.0f, 0.0f, 15.0f)));
+    uint b = U32(ftoi_trunc(std::clamp(color.z * 15.0f, 0.0f, 15.0f)));
 
     // Round exactly according to 444 bit-expansion.
     r += (color.x > midpoints4[r]);
@@ -771,9 +773,9 @@ static uint32 pack_color_444(float3 color) {
 static uint32 pack_color_555(float3 color) {
 
     // Truncate.
-    uint r = U32(ftoi_trunc(clamp(color.x * 31.0f, 0.0f, 31.0f)));
-    uint g = U32(ftoi_trunc(clamp(color.y * 31.0f, 0.0f, 31.0f)));
-    uint b = U32(ftoi_trunc(clamp(color.z * 31.0f, 0.0f, 31.0f)));
+    uint r = U32(ftoi_trunc(std::clamp(color.x * 31.0f, 0.0f, 31.0f)));
+    uint g = U32(ftoi_trunc(std::clamp(color.y * 31.0f, 0.0f, 31.0f)));
+    uint b = U32(ftoi_trunc(std::clamp(color.z * 31.0f, 0.0f, 31.0f)));
 
     // Round exactly according to 555 bit-expansion.
     r += (color.x > midpoints5[r]);
@@ -786,9 +788,9 @@ static uint32 pack_color_555(float3 color) {
 static uint32 pack_delta_333(float3 delta) {
     // @@ Accurate rounding of signed 3-bit components.
 
-    int r = ftoi_round(clamp(delta.x * 31.0f, -4.0f, 3.0f));
-    int g = ftoi_round(clamp(delta.y * 31.0f, -4.0f, 3.0f));
-    int b = ftoi_round(clamp(delta.z * 31.0f, -4.0f, 3.0f));
+    int r = ftoi_round(std::clamp(delta.x * 31.0f, -4.0f, 3.0f));
+    int g = ftoi_round(std::clamp(delta.y * 31.0f, -4.0f, 3.0f));
+    int b = ftoi_round(std::clamp(delta.z * 31.0f, -4.0f, 3.0f));
 
     //r += (delta.x > delta_midpoints3[r]);
     //g += (delta.y > delta_midpoints3[g]);
@@ -803,12 +805,12 @@ static uint32 pack_delta_333(float3 delta) {
 static uint8 pack_float_6(float f) {
 
     // Truncate.
-    uint u = U32(ftoi_trunc(clamp(f * 63.0f, 0.0f, 63.0f)));
+    uint u = U32(ftoi_trunc(std::clamp(f * 63.0f, 0.0f, 63.0f)));
 
     // Round exactly according to 6 bit-expansion.
     //u += (f > midpoints6[u]);
 
-    float midpoint = 0.5f * (bitexpand(u, 6, 8) + bitexpand(min(u + 1, 63U), 6, 8));    // @@ Precompute.
+    float midpoint = 0.5f * (bitexpand(u, 6, 8) + bitexpand(std::min(u + 1, 63U), 6, 8));    // @@ Precompute.
     u += (f > midpoint);
 
     return U8(u);
@@ -817,24 +819,24 @@ static uint8 pack_float_6(float f) {
 static uint8 pack_float_7(float f) {
 
     // Truncate.
-    uint u = U32(ftoi_trunc(clamp(f * 127.0f, 0.0f, 127.0f)));
+    uint u = U32(ftoi_trunc(std::clamp(f * 127.0f, 0.0f, 127.0f)));
 
     // Round exactly according to 6 bit-expansion.
     //u += (f > midpoints7[u]);
 
-    float midpoint = 0.5f * (bitexpand(u, 7, 8) + bitexpand(min(u + 1, 127U), 7, 8));   // @@ Precompute.
+    float midpoint = 0.5f * (bitexpand(u, 7, 8) + bitexpand(std::min(u + 1, 127U), 7, 8));   // @@ Precompute.
     u += (f > midpoint);
 
     return U8(u);
 }
 
 static uint8 pack_float_6(float f, bool round_dir) {
-    uint u = U32(ftoi_trunc(clamp(f * 63.0f + round_dir, 0.0f, 63.0f)));
+    uint u = U32(ftoi_trunc(std::clamp(f * 63.0f + round_dir, 0.0f, 63.0f)));
     return U8(u);
 }
 
 static uint8 pack_float_7(float f, bool round_dir) {
-    uint u = U32(ftoi_trunc(clamp(f * 127.0f + round_dir, 0.0f, 127.0f)));
+    uint u = U32(ftoi_trunc(std::clamp(f * 127.0f + round_dir, 0.0f, 127.0f)));
     return U8(u);
 }
 

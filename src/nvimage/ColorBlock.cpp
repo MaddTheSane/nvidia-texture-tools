@@ -9,6 +9,7 @@
 #include "nvcore/Utils.h" // swap
 
 #include <string.h> // memcpy
+#include <algorithm>
 
 using namespace nv;
 
@@ -55,8 +56,8 @@ void ColorBlock::init(uint w, uint h, const uint * data, uint x, uint y)
 {
     nvDebugCheck(data != NULL);
 
-    const uint bw = min(w - x, 4U);
-    const uint bh = min(h - y, 4U);
+    const uint bw = std::min(w - x, 4U);
+    const uint bh = std::min(h - y, 4U);
     nvDebugCheck(bw != 0 && bh != 0);
 
     // Blocks that are smaller than 4x4 are handled by repeating the pixels.
@@ -81,8 +82,8 @@ void ColorBlock::init(uint w, uint h, const float * data, uint x, uint y)
 {
     nvDebugCheck(data != NULL);
 
-    const uint bw = min(w - x, 4U);
-    const uint bh = min(h - y, 4U);
+    const uint bw = std::min(w - x, 4U);
+    const uint bh = std::min(h - y, 4U);
     nvDebugCheck(bw != 0 && bh != 0);
 
     // Blocks that are smaller than 4x4 are handled by repeating the pixels.
@@ -101,10 +102,10 @@ void ColorBlock::init(uint w, uint h, const float * data, uint x, uint y)
             const uint idx = ((y + by) * w + x + bx);
 
             Color32 & c = color(e, i);
-            c.r = uint8(255 * clamp(data[idx + 0 * srcPlane], 0.0f, 1.0f)); // @@ Is this the right way to quantize floats to bytes?
-            c.g = uint8(255 * clamp(data[idx + 1 * srcPlane], 0.0f, 1.0f));
-            c.b = uint8(255 * clamp(data[idx + 2 * srcPlane], 0.0f, 1.0f));
-            c.a = uint8(255 * clamp(data[idx + 3 * srcPlane], 0.0f, 1.0f));
+            c.r = uint8(255 * std::clamp(data[idx + 0 * srcPlane], 0.0f, 1.0f)); // @@ Is this the right way to quantize floats to bytes?
+            c.g = uint8(255 * std::clamp(data[idx + 1 * srcPlane], 0.0f, 1.0f));
+            c.b = uint8(255 * std::clamp(data[idx + 2 * srcPlane], 0.0f, 1.0f));
+            c.a = uint8(255 * std::clamp(data[idx + 3 * srcPlane], 0.0f, 1.0f));
         }
     }
 }

@@ -7,8 +7,11 @@
 #include "nvcore/Array.inl"
 #include "nvcore/Utils.h" // max, swap
 
+#include <cmath>
+#include <math.h>
 #include <float.h> // FLT_MAX
 #include <string.h>
+#include <algorithm>
 
 using namespace nv;
 using namespace simd;
@@ -500,7 +503,7 @@ static void EigenSolver3_Tridiagonal(float mat[3][3], float * diag, float * subd
 
     diag[0] = a;
     subd[2] = 0.f;
-    if (fabsf(c) >= epsilon)
+    if (std::abs(c) >= epsilon)
     {
         const float ell = sqrtf(b*b+c*c);
         b /= ell;
@@ -540,8 +543,8 @@ static bool EigenSolver3_QLAlgorithm(float mat[3][3], float * diag, float * subd
             int m;
             for (m = ell; m <= 1; m++)
             {
-                float dd = fabsf(diag[m]) + fabsf(diag[m+1]);
-                if ( fabsf(subd[m]) + dd == dd )
+                float dd = std::abs(diag[m]) + std::abs(diag[m+1]);
+                if ( std::abs(subd[m]) + dd == dd )
                     break;
             }
             if ( m == ell )
@@ -557,7 +560,7 @@ static bool EigenSolver3_QLAlgorithm(float mat[3][3], float * diag, float * subd
             for (int i = m-1; i >= ell; i--)
             {
                 float f = s*subd[i], b = c*subd[i];
-                if ( fabsf(f) >= fabsf(g) )
+                if ( std::abs(f) >= std::abs(g) )
                 {
                     c = g/f;
                     r = sqrtf(c*c+1);
@@ -655,8 +658,8 @@ bool nv::Fit::eigenSolveSymmetric4(const float matrix[10], float eigenValues[4],
 		{
 			if (eigenValues[j] > eigenValues[i])
 			{
-				swap(eigenValues[i], eigenValues[j]);
-				swap(eigenVectors[i], eigenVectors[j]);
+				std::swap(eigenValues[i], eigenValues[j]);
+				std::swap(eigenVectors[i], eigenVectors[j]);
 			}
 		}
 	}
@@ -692,7 +695,7 @@ static void EigenSolver4_Tridiagonal(float mat[4][4], float * diag, float * subd
 	float maxElement = FLT_MAX;
 	for (int i = 0; i < n; ++i)
 		for (int j = 0; j < n; ++j)
-            maxElement = simd::max(maxElement, fabsf(mat[i][j]));
+            maxElement = simd::max(maxElement, std::abs(mat[i][j]));
 	float epsilon = relEpsilon * maxElement;
 
 	// Iterative algorithm, works for any size of matrix but might be slower than
@@ -730,12 +733,12 @@ static void EigenSolver4_Tridiagonal(float mat[4][4], float * diag, float * subd
 		Q = mul(Q, P);
 	}
 
-	nvDebugCheck(fabsf(A(2,0)) < epsilon);
-	nvDebugCheck(fabsf(A(0,2)) < epsilon);
-	nvDebugCheck(fabsf(A(3,0)) < epsilon);
-	nvDebugCheck(fabsf(A(0,3)) < epsilon);
-	nvDebugCheck(fabsf(A(3,1)) < epsilon);
-	nvDebugCheck(fabsf(A(1,3)) < epsilon);
+	nvDebugCheck(std::abs(A(2,0)) < epsilon);
+	nvDebugCheck(std::abs(A(0,2)) < epsilon);
+	nvDebugCheck(std::abs(A(3,0)) < epsilon);
+	nvDebugCheck(std::abs(A(0,3)) < epsilon);
+	nvDebugCheck(std::abs(A(3,1)) < epsilon);
+	nvDebugCheck(std::abs(A(1,3)) < epsilon);
 
 	for (int i = 0; i < n; ++i)
 		diag[i] = A(i,i);
@@ -760,8 +763,8 @@ static bool EigenSolver4_QLAlgorithm(float mat[4][4], float * diag, float * subd
             int m;
             for (m = ell; m < 3; m++)
             {
-                float dd = fabsf(diag[m]) + fabsf(diag[m+1]);
-                if ( fabsf(subd[m]) + dd == dd )
+                float dd = std::abs(diag[m]) + std::abs(diag[m+1]);
+                if ( std::abs(subd[m]) + dd == dd )
                     break;
             }
             if ( m == ell )
@@ -777,7 +780,7 @@ static bool EigenSolver4_QLAlgorithm(float mat[4][4], float * diag, float * subd
             for (int i = m-1; i >= ell; i--)
             {
                 float f = s*subd[i], b = c*subd[i];
-                if ( fabsf(f) >= fabsf(g) )
+                if ( std::abs(f) >= std::abs(g) )
                 {
                     c = g/f;
                     r = sqrtf(c*c+1);
@@ -899,8 +902,8 @@ int nv::Fit::compute4Means(int n, const float3 *__restrict points, const float *
         {
             for (int j = i; j > 0 && total[j] > total[j - 1]; j--)
             {
-                swap( total[j], total[j - 1] );
-                swap( cluster[j], cluster[j - 1] );
+                std::swap( total[j], total[j - 1] );
+                std::swap( cluster[j], cluster[j - 1] );
             }
         }
     }
@@ -914,8 +917,8 @@ inline float Sqr(float x) { return x*x; }
 
 inline float svd_pythag( float a, float b )
 {
-	float at = fabsf(a);
-	float bt = fabsf(b);
+	float at = std::abs(a);
+	float bt = std::abs(b);
 	if( at > bt )
 		return at * sqrtf( 1.0f + Sqr( bt / at ) );
 	else if( bt > 0.0f )
@@ -926,8 +929,8 @@ inline float svd_pythag( float a, float b )
 inline float SameSign( float a, float b ) 
 {
 	float t;
-	if( b >= 0.0f ) t = fabsf( a );
-	else t = -fabsf( a );
+	if( b >= 0.0f ) t = std::abs( a );
+	else t = -std::abs( a );
 	return t;
 }
 
@@ -935,7 +938,7 @@ void ArvoSVD(int rows, int cols, float * Q, float * diag, float * R)
 {
 	static const int MaxIterations = 30;
 
-	int    i, j, k, l, p, q, iter;
+	int    i, j, k, l=0, p, q=0, iter;
 	float  c, f, h, s, x, y, z;
 	float  norm  = 0.0f;
 	float  g     = 0.0f;
@@ -953,8 +956,8 @@ void ArvoSVD(int rows, int cols, float * Q, float * diag, float * R)
 
 		if( i < rows )
 		{
-			for( k = i; k < rows; k++ ) scale += fabsf( Q[k*cols+i] );
-			if( scale != 0.0f ) 
+			for( k = i; k < rows; k++ ) scale += std::abs( Q[k*cols+i] );
+			if( scale != 0.0f )
 			{
 				for( k = i; k < rows; k++ ) 
 				{
@@ -986,8 +989,8 @@ void ArvoSVD(int rows, int cols, float * Q, float * diag, float * R)
 
 		if( i < rows && i != cols - 1 ) 
 		{
-			for( k = l; k < cols; k++ ) scale += fabsf( Q[i*cols+k] );
-			if( scale != 0.0f ) 
+			for( k = l; k < cols; k++ ) scale += std::abs( Q[i*cols+k] );
+			if( scale != 0.0f )
 			{
 				for( k = l; k < cols; k++ ) 
 				{
@@ -1011,7 +1014,7 @@ void ArvoSVD(int rows, int cols, float * Q, float * diag, float * R)
 				for( k = l; k < cols; k++ ) Q[i*cols+k] *= scale;
 			}
 		}
-		norm = simd::max( norm, fabsf( diag[i] ) + fabsf( temp[i] ) );
+		norm = simd::max( norm, std::abs( diag[i] ) + std::abs( temp[i] ) );
 	}
 
 
@@ -1078,8 +1081,8 @@ void ArvoSVD(int rows, int cols, float * Q, float * diag, float * R)
 			for( l = k; l >= 0; l-- )
 			{
 				q = l - 1;
-				if( fabsf( temp[l] ) + norm == norm ) { jump = 1; break; }
-				if( fabsf( diag[q] ) + norm == norm ) { jump = 0; break; }
+				if( std::abs( temp[l] ) + norm == norm ) { jump = 1; break; }
+				if( std::abs( diag[q] ) + norm == norm ) { jump = 0; break; }
 			}
 
 			if( !jump )
@@ -1090,7 +1093,7 @@ void ArvoSVD(int rows, int cols, float * Q, float * diag, float * R)
 				{
 					f = s * temp[i];
 					temp[i] *= c;
-					if( fabsf( f ) + norm == norm ) break;
+					if( std::abs( f ) + norm == norm ) break;
 					g = diag[i];
 					h = svd_pythag( f, g );
 					diag[i] = h;
@@ -1192,14 +1195,14 @@ void ArvoSVD(int rows, int cols, float * Q, float * diag, float * R)
 		{
 			// Swap columns in Q.
 			for (int j = 0; j < rows; ++j)
-				swap(Q[j*cols+i], Q[j*cols+bindex]);
+				std::swap(Q[j*cols+i], Q[j*cols+bindex]);
 
 			// Swap rows in R.
 			for (int j = 0; j < rows; ++j)
-				swap(R[i*cols+j], R[bindex*cols+j]);
+				std::swap(R[i*cols+j], R[bindex*cols+j]);
 
 			// Swap elements in diag.
-			swap(diag[i], diag[bindex]);
+			std::swap(diag[i], diag[bindex]);
 		}
 	}
 }

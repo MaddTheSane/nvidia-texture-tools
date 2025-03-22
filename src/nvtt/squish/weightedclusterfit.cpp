@@ -179,8 +179,8 @@ void WeightedClusterFit::Compress3( void* block )
 			Vec4 b = NegativeMultiplySubtract(alphax_sum, alphabeta_sum, betax_sum*alpha2_sum) * factor;
 			
 			// clamp to the grid
-            a = simd::min( one, simd::max( zero, a ) );
-            b = simd::min( one, simd::max( zero, b ) );
+            a = simd::clamp( a, zero, one );
+            b = simd::clamp( b, zero, one );
 			a = Truncate( MultiplyAdd( grid, a, half ) ) * gridrcp;
 			b = Truncate( MultiplyAdd( grid, b, half ) ) * gridrcp;
 			
@@ -298,8 +298,8 @@ void WeightedClusterFit::Compress4( void* block )
 				Vec4 b = NegativeMultiplySubtract(alphax_sum, alphabeta_sum, betax_sum*alpha2_sum) * factor;
 				
 				// clamp to the grid
-                a = simd::min( one, simd::max( zero, a ) );
-                b = simd::min( one, simd::max( zero, b ) );
+                a = simd::clamp( a, zero, one );
+                b = simd::clamp( a, zero, one );
 				a = Truncate( MultiplyAdd( grid, a, half ) ) * gridrcp;
 				b = Truncate( MultiplyAdd( grid, b, half ) ) * gridrcp;
 				

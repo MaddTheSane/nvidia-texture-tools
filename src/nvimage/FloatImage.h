@@ -12,6 +12,7 @@
 
 #include <stdlib.h> // abs
 #include <simd/simd.h>
+#include <algorithm>
 
 namespace nv
 {
@@ -296,7 +297,7 @@ namespace nv
 
     inline int wrapClamp(int x, int w)
     {
-        return nv::clamp(x, 0, w - 1);
+        return std::clamp(x, 0, w - 1);
     }
     inline int wrapRepeat(int x, int w)
     {
@@ -307,9 +308,9 @@ namespace nv
     {
         if (w == 1) x = 0;
 
-        x = abs(x);
+        x = std::abs(x);
         while (x >= w) {
-            x = abs(w + w - x - 2);
+            x = std::abs(w + w - x - 2);
         }
 
         return x;

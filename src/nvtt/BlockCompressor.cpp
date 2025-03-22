@@ -37,6 +37,7 @@
 #include "nvcore/Array.inl"
 
 #include <new> // placement new
+#include <algorithm>
 
 
 using namespace nv;
@@ -133,8 +134,8 @@ void FloatColorCompressorTask(void * data, int i)
     float4 colors[16];
     float weights[16];
 
-    const uint block_w = min(d->w - block_x * 4, 4U);
-    const uint block_h = min(d->h - block_y * 4, 4U);
+    const uint block_w = std::min(d->w - block_x * 4, 4U);
+    const uint block_h = std::min(d->h - block_y * 4, 4U);
 
     uint x, y;
     for (y = 0; y < block_h; y++) {

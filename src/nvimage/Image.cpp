@@ -69,9 +69,9 @@ void Image::resize(uint w, uint h, uint d/*= 1*/) {
 
     // Copy image.
     uint x, y, z;
-    for(z = 0; z < min(d, depth); z++) {
-        for(y = 0; y < min(h, height); y++) {
-            for(x = 0; x < min(w, width); x++) {
+    for(z = 0; z < std::min(d, depth); z++) {
+        for(y = 0; y < std::min(h, height); y++) {
+            for(x = 0; x < std::min(w, width); x++) {
                 img.pixel(x, y, z) = pixel(x, y, z);
             }
             for(; x < w; x++) {
@@ -92,12 +92,12 @@ void Image::resize(uint w, uint h, uint d/*= 1*/) {
         }
     }
 
-    swap(width, img.width);
-    swap(height, img.height);
-	swap(depth, img.depth);
-    swap(format, img.format);
-    swap(sRGB, img.sRGB);
-    swap(data, img.data);
+    std::swap(width, img.width);
+    std::swap(height, img.height);
+    std::swap(depth, img.depth);
+    std::swap(format, img.format);
+    std::swap(sRGB, img.sRGB);
+    std::swap(data, img.data);
 }
 
 bool Image::load(const char * name)
@@ -109,12 +109,12 @@ bool Image::load(const char * name)
         return false;
     }
 
-    swap(width, img->width);
-    swap(height, img->height);
-	swap(depth, img->depth);
-    swap(format, img->format);
-    swap(sRGB, img->sRGB);
-    swap(data, img->data);
+    std::swap(width, img->width);
+    std::swap(height, img->height);
+    std::swap(depth, img->depth);
+    std::swap(format, img->format);
+    std::swap(sRGB, img->sRGB);
+    std::swap(data, img->data);
 
     return true;
 }

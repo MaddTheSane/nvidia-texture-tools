@@ -36,6 +36,7 @@
 
 #include <string.h> // memset
 #include <float.h> // FLT_MAX 
+#include <algorithm>
 
 using namespace nv;
 using namespace QuickCompress;
@@ -122,21 +123,21 @@ inline static void insetBBox(simd::float3 * restrict maxColor, simd::float3 * re
 // Takes a normalized color in [0, 255] range and returns 
 inline static uint16 roundAndExpand(simd::float3 * restrict v)
 {
-	uint r = ftoi_floor(clamp(v->x * (31.0f / 255.0f), 0.0f, 31.0f));
-	uint g = ftoi_floor(clamp(v->y * (63.0f / 255.0f), 0.0f, 63.0f));
-	uint b = ftoi_floor(clamp(v->z * (31.0f / 255.0f), 0.0f, 31.0f));
+	uint r = ftoi_floor(std::clamp(v->x * (31.0f / 255.0f), 0.0f, 31.0f));
+	uint g = ftoi_floor(std::clamp(v->y * (63.0f / 255.0f), 0.0f, 63.0f));
+	uint b = ftoi_floor(std::clamp(v->z * (31.0f / 255.0f), 0.0f, 31.0f));
 
     float r0 = float(((r+0) << 3) | ((r+0) >> 2));
     float r1 = float(((r+1) << 3) | ((r+1) >> 2));
-    if (fabs(v->x - r1) < fabs(v->x - r0)) r = min(r+1, 31U);
+    if (std::abs(v->x - r1) < std::abs(v->x - r0)) r = min(r+1, 31U);
 
     float g0 = float(((g+0) << 2) | ((g+0) >> 4));
     float g1 = float(((g+1) << 2) | ((g+1) >> 4));
-    if (fabs(v->y - g1) < fabs(v->y - g0)) g = min(g+1, 63U);
+    if (std::abs(v->y - g1) < std::abs(v->y - g0)) g = min(g+1, 63U);
 
     float b0 = float(((b+0) << 3) | ((b+0) >> 2));
     float b1 = float(((b+1) << 3) | ((b+1) >> 2));
-    if (fabs(v->z - b1) < fabs(v->z - b0)) b = min(b+1, 31U);
+    if (std::abs(v->z - b1) < std::abs(v->z - b0)) b = min(b+1, 31U);
 
 
 	uint16 w = (r << 11) | (g << 5) | b;
@@ -152,21 +153,21 @@ inline static uint16 roundAndExpand(simd::float3 * restrict v)
 // Takes a normalized color in [0, 255] range and returns 
 inline static uint16 roundAndExpand01(simd::float3 * restrict v)
 {
-	uint r = ftoi_floor(clamp(v->x * 31.0f, 0.0f, 31.0f));
-	uint g = ftoi_floor(clamp(v->y * 63.0f, 0.0f, 63.0f));
-	uint b = ftoi_floor(clamp(v->z * 31.0f, 0.0f, 31.0f));
+	uint r = ftoi_floor(std::clamp(v->x * 31.0f, 0.0f, 31.0f));
+	uint g = ftoi_floor(std::clamp(v->y * 63.0f, 0.0f, 63.0f));
+	uint b = ftoi_floor(std::clamp(v->z * 31.0f, 0.0f, 31.0f));
 
     float r0 = float(((r+0) << 3) | ((r+0) >> 2));
     float r1 = float(((r+1) << 3) | ((r+1) >> 2));
-    if (fabs(v->x - r1) < fabs(v->x - r0)) r = min(r+1, 31U);
+    if (std::abs(v->x - r1) < std::abs(v->x - r0)) r = min(r+1, 31U);
 
     float g0 = float(((g+0) << 2) | ((g+0) >> 4));
     float g1 = float(((g+1) << 2) | ((g+1) >> 4));
-    if (fabs(v->y - g1) < fabs(v->y - g0)) g = min(g+1, 63U);
+    if (std::abs(v->y - g1) < std::abs(v->y - g0)) g = min(g+1, 63U);
 
     float b0 = float(((b+0) << 3) | ((b+0) >> 2));
     float b1 = float(((b+1) << 3) | ((b+1) >> 2));
-    if (fabs(v->z - b1) < fabs(v->z - b0)) b = min(b+1, 31U);
+    if (std::abs(v->z - b1) < std::abs(v->z - b0)) b = min(b+1, 31U);
 
 
 	uint16 w = (r << 11) | (g << 5) | b;
@@ -443,8 +444,8 @@ static void optimizeEndPoints4(simd::float3 block[16], BlockDXT1 * dxtBlock)
 
 	if (color0 < color1)
 	{
-		swap(a, b);
-		swap(color0, color1);
+		std::swap(a, b);
+		std::swap(color0, color1);
 	}
 
 	dxtBlock->col0 = Color16(color0);
@@ -457,8 +458,8 @@ static void optimizeEndPoints3(simd::float3 block[16], BlockDXT1 * dxtBlock)
 	float alpha2_sum = 0.0f;
 	float beta2_sum = 0.0f;
 	float alphabeta_sum = 0.0f;
-	float3 alphax_sum(0.0f);
-	float3 betax_sum(0.0f);
+    simd::float3 alphax_sum = simd_make_float3(0.0f);
+    simd::float3 betax_sum = simd_make_float3(0.0f);
 	
 	for( int i = 0; i < 16; ++i )
 	{
@@ -491,8 +492,8 @@ static void optimizeEndPoints3(simd::float3 block[16], BlockDXT1 * dxtBlock)
 
 	if (color0 < color1)
 	{
-		swap(a, b);
-		swap(color0, color1);
+		std::swap(a, b);
+		std::swap(color0, color1);
 	}
 
 	dxtBlock->col0 = Color16(color1);
@@ -565,8 +566,8 @@ namespace
 		float a = (alphax_sum * beta2_sum - betax_sum * alphabeta_sum) * factor;
 		float b = (betax_sum * alpha2_sum - alphax_sum * alphabeta_sum) * factor;
 
-		uint alpha0 = uint(min(max(a, 0.0f), 255.0f));
-		uint alpha1 = uint(min(max(b, 0.0f), 255.0f));
+		uint alpha0 = uint(std::clamp(a, 0.0f, 255.0f));
+		uint alpha1 = uint(std::clamp(b, 0.0f, 255.0f));
 
 		if (alpha0 < alpha1)
 		{
@@ -701,8 +702,8 @@ void QuickCompress::compressDXT1(const ColorBlock & rgba, BlockDXT1 * dxtBlock)
 
 		if (color0 < color1)
 		{
-			swap(maxColor, minColor);
-			swap(color0, color1);
+			std::swap(maxColor, minColor);
+			std::swap(color0, color1);
 		}
 
 		dxtBlock->col0 = Color16(color0);
@@ -739,7 +740,7 @@ void QuickCompress::compressDXT1a(const ColorBlock & rgba, BlockDXT1 * dxtBlock)
 		uint num = extractColorBlockRGBA(rgba, block);
 		
 		// find min and max colors
-		float3 maxColor, minColor;
+		simd::float3 maxColor, minColor;
 		findMinMaxColorsBox(block, num, &maxColor, &minColor);
 		
 		selectDiagonal(block, num, &maxColor, &minColor);
@@ -786,8 +787,8 @@ void QuickCompress::compressDXT5A(const AlphaBlock4x4 & src, AlphaBlockDXT5 * ds
 	for (uint i = 0; i < 16; i++)
 	{
 		uint8 alpha = src.alpha[i];
-		alpha0 = max(alpha0, alpha);
-		alpha1 = min(alpha1, alpha);
+		alpha0 = std::max(alpha0, alpha);
+		alpha1 = std::min(alpha1, alpha);
 	}
 	
 	AlphaBlockDXT5 block;

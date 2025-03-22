@@ -12,6 +12,7 @@
 #if NV_CC_MSVC
 #include <stdarg.h> // vsnprintf
 #endif
+#include <algorithm>
 
 using namespace nv;
 
@@ -142,7 +143,7 @@ void nv::strCpy(char * dst, uint size, const char * src, uint len)
 #if NV_CC_MSVC && _MSC_VER >= 1400
     strncpy_s(dst, size, src, len);
 #else
-    int n = min(len+1, size);
+    int n = std::min(len+1, size);
     strncpy(dst, src, n);
     dst[n-1] = '\0';
 #endif

@@ -17,8 +17,10 @@
 #include "nvcore/Memory.h"
 #include "nvcore/Array.inl"
 
+#include <cmath>
 #include <math.h>
 #include <string.h> // memset, memcpy
+#include <algorithm>
 
 
 using namespace nv;
@@ -98,7 +100,7 @@ Image * FloatImage::createImage(uint baseComponent/*= 0*/, uint num/*= 4*/) cons
 
         for (c = 0; c < num; c++) {
             float f = pixel(baseComponent + c, i);
-            rgba[c] = nv::clamp(int(255.0f * f), 0, 255);
+            rgba[c] = std::clamp(int(255.0f * f), 0, 255);
         }
 
         img->pixel(i) = Color32(rgba[0], rgba[1], rgba[2], rgba[3]);
@@ -124,10 +126,10 @@ Image * FloatImage::createImageGammaCorrect(float gamma/*= 2.2f*/) const
     const uint count = m_pixelCount;
     for (uint i = 0; i < count; i++)
     {
-        const uint8 r = nv::clamp(int(255.0f * pow(rChannel[i], 1.0f/gamma)), 0, 255);
-        const uint8 g = nv::clamp(int(255.0f * pow(gChannel[i], 1.0f/gamma)), 0, 255);
-        const uint8 b = nv::clamp(int(255.0f * pow(bChannel[i], 1.0f/gamma)), 0, 255);
-        const uint8 a = nv::clamp(int(255.0f * aChannel[i]), 0, 255);
+        const uint8 r = std::clamp(int(255.0f * std::pow(rChannel[i], 1.0f/gamma)), 0, 255);
+        const uint8 g = std::clamp(int(255.0f * std::pow(gChannel[i], 1.0f/gamma)), 0, 255);
+        const uint8 b = std::clamp(int(255.0f * std::pow(bChannel[i], 1.0f/gamma)), 0, 255);
+        const uint8 a = std::clamp(int(255.0f * aChannel[i]), 0, 255);
 
         img->pixel(i) = Color32(r, g, b, a);
     }
@@ -254,7 +256,7 @@ void FloatImage::clamp(uint baseComponent, uint num, float low, float high)
         float * ptr = this->channel(baseComponent + c);
 
         for (uint i = 0; i < size; i++) {
-            ptr[i] = nv::clamp(ptr[i], low, high);
+            ptr[i] = std::clamp(ptr[i], low, high);
         }
     }
 }
@@ -296,7 +298,7 @@ void FloatImage::exponentiate(uint baseComponent, uint num, float power)
         float * ptr = this->channel(baseComponent + c);
 
         for(uint i = 0; i < size; i++) {
-            ptr[i] = powf(max(0.0f, ptr[i]), power);
+            ptr[i] = std::pow(std::max(0.0f, ptr[i]), power);
         }
     }
 }
@@ -435,10 +437,10 @@ float FloatImage::sampleLinearClamp(uint c, float x, float y) const
     const float fracX = frac(x);
     const float fracY = frac(y);
 
-    const int ix0 = ::clamp(ifloor(x), 0, w-1);
-    const int iy0 = ::clamp(ifloor(y), 0, h-1);
-    const int ix1 = ::clamp(ifloor(x)+1, 0, w-1);
-    const int iy1 = ::clamp(ifloor(y)+1, 0, h-1);
+    const int ix0 = std::clamp(ifloor(x), 0, w-1);
+    const int iy0 = std::clamp(ifloor(y), 0, h-1);
+    const int ix1 = std::clamp(ifloor(x)+1, 0, w-1);
+    const int iy1 = std::clamp(ifloor(y)+1, 0, h-1);
 
     return bilerp(c, ix0, iy0, ix1, iy1, fracX, fracY);
 }
@@ -498,12 +500,12 @@ float FloatImage::sampleLinearClamp(uint c, float x, float y, float z) const
     //z -= fracZ;
 
     // @@ Using floor in some places, but round in others?
-    const int ix0 = ::clamp(ifloor(x), 0, w-1);
-    const int iy0 = ::clamp(ifloor(y), 0, h-1);
-    const int iz0 = ::clamp(ifloor(z), 0, d-1);
-    const int ix1 = ::clamp(ifloor(x)+1, 0, w-1);
-    const int iy1 = ::clamp(ifloor(y)+1, 0, h-1);
-    const int iz1 = ::clamp(ifloor(z)+1, 0, d-1);
+    const int ix0 = std::clamp(ifloor(x), 0, w-1);
+    const int iy0 = std::clamp(ifloor(y), 0, h-1);
+    const int iz0 = std::clamp(ifloor(z), 0, d-1);
+    const int ix1 = std::clamp(ifloor(x)+1, 0, w-1);
+    const int iy1 = std::clamp(ifloor(y)+1, 0, h-1);
+    const int iz1 = std::clamp(ifloor(z)+1, 0, d-1);
 
     return trilerp(c, ix0, iy0, iz0, ix1, iy1, iz1, fracX, fracY, fracZ);
 }
@@ -567,8 +569,8 @@ FloatImage * FloatImage::fastDownSample() const
 
     AutoPtr<FloatImage> dst_image( new FloatImage() );
 
-    const uint w = max(1, m_width / 2);
-    const uint h = max(1, m_height / 2);
+    const uint w = std::max(1, m_width / 2);
+    const uint h = std::max(1, m_height / 2);
     dst_image->allocate(m_componentCount, w, h);
 
     // 1D box filter.
@@ -743,9 +745,9 @@ FloatImage * FloatImage::fastDownSample() const
 /// Downsample applying a 1D kernel separately in each dimension.
 FloatImage * FloatImage::downSample(const Filter & filter, WrapMode wm) const
 {
-    const uint w = max(1, m_width / 2);
-    const uint h = max(1, m_height / 2);
-    const uint d = max(1, m_depth / 2);
+    const uint w = std::max(1, m_width / 2);
+    const uint h = std::max(1, m_height / 2);
+    const uint d = std::max(1, m_depth / 2);
 
     return resize(filter, w, h, d, wm);
 }
@@ -753,9 +755,9 @@ FloatImage * FloatImage::downSample(const Filter & filter, WrapMode wm) const
 /// Downsample applying a 1D kernel separately in each dimension.
 FloatImage * FloatImage::downSample(const Filter & filter, WrapMode wm, uint alpha) const
 {
-    const uint w = max(1, m_width / 2);
-    const uint h = max(1, m_height / 2);
-    const uint d = max(1, m_depth / 2);
+    const uint w = std::max(1, m_width / 2);
+    const uint h = std::max(1, m_height / 2);
+    const uint d = std::max(1, m_depth / 2);
 
     return resize(filter, w, h, d, wm, alpha);
 }
@@ -1131,8 +1133,8 @@ void FloatImage::applyKernelX(const PolyphaseKernel & k, int y, int z, uint c, W
     {
         const float center = (0.5f + i) * iscale;
 
-        const int left = (int)floorf(center - width);
-        const int right = (int)ceilf(center + width);
+        const int left = (int)std::floor(center - width);
+        const int right = (int)std::ceil(center + width);
         nvDebugCheck(right - left <= windowSize);
 
         float sum = 0;
@@ -1163,8 +1165,8 @@ void FloatImage::applyKernelY(const PolyphaseKernel & k, int x, int z, uint c, W
     {
         const float center = (0.5f + i) * iscale;
 
-        const int left = (int)floorf(center - width);
-        const int right = (int)ceilf(center + width);
+        const int left = (int)std::floor(center - width);
+        const int right = (int)std::ceil(center + width);
         nvCheck(right - left <= windowSize);
 
         float sum = 0;
@@ -1195,8 +1197,8 @@ void FloatImage::applyKernelZ(const PolyphaseKernel & k, int x, int y, uint c, W
     {
         const float center = (0.5f + i) * iscale;
 
-        const int left = (int)floorf(center - width);
-        const int right = (int)ceilf(center + width);
+        const int left = (int)std::floor(center - width);
+        const int right = (int)std::ceil(center + width);
         nvCheck(right - left <= windowSize);
 
         float sum = 0;
@@ -1229,8 +1231,8 @@ void FloatImage::applyKernelX(const PolyphaseKernel & k, int y, int z, uint c, u
     {
         const float center = (0.5f + i) * iscale;
 
-        const int left = (int)floorf(center - width);
-        const int right = (int)ceilf(center + width);
+        const int left = (int)std::floor(center - width);
+        const int right = (int)std::ceil(center + width);
         nvDebugCheck(right - left <= windowSize);
 
         float norm = 0.0f;
@@ -1265,8 +1267,8 @@ void FloatImage::applyKernelY(const PolyphaseKernel & k, int x, int z, uint c, u
     {
         const float center = (0.5f + i) * iscale;
 
-        const int left = (int)floorf(center - width);
-        const int right = (int)ceilf(center + width);
+        const int left = (int)std::floor(center - width);
+        const int right = (int)std::ceil(center + width);
         nvCheck(right - left <= windowSize);
 
         float norm = 0;
@@ -1301,8 +1303,8 @@ void FloatImage::applyKernelZ(const PolyphaseKernel & k, int x, int y, uint c, u
     {
         const float center = (0.5f + i) * iscale;
 
-        const int left = (int)floorf(center - width);
-        const int right = (int)ceilf(center + width);
+        const int left = (int)std::floor(center - width);
+        const int right = (int)std::ceil(center + width);
         nvDebugCheck(right - left <= windowSize);
 
         float norm = 0.0f;
@@ -1333,7 +1335,7 @@ void FloatImage::flipX()
             for (uint y = 0; y < h; y++) {
                 float * line = scanline(c, y, z);
                 for (uint x = 0; x < w2; x++) {
-                    swap(line[x], line[w - 1 - x]);
+                    std::swap(line[x], line[w - 1 - x]);
                 }
             }
         }
@@ -1353,7 +1355,7 @@ void FloatImage::flipY()
                 float * src = scanline(c, y, z);
                 float * dst = scanline(c, h - 1 - y, z);
                 for (uint x = 0; x < w; x++) {
-                    swap(src[x], dst[x]);
+                    std::swap(src[x], dst[x]);
                 }
             }
         }
@@ -1372,7 +1374,7 @@ void FloatImage::flipZ()
             float * src = plane(c, z);
             float * dst = plane(c, d - 1 - z);
             for (uint i = 0; i < w*h; i++) {
-                swap(src[i], dst[i]);
+                std::swap(src[i], dst[i]);
             }
         }
     }

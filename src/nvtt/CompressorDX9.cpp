@@ -220,8 +220,3 @@ void CompressorDXT5n::compressBlock(ColorBlock & rgba, nvtt::AlphaMode alphaMode
         QuickCompress::compressDXT5A(rgba, &block->alpha);
     }
 }
-
-
-
-
-

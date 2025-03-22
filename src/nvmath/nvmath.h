@@ -14,6 +14,8 @@
 #include <float.h>  // finite, isnan
 #endif
 
+#include <algorithm>
+
 // Set some reasonable defaults.
 #ifndef NV_USE_ALTIVEC
 #   define NV_USE_ALTIVEC NV_CPU_PPC
@@ -74,37 +76,37 @@
 extern "C" inline double sqrt_assert(const double f)
 {
     nvDebugCheck(f >= 0.0f);
-    return sqrt(f);
+    return std::sqrt(f);
 }
 
 inline float sqrtf_assert(const float f)
 {
     nvDebugCheck(f >= 0.0f);
-    return sqrtf(f);
+    return std::sqrt(f);
 }
 
 extern "C" inline double acos_assert(const double f)
 {
     nvDebugCheck(f >= -1.0f && f <= 1.0f);
-    return acos(f);
+    return std::acos(f);
 }
 
 inline float acosf_assert(const float f)
 {
     nvDebugCheck(f >= -1.0f && f <= 1.0f);
-    return acosf(f);
+    return std::acos(f);
 }
 
 extern "C" inline double asin_assert(const double f)
 {
     nvDebugCheck(f >= -1.0f && f <= 1.0f);
-    return asin(f);
+    return std::asin(f);
 }
 
 inline float asinf_assert(const float f)
 {
     nvDebugCheck(f >= -1.0f && f <= 1.0f);
-    return asinf(f);
+    return std::asin(f);
 }
 
 // Replace default functions with asserting ones.
@@ -139,12 +141,12 @@ namespace nv
     inline bool equal(const float f0, const float f1, const float epsilon = NV_EPSILON)
     {
         //return fabs(f0-f1) <= epsilon;
-        return fabs(f0-f1) <= epsilon * max3(1.0f, fabsf(f0), fabsf(f1));
+        return std::abs(f0-f1) <= epsilon * std::max({1.0f, std::abs(f0), std::abs(f1)});
     }
 
     inline bool isZero(const float f, const float epsilon = NV_EPSILON)
     {
-        return fabs(f) <= epsilon;
+        return std::abs(f) <= epsilon;
     }
 
     inline bool isFinite(const float f)
@@ -203,12 +205,12 @@ namespace nv
 
     inline float frac(float f)
     {
-        return f - floorf(f);
+        return f - std::floor(f);
     }
 
     inline float floatRound(float f)
     {
-        return floorf(f + 0.5f);
+        return std::floor(f + 0.5f);
     }
 
     // Eliminates negative zeros from a float array.
@@ -222,7 +224,7 @@ namespace nv
     }
 
     inline float saturate(float f) {
-        return clamp(f, 0.0f, 1.0f);
+        return std::clamp(f, 0.0f, 1.0f);
     }
 
     inline float linearstep(float edge0, float edge1, float x) {

@@ -378,8 +378,8 @@ Vec4 ClusterFit::SolveLeastSquares( Vec4& start, Vec4& end ) const
 	// clamp the output to [0, 1]
 	Vec4 const one = VEC4_CONST( 1.0f );
 	Vec4 const half = VEC4_CONST( 0.5f );
-	a = simd::min( one, simd::max( zero, a ) );
-	b = simd::min( one, simd::max( zero, b ) );
+	a = simd::clamp( a, zero, one );
+	b = simd::clamp( b, zero, one );
 
 	// clamp to the grid
 	Vec4 const grid = simd_make_float4( 31.0f, 63.0f, 31.0f, 0.0f );

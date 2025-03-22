@@ -48,6 +48,7 @@
 
 #include <float.h>
 #include <string.h> // memset, memcpy
+#include <algorithm>
 //#include <stdio.h> // printf?
 
 #if NV_CC_GNUC
@@ -454,7 +455,7 @@ float Surface::alphaTestCoverage(float alphaRef/*= 0.5*/, int alpha_channel/*=3*
 {
     if (m->image == NULL) return 0.0f;
 
-    alphaRef = nv::clamp(alphaRef, 1.0f/256, 255.0f/256);
+    alphaRef = std::clamp(alphaRef, 1.0f/256, 255.0f/256);
 
     return m->image->alphaTestCoverage(alphaRef, alpha_channel);
 }
@@ -1830,7 +1831,7 @@ void Surface::scaleAlphaToCoverage(float coverage, float alphaRef/*= 0.5f*/, int
 
     detach();
 
-    alphaRef = nv::clamp(alphaRef, 1.0f/256, 255.0f/256);
+    alphaRef = std::clamp(alphaRef, 1.0f/256, 255.0f/256);
 
     m->image->scaleAlphaToCoverage(coverage, alphaRef, alpha_channel);
 }
@@ -1881,9 +1882,9 @@ void Surface::toRGBM(float range/*= 1*/, float threshold/*= 0.25*/)
 
     const uint count = img->pixelCount();
     for (uint i = 0; i < count; i++) {
-        float R = nv::clamp(r[i], 0.0f, 1.0f);
-        float G = nv::clamp(g[i], 0.0f, 1.0f);
-        float B = nv::clamp(b[i], 0.0f, 1.0f);
+        float R = std::clamp(r[i], 0.0f, 1.0f);
+        float G = std::clamp(g[i], 0.0f, 1.0f);
+        float B = std::clamp(b[i], 0.0f, 1.0f);
 
 #if 0
         // Baseline, no compression:
@@ -1994,11 +1995,11 @@ void Surface::toLM(float range/*= 1*/, float threshold/*= 0.25*/)
 
     const uint count = img->pixelCount();
     for (uint i = 0; i < count; i++) {
-        float R = nv::clamp(r[i], 0.0f, 1.0f);
-        float G = nv::clamp(g[i], 0.0f, 1.0f);
-        float B = nv::clamp(b[i], 0.0f, 1.0f);
+        float R = std::clamp(r[i], 0.0f, 1.0f);
+        float G = std::clamp(g[i], 0.0f, 1.0f);
+        float B = std::clamp(b[i], 0.0f, 1.0f);
 
-        float M = max(max(R, G), max(B, threshold));
+        float M = std::max({R, G, B, threshold});
 
         float L = (R + G + B) / 3;
         r[i] = L / M;
@@ -2012,16 +2013,16 @@ void Surface::toLM(float range/*= 1*/, float threshold/*= 0.25*/)
 static Color32 toRgbe8(float r, float g, float b)
 {
     Color32 c;
-    float v = max(max(r, g), b);
+    float v = std::max({r, g, b});
     if (v < 1e-32) {
         c.r = c.g = c.b = c.a = 0;
     }
     else {
         int e;
-        v = frexpf(v, &e) * 256.0f / v;
-        c.r = uint8(clamp(r * v, 0.0f, 255.0f));
-        c.g = uint8(clamp(g * v, 0.0f, 255.0f));
-        c.b = uint8(clamp(b * v, 0.0f, 255.0f));
+        v = std::frexp(v, &e) * 256.0f / v;
+        c.r = uint8(std::clamp(r * v, 0.0f, 255.0f));
+        c.g = uint8(std::clamp(g * v, 0.0f, 255.0f));
+        c.b = uint8(std::clamp(b * v, 0.0f, 255.0f));
         c.a = e + 128;
     }
 
@@ -2160,12 +2161,12 @@ void Surface::toRGBE(int mantissaBits, int exponentBits)
     const uint count = img->pixelCount();
     for (uint i = 0; i < count; i++) {
         // Clamp components:
-        float R = ::clamp(r[i], 0.0f, maxValue);
-        float G = ::clamp(g[i], 0.0f, maxValue);
-        float B = ::clamp(b[i], 0.0f, maxValue);
+        float R = std::clamp(r[i], 0.0f, maxValue);
+        float G = std::clamp(g[i], 0.0f, maxValue);
+        float B = std::clamp(b[i], 0.0f, maxValue);
 
         // Compute max:
-        float M = max3(R, G, B);
+        float M = std::max({R, G, B});
 
         // Preliminary exponent:
         int E = max(- exponentBias - 1, floatExponent(M)) + 1 + exponentBias;
@@ -2248,7 +2249,7 @@ void Surface::fromRGBE(int mantissaBits, int exponentBits)
         int E = ftoi_round(a[i] * ((1 << exponentBits) - 1));
 
         //float scale = ldexpf(1.0f, E - exponentBias - mantissaBits);
-        float scale = powf(2, float(E - exponentBias - mantissaBits));
+        float scale = std::pow(2, float(E - exponentBias - mantissaBits));
 
         r[i] = R * scale;
         g[i] = G * scale;
@@ -2323,8 +2324,8 @@ void Surface::blockScaleCoCg(int bits/*= 5*/, float threshold/*= 0.0*/)
                     float Co = img->pixel(0, x, y, 0);
                     float Cg = img->pixel(1, x, y, 0);
 
-                    m = max(m, fabsf(Co));
-                    m = max(m, fabsf(Cg));
+                    m = std::max(m, std::abs(Co));
+                    m = std::max(m, std::abs(Cg));
                 }
             }
 
@@ -2334,8 +2335,8 @@ void Surface::blockScaleCoCg(int bits/*= 5*/, float threshold/*= 0.0*/)
             // Store block scale in blue channel and scale CoCg.
             for (uint j = 0; j < 4; j++) {
                 for (uint i = 0; i < 4; i++) {
-                    uint x = min(bi*4 + i, w);
-                    uint y = min(bj*4 + j, h);
+                    uint x = std::min(bi*4 + i, w);
+                    uint y = std::min(bj*4 + j, h);
 
                     float & Co = img->pixel(0, x, y, 0);
                     float & Cg = img->pixel(1, x, y, 0);
@@ -2402,9 +2403,9 @@ void Surface::toLUVW(float range/*= 1.0f*/)
 
     const uint count = img->pixelCount();
     for (uint i = 0; i < count; i++) {
-        float R = nv::clamp(r[i] * irange, 0.0f, 1.0f);
-        float G = nv::clamp(g[i] * irange, 0.0f, 1.0f);
-        float B = nv::clamp(b[i] * irange, 0.0f, 1.0f);
+        float R = std::clamp(r[i] * irange, 0.0f, 1.0f);
+        float G = std::clamp(g[i] * irange, 0.0f, 1.0f);
+        float B = std::clamp(b[i] * irange, 0.0f, 1.0f);
 
         float L = max(sqrtf(R*R + G*G + B*B), 1e-6f); // Avoid division by zero.
 
@@ -2432,7 +2433,7 @@ void Surface::abs(int channel)
 
     const uint count = img->pixelCount();
     for (uint i = 0; i < count; i++) {
-        c[i] = fabsf(c[i]);
+        c[i] = std::abs(c[i]);
     }
 }
 
@@ -2462,7 +2463,7 @@ void Surface::toneMap(ToneMapper tm, float * parameters)
     if (tm == ToneMapper_Linear) {
         // Clamp preserving the hue.
         for (uint i = 0; i < count; i++) {
-            float m = max3(r[i], g[i], b[i]);
+            float m = std::max({r[i], g[i], b[i]});
             if (m > 1.0f) {
                 r[i] *= 1.0f / m;
                 g[i] *= 1.0f / m;
@@ -2479,9 +2480,9 @@ void Surface::toneMap(ToneMapper tm, float * parameters)
     }
     else if (tm == ToneMapper_Halo) {
         for (uint i = 0; i < count; i++) {
-            r[i] = 1 - exp2f(-r[i]);
-            g[i] = 1 - exp2f(-g[i]);
-            b[i] = 1 - exp2f(-b[i]);
+            r[i] = 1 - std::exp2(-r[i]);
+            g[i] = 1 - std::exp2(-g[i]);
+            b[i] = 1 - std::exp2(-b[i]);
         }
     }
     else if (tm == ToneMapper_Lightmap) {
@@ -2490,7 +2491,7 @@ void Surface::toneMap(ToneMapper tm, float * parameters)
         // Avoid clamping abrubtly.
         // Minimize color difference along most of the color range. [0, alpha)
         for (uint i = 0; i < count; i++) {
-            float m = max3(r[i], g[i], b[i]);
+            float m = std::max({r[i], g[i], b[i]});
             if (m > 1.0f) {
                 r[i] *= 1.0f / m;
                 g[i] *= 1.0f / m;
@@ -2508,11 +2509,11 @@ void Surface::toLogScale(int channel, float base) {
     FloatImage * img = m->image;
     float * c = img->channel(channel);
 
-    float scale = 1.0f / log2f(base);
+    float scale = 1.0f / std::log2(base);
 
     const uint count = img->pixelCount();
     for (uint i = 0; i < count; i++) {
-        c[i] = log2f(c[i]) * scale;
+        c[i] = std::log2(c[i]) * scale;
     }
 }
 
@@ -2524,11 +2525,11 @@ void Surface::fromLogScale(int channel, float base) {
     FloatImage * img = m->image;
     float * c = img->channel(channel);
 
-    float scale = log2f(base);
+    float scale = std::log2(base);
 
     const uint count = img->pixelCount();
     for (uint i = 0; i < count; i++) {
-        c[i] = exp2f(c[i] * scale);
+        c[i] = std::exp2(c[i] * scale);
     }
 }
 
@@ -2748,7 +2749,7 @@ void Surface::quantize(int channel, int bits, bool exactEndPoints, bool dither)
         float * c = img->channel(channel);
         const uint count = img->pixelCount();
         for (uint i = 0; i < count; i++) {
-            c[i] = saturate((floorf(c[i] * scale + offset0) + offset1) / scale);
+            c[i] = saturate((std::floor(c[i] * scale + offset0) + offset1) / scale);
         }
     }
     else {
@@ -2769,7 +2770,7 @@ void Surface::quantize(int channel, int bits, bool exactEndPoints, bool dither)
                     float & f = img->pixel(channel, x, y, 0);
 
                     // Add error and quantize.
-                    float qf = saturate((floorf((f + row0[1+x]) * scale + offset0) + offset1) / scale);
+                    float qf = saturate((std::floor((f + row0[1+x]) * scale + offset0) + offset1) / scale);
 
                     // Compute new error:
                     float diff = f - qf;
@@ -2784,7 +2785,7 @@ void Surface::quantize(int channel, int bits, bool exactEndPoints, bool dither)
                     row1[1+x+1] += (1.0f / 16.0f) * diff;
                 }
 
-                swap(row0, row1);
+                std::swap(row0, row1);
                 memset(row1, 0, sizeof(float)*(w+2));
             }
         }
@@ -2870,13 +2871,13 @@ void Surface::transformNormals(NormalTransform xform)
             float discriminant = b * b - 4.0f * a * c;
             float t = (-b + sqrtf(discriminant)) / (2.0f * a);
 
-            float d = fabsf(n.z * t - (1 - n.x*n.x*t*t) * (1 - n.y*n.y*t*t));
+            float d = std::abs(n.z * t - (1 - n.x*n.x*t*t) * (1 - n.y*n.y*t*t));
 
             while (d > 0.0001) {
                 float ft = 1 - n.z * t - (n.x*n.x + n.y*n.y)*t*t + n.x*n.x*n.y*n.y*t*t*t*t;
                 float fit = - n.z - 2*(n.x*n.x + n.y*n.y)*t + 4*n.x*n.x*n.y*n.y*t*t*t;
                 t -= ft / fit;
-                d = fabsf(n.z * t - (1 - n.x*n.x*t*t) * (1 - n.y*n.y*t*t));
+                d = std::abs(n.z * t - (1 - n.x*n.x*t*t) * (1 - n.y*n.y*t*t));
             };
 
             n.x = n.x * t;
@@ -2909,7 +2910,7 @@ void Surface::reconstructNormals(NormalTransform xform)
         float3 n = make_float3(x, y, z);
 
         if (xform == NormalTransform_Orthographic) {
-            n.z = sqrtf(1 - nv::clamp(n.x * n.x + n.y * n.y, 0.0f, 1.0f));
+            n.z = sqrtf(1 - std::clamp(n.x * n.x + n.y * n.y, 0.0f, 1.0f));
         }
         else if (xform == NormalTransform_Stereographic) {
             float denom = 2.0f / (1 + nv::clamp(n.x * n.x + n.y * n.y, 0.0f, 1.0f));
@@ -2920,13 +2921,13 @@ void Surface::reconstructNormals(NormalTransform xform)
         else if (xform == NormalTransform_Paraboloid) {
             n.x = n.x;
             n.y = n.y;
-            n.z = 1.0f - nv::clamp(n.x * n.x + n.y * n.y, 0.0f, 1.0f);
+            n.z = 1.0f - std::clamp(n.x * n.x + n.y * n.y, 0.0f, 1.0f);
             n = normalizeSafe(n, make_float3(0.0f), 0.0f);
         }
         else if (xform == NormalTransform_Quartic) {
             n.x = n.x;
             n.y = n.y;
-            n.z = nv::clamp((1 - n.x * n.x) * (1 - n.y * n.y), 0.0f, 1.0f);
+            n.z = std::clamp((1 - n.x * n.x) * (1 - n.y * n.y), 0.0f, 1.0f);
             n = normalizeSafe(n, make_float3(0.0f), 0.0f);
         }
         /*else if (xform == NormalTransform_DualParaboloid) {
@@ -3376,7 +3377,7 @@ Surface nvtt::histogram(const Surface & img, int width, int height)
     img.range(2, &min_color[2], &max_color[2]);
 
     float minRange = nv::min3(min_color[0], min_color[1], min_color[2]);
-    float maxRange = nv::max3(max_color[0], max_color[1], max_color[2]);
+    float maxRange = std::max({max_color[0], max_color[1], max_color[2]});
 
     if (maxRange > 16) maxRange = 16;
 
@@ -3531,7 +3532,7 @@ nvtt::Surface nvtt::histogram(const Surface & img, float minRange, float maxRang
     // Compute largerst height.
     float maxh = 0;
     for (int i = 0; i < width; i++) {
-        maxh = nv::max(maxh, nv::max3(buckets[i].x, buckets[i].y, buckets[i].z));
+        maxh = std::max({maxh, buckets[i].x, buckets[i].y, buckets[i].z});
     }
 
     //printf("maxh = %f\n", maxh);

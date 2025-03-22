@@ -30,6 +30,7 @@
 
 #include "nvcore/Array.inl"
 #include "nvcore/StrLib.h"
+#include <algorithm>
 
 using namespace nv;
 using namespace nvtt;
@@ -513,8 +514,8 @@ void CubeSurface::range(int channel, float * minimum_ptr, float * maximum_ptr) c
          for (uint y = 0; y < edgeLength; y++) {
              for (uint x = 0; x < edgeLength; x++) {
 
-                 minimum = nv::min(minimum, c[y * edgeLength + x]);
-                 maximum = nv::max(maximum, c[y * edgeLength + x]);
+                 minimum = std::min(minimum, c[y * edgeLength + x]);
+                 maximum = std::max(maximum, c[y * edgeLength + x]);
             }
         }
     }

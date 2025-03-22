@@ -35,7 +35,7 @@ static bool ludcmp(float **a, int n, int *indx, float *d)
     
         float big = 0.0;
         for (int j = 0; j < n; j++) {
-            big = max(big, fabsf(a[i][j]));
+            big = std::max(big, std::abs(a[i][j]));
         }
         if (big == 0) {
             return false;   // Singular matrix
@@ -61,7 +61,7 @@ static bool ludcmp(float **a, int n, int *indx, float *d)
             }
             a[i][j]=sum;
 
-            float dum = vv[i]*fabsf(sum);
+            float dum = vv[i]*std::abs(sum);
             if (dum >= big) {
                 // Is the figure of merit for the pivot better than the best so far?
                 big = dum;
@@ -72,7 +72,7 @@ static bool ludcmp(float **a, int n, int *indx, float *d)
 
         if (j != imax) {                // Do we need to interchange rows?
             for (int k = 0; k < n; k++) {   // Yes, do so...
-                swap(a[imax][k], a[j][k]);
+                std::swap(a[imax][k], a[j][k]);
             }
             *d = -(*d); // ...and change the parity of d.
             vv[imax]=vv[j]; // Also interchange the scale factor.
@@ -281,23 +281,23 @@ Matrix nv::inverse(const Matrix & m) {
     Matrix A = m;
     Matrix B(identity);
 
-    int i, j, k;
+    int i=0, j=0, k;
     float max, t, det, pivot;
 
     det = 1.0;
     for (i=0; i<4; i++) {               /* eliminate in column i, below diag */
         max = -1.;
         for (k=i; k<4; k++)             /* find pivot for column i */
-            if (fabsf(A(k, i)) > max) {
-                max = fabsf(A(k, i));
+            if (std::abs(A(k, i)) > max) {
+                max = std::abs(A(k, i));
                 j = k;
             }
         if (max<=0.) return B;         /* if no nonzero pivot, PUNT */
         if (j!=i) {                     /* swap rows i and j */
             for (k=i; k<4; k++)
-                swap(A(i, k), A(j, k));
+                std::swap(A(i, k), A(j, k));
             for (k=0; k<4; k++)
-                swap(B(i, k), B(j, k));
+                std::swap(B(i, k), B(j, k));
             det = -det;
         }
         pivot = A(i, i);
@@ -336,23 +336,23 @@ Matrix3 nv::inverse(const Matrix3 & m) {
     Matrix3 A = m;
     Matrix3 B(identity);
 
-    int i, j, k;
+    int i=0, j=0, k=0;
     float max, t, det, pivot;
 
     det = 1.0;
     for (i=0; i<3; i++) {               /* eliminate in column i, below diag */
         max = -1.;
         for (k=i; k<3; k++)             /* find pivot for column i */
-            if (fabs(A(k, i)) > max) {
-                max = fabsf(A(k, i));
+            if (std::abs(A(k, i)) > max) {
+                max = std::abs(A(k, i));
                 j = k;
             }
         if (max<=0.) return B;         /* if no nonzero pivot, PUNT */
         if (j!=i) {                     /* swap rows i and j */
             for (k=i; k<3; k++)
-                swap(A(i, k), A(j, k));
+                std::swap(A(i, k), A(j, k));
             for (k=0; k<3; k++)
-                swap(B(i, k), B(j, k));
+                std::swap(B(i, k), B(j, k));
             det = -det;
         }
         pivot = A(i, i);

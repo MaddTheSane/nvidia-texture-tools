@@ -68,7 +68,7 @@ namespace
 	
 		// Rule 2 needs no previous results
 		if (l == m) {
-			return powf(-1.0f, float(m)) * doubleFactorial(2 * m - 1) * powf(1 - x*x, 0.5f * m);
+			return std::pow(-1.0f, float(m)) * doubleFactorial(2 * m - 1) * std::pow(1 - x*x, 0.5f * m);
 		}
 	
 		// Rule 3 requires the result for the same argument of the previous band
@@ -115,7 +115,7 @@ namespace
 		return -15 * (-x + x * x * x);
 	}
 	template <> float legendre<3, 3>(float x) {
-		return -15 * powf(1 - x * x, 1.5f);
+		return -15 * std::pow(1 - x * x, 1.5f);
 	}
 	
 	template <> float legendre<4, 0>(float x) {
@@ -128,7 +128,7 @@ namespace
 		return -7.5f * (1.0f - 8.0f * x * x + 7.0f * x * x * x * x);
 	}
 	template <> float legendre<4, 3>(float x) {
-		return -105.0f * x * powf(1 - x * x, 1.5f);
+		return -105.0f * x * std::pow(1 - x * x, 1.5f);
 	}
 	template <> float legendre<4, 4>(float x) {
 		return 105.0f * (x * x - 1.0f) * (x * x - 1.0f);
@@ -179,13 +179,13 @@ float nv::shBasis( int l, int m, float theta, float phi )
 {
 	if( m == 0 ) {
 		// K(l, 0) = sqrt((2*l+1)/(4*PI))
-		return sqrtf((2 * l + 1) / (4 * PI)) * legendrePolynomial(l, 0, cosf(theta));
+		return sqrtf((2 * l + 1) / (4 * PI)) * legendrePolynomial(l, 0, std::cos(theta));
 	}
 	else if( m > 0 ) {
-		return sqrtf(2.0f) * K(l, m) * cosf(m * phi) * legendrePolynomial(l, m, cosf(theta));
+		return sqrtf(2.0f) * K(l, m) * std::cos(m * phi) * legendrePolynomial(l, m, std::cos(theta));
 	}
 	else {
-		return sqrtf(2.0f) * K(l, -m) * sinf(-m * phi) * legendrePolynomial(l, -m, cosf(theta));
+		return sqrtf(2.0f) * K(l, -m) * std::sin(-m * phi) * legendrePolynomial(l, -m, std::cos(theta));
 	}
 }
 
@@ -200,7 +200,7 @@ float nv::shBasis( int l, int m, float theta, float phi )
 float nv::shBasis( int l, int m, const simd::float3 & v )
 {
 	float theta = acosf(v.z);
-	float phi = atan2f(v.y, v.x);
+	float phi = std::atan2(v.y, v.x);
 	return shBasis( l, m, theta, phi );
 }
 
@@ -216,13 +216,13 @@ float nv::hshBasis( int l, int m, float theta, float phi )
 {
 	if( m == 0 ) {
 		// HK(l, 0) = sqrt((2*l+1)/(2*PI))
-		return sqrtf((2 * l + 1) / (2 * PI)) * legendrePolynomial(l, 0, 2*cosf(theta)-1);
+		return sqrtf((2 * l + 1) / (2 * PI)) * legendrePolynomial(l, 0, 2*std::cos(theta)-1);
 	}
 	else if( m > 0 ) {
-		return sqrtf(2.0f) * HK(l, m) * cosf(m * phi) * legendrePolynomial(l, m, 2*cosf(theta)-1);
+		return sqrtf(2.0f) * HK(l, m) * std::cos(m * phi) * legendrePolynomial(l, m, 2*std::cos(theta)-1);
 	}
 	else {
-		return sqrtf(2.0f) * HK(l, -m) * sinf(-m * phi) * legendrePolynomial(l, -m, 2*cosf(theta)-1);
+		return sqrtf(2.0f) * HK(l, -m) * std::sin(-m * phi) * legendrePolynomial(l, -m, 2*std::cos(theta)-1);
 	}
 }
 
@@ -237,7 +237,7 @@ float nv::hshBasis( int l, int m, float theta, float phi )
 float nv::hshBasis( int l, int m, const simd::float3 & v )
 {
 	float theta = acosf(v.z);
-	float phi = atan2f(v.y, v.x);
+	float phi = std::atan2(v.y, v.x);
 	return hshBasis( l, m, theta, phi );
 }
 

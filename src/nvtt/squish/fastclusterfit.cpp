@@ -163,8 +163,8 @@ void FastClusterFit::Compress3( void* block )
 			Vec4 b = NegativeMultiplySubtract(alphax_sum, alphabeta_sum, betax_sum*alpha2_sum) * factor;
 			
 			// clamp to the grid
-			a = simd::min( one, simd::max( zero, a ) );
-			b = simd::min( one, simd::max( zero, b ) );
+			a = simd::clamp( a, zero, one );
+			b = simd::clamp( b, zero, one );
 			a = Truncate( MultiplyAdd( grid, a, half ) ) * gridrcp;
 			b = Truncate( MultiplyAdd( grid, b, half ) ) * gridrcp;
 			
@@ -280,8 +280,8 @@ void FastClusterFit::Compress4( void* block )
 				Vec4 b = NegativeMultiplySubtract(alphax_sum, alphabeta_sum, betax_sum*alpha2_sum) * factor;
 				
 				// clamp the output to [0, 1]
-				a = simd::min( one, simd::max( zero, a ) );
-				b = simd::min( one, simd::max( zero, b ) );
+				a = simd::clamp(a, zero, one );
+				b = simd::clamp(b, zero, one );
 				
 				// clamp to the grid
 				Vec4 const grid = simd::make_float4( 31.0f, 63.0f, 31.0f, 0.0f );

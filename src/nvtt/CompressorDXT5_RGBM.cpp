@@ -15,6 +15,7 @@
 
 #include "nvthread/Atomic.h"
 #include <stdio.h>
+#include <algorithm>
 
 using namespace nv;
 using simd::float3;
@@ -36,7 +37,7 @@ static void convert_to_rgbm(const float4 input_colors[16], const float input_wei
         float G = saturate(c.y);
         float B = saturate(c.z);
         
-        float M = max(max(R, G), max(B, min_m));
+        float M = std::max({R, G, B, min_m});
         float r = R / M;
         float g = G / M;
         float b = B / M;

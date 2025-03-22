@@ -13,6 +13,7 @@
 #include "nvmath/ftoi.h"
 
 #include <string.h> // memset
+#include <algorithm>
 
 
 using namespace nv;
@@ -1301,7 +1302,7 @@ void DirectDrawSurface::setUserVersion(int version)
 static uint mipmapExtent(uint mipmap, uint x)
 {
     for (uint m = 0; m < mipmap; m++) {
-        x = max(1U, x / 2);
+        x = std::max(1U, x / 2);
     }
     return x;
 }
@@ -1703,9 +1704,9 @@ static bool readBlockImage(Image * img, uint8 * data, uint dxgiFormat, bool isNo
                 readBlock(&block, data, dxgiFormat, isNormalMap, swapRA);
 
                 // Write color block.
-                for (uint y = 0; y < min(4U, h - 4 * by); y++)
+                for (uint y = 0; y < std::min(4U, h - 4 * by); y++)
                 {
-                    for (uint x = 0; x < min(4U, w - 4 * bx); x++)
+                    for (uint x = 0; x < std::min(4U, w - 4 * bx); x++)
                     {
                         img->pixel(4 * bx + x, 4 * by + y) = block.color(x, y);
                     }
