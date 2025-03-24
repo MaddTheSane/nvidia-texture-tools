@@ -43,7 +43,7 @@ using simd::dot;
 // Solid angle of an axis aligned quad from (0,0,1) to (x,y,1)
 // See: http://www.fizzmoll11.com/thesis/ for a derivation of this formula.
 static float areaElement(float x, float y) {
-    return atan2f(x*y, sqrtf(x*x + y*y + 1));
+    return std::atan2(x*y, sqrtf(x*x + y*y + 1));
 }
 
 // Solid angle of a hemicube texel.
@@ -92,15 +92,15 @@ static float3 texelDirection(uint face, uint x, uint y, int edgeLength, EdgeFixu
 
     if (fixupMethod == EdgeFixup_Warp) {
         // Warp texel centers in the proximity of the edges.
-        float a = powf(float(edgeLength), 2.0f) / powf(float(edgeLength - 1), 3.0f);
-        u = a * powf(u, 3) + u;
-        v = a * powf(v, 3) + v;
+        float a = std::pow(float(edgeLength), 2.0f) / std::pow(float(edgeLength - 1), 3.0f);
+        u = a * std::pow(u, 3) + u;
+        v = a * std::pow(v, 3) + v;
     }
 
     nvDebugCheck(u >= -1.0f && u <= 1.0f);
     nvDebugCheck(v >= -1.0f && v <= 1.0f);
 
-    float3 n;
+    float3 n = 0;
 
     if (face == 0) {
         n.x = 1;
@@ -210,19 +210,19 @@ static const float3 faceV[6] = {
 
 static float2 toPolar(const float3 & v) {
     float2 p;
-    p.x = atan2f(v.x, v.y);  // theta
-    p.y = acosf(v.z);       // phi
+    p.x = std::atan2(v.x, v.y); // theta
+    p.y = acosf(v.z);           // phi
     return p;
 }
 
 static float2 toPlane(float theta, float phi) {
-    float x = sinf(phi) * cosf(theta);
-    float y = sinf(phi) * sinf(theta);
-    float z = cosf(phi);
+    float x = std::sin(phi) * std::cos(theta);
+    float y = std::sin(phi) * std::sin(theta);
+    float z = std::cos(phi);
 
     float2 p;
-    p.x = x / fabsf(z);
-    p.y = y / fabsf(z);
+    p.x = x / std::abs(z);
+    p.y = y / std::abs(z);
     //p.x = tan(phi) * cos(theta);
     //p.y = tan(phi) * sin(theta);
 
@@ -864,7 +864,7 @@ struct ApplyAngularFilterContext {
     EdgeFixup fixupMethod;
 };
 
-void ApplyAngularFilterTask(void * context, int id)
+static void ApplyAngularFilterTask(void * context, int id)
 {
     ApplyAngularFilterContext * ctx = (ApplyAngularFilterContext *)context;
 
@@ -970,11 +970,11 @@ CubeSurface CubeSurface::cosinePowerFilter(int size, float cosinePower, EdgeFixu
 float3 CubeSurface::Private::sample(const float3 & dir)
 {
     int f = -1;
-    if (fabs(dir.x) > fabs(dir.y) && fabs(dir.x) > fabs(dir.z)) {
+    if (std::abs(dir.x) > std::abs(dir.y) && std::abs(dir.x) > std::abs(dir.z)) {
         if (dir.x > 0) f = 0;
         else f = 1;
     }
-    else if (fabs(dir.y) > fabs(dir.z)) {
+    else if (std::abs(dir.y) > std::abs(dir.z)) {
         if (dir.y > 0) f = 2;
         else f = 3;
     }

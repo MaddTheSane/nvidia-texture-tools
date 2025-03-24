@@ -391,7 +391,6 @@ static float map_colors(const float3 colors[], const float importance[], int np,
 {
     float3 palette[NINDICES];
     float toterr = 0;
-    float3 err;
 
     generate_palette_quantized(endpts, prec, palette);
 
@@ -428,8 +427,6 @@ static void assign_indices(const Tile &tile, int shapeindex, IntEndpts endpts[NR
         toterr[region] = 0;
     }
 
-    float3 err;
-
     for (int y = 0; y < tile.size_y; y++)
 	for (int x = 0; x < tile.size_x; x++)
 	{
@@ -464,7 +461,7 @@ static float perturb_one(const float3 colors[], const float importance[], int np
 
     IntEndpts temp_endpts;
     float min_err = old_err;		// start with the best current error
-    int beststep;
+    int beststep = 0;
 
     // copy real endpoints so we can perturb them
     for (int i=0; i<NCHANNELS; ++i) { temp_endpts.A[i] = new_endpts.A[i] = old_endpts.A[i]; temp_endpts.B[i] = new_endpts.B[i] = old_endpts.B[i]; }

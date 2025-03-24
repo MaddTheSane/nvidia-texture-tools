@@ -806,5 +806,5 @@ void String::allocString(const char * str, uint len)
 }
 
 void nv::swap(String & a, String & b) {
-    swap(a.data, b.data);
+    std::swap(a.data, b.data);
 }

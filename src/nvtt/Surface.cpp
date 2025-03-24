@@ -240,12 +240,12 @@ void nv::getTargetExtent(int * width, int * height, int * depth, int maxExtent, 
     }
 
     // Scale extents without changing aspect ratio.
-    int m = max(max(w, h), d);
+    int m = std::max({w, h, d});
     if (maxExtent > 0 && m > maxExtent)
     {
-        w = max((w * maxExtent) / m, 1);
-        h = max((h * maxExtent) / m, 1);
-        d = max((d * maxExtent) / m, 1);
+        w = std::max((w * maxExtent) / m, 1);
+        h = std::max((h * maxExtent) / m, 1);
+        d = std::max((d * maxExtent) / m, 1);
     }
 
     if (textureType == TextureType_2D)
@@ -1421,8 +1421,8 @@ bool Surface::buildNextMipmapSolidColor(const float * const color_components)
     detach();
 
     FloatImage * img = new FloatImage();
-    const uint w = max(1, m->image->m_width / 2);
-    const uint h = max(1, m->image->m_height / 2);
+    const uint w = std::max(1, m->image->m_width / 2);
+    const uint h = std::max(1, m->image->m_height / 2);
     img->allocate(m->image->m_componentCount, w, h);
 
     for(uint c = 0; c < img->m_componentCount; c++)
@@ -1904,7 +1904,7 @@ void Surface::toRGBM(float range/*= 1*/, float threshold/*= 0.25*/)
 
 #else
         // The optimal compressor produces the best results, but can introduce interpolation errors!
-        float bestM;
+        float bestM = 0;
         float bestError = FLT_MAX;
 
         //float range = 15;  // 4 bit quantization.
@@ -1913,11 +1913,11 @@ void Surface::toRGBM(float range/*= 1*/, float threshold/*= 0.25*/)
         int irange = 256;
 
 
-        float M = max(max(R, G), max(B, threshold));
+        float M = std::max({R, G, B, threshold});
         int iM = ftoi_ceil((M - threshold) / (1 - threshold) * range);
 
         //for (int m = 0; m < 256; m++) {                           // If we use the entire search space, interpolation errors are very likely to occur.
-        for (int m = max(iM-16, 0); m < min(iM+16, irange); m++) {     // If we constrain the search space, these errors disappear.
+        for (int m = std::max(iM-16, 0); m < std::min(iM+16, irange); m++) {     // If we constrain the search space, these errors disappear.
         //for (int m = max(iM-4, 0); m < min(iM+4, irange); m++) {     // If we constrain the search space, these errors disappear.
             float fm = float(m) / range;
 
@@ -1959,7 +1959,7 @@ void Surface::fromRGBM(float range/*= 1*/, float threshold/*= 0.25*/)
 
     detach();
 
-    threshold = ::clamp(threshold, 1e-6f, 1.0f);
+    threshold = std::clamp(threshold, 1e-6f, 1.0f);
 
 	FloatImage * img = m->image;
     float * r = img->channel(0);
@@ -1985,7 +1985,7 @@ void Surface::toLM(float range/*= 1*/, float threshold/*= 0.25*/)
 
     detach();
 
-    threshold = ::clamp(threshold, 1e-6f, 1.0f);
+    threshold = std::clamp(threshold, 1e-6f, 1.0f);
 
     FloatImage * img = m->image;
     float * r = img->channel(0);
@@ -2169,10 +2169,10 @@ void Surface::toRGBE(int mantissaBits, int exponentBits)
         float M = std::max({R, G, B});
 
         // Preliminary exponent:
-        int E = max(- exponentBias - 1, floatExponent(M)) + 1 + exponentBias;
+        int E = std::max(- exponentBias - 1, floatExponent(M)) + 1 + exponentBias;
         nvDebugCheck(E >= 0 && E < (1 << exponentBits));
 
-        double denom = pow(2.0, double(E - exponentBias - mantissaBits));
+        double denom = std::pow(2.0, double(E - exponentBias - mantissaBits));
 
         // Refine exponent:
         int m = ftoi_round(float(M / denom));
@@ -2305,8 +2305,8 @@ void Surface::blockScaleCoCg(int bits/*= 5*/, float threshold/*= 0.0*/)
     FloatImage * img = m->image;
     const uint w = img->width();
     const uint h = img->height();
-    const uint bw = max(1U, w/4);
-    const uint bh = max(1U, h/4);
+    const uint bw = std::max(1U, w/4);
+    const uint bh = std::max(1U, h/4);
 
     for (uint bj = 0; bj < bh; bj++) {
         for (uint bi = 0; bi < bw; bi++) {
@@ -2324,8 +2324,7 @@ void Surface::blockScaleCoCg(int bits/*= 5*/, float threshold/*= 0.0*/)
                     float Co = img->pixel(0, x, y, 0);
                     float Cg = img->pixel(1, x, y, 0);
 
-                    m = std::max(m, std::abs(Co));
-                    m = std::max(m, std::abs(Cg));
+                    m = std::max({m, std::abs(Co), std::abs(Cg)});
                 }
             }
 
@@ -2342,10 +2341,10 @@ void Surface::blockScaleCoCg(int bits/*= 5*/, float threshold/*= 0.0*/)
                     float & Cg = img->pixel(1, x, y, 0);
 
                     Co /= scale;
-                    nvDebugCheck(fabsf(Co) <= 1.0f);
+                    nvDebugCheck(std::abs(Co) <= 1.0f);
 
                     Cg /= scale;
-                    nvDebugCheck(fabsf(Cg) <= 1.0f);
+                    nvDebugCheck(std::abs(Cg) <= 1.0f);
 
                     img->pixel(2, x, y, 0) = scale;
                 }
@@ -2407,7 +2406,7 @@ void Surface::toLUVW(float range/*= 1.0f*/)
         float G = std::clamp(g[i] * irange, 0.0f, 1.0f);
         float B = std::clamp(b[i] * irange, 0.0f, 1.0f);
 
-        float L = max(sqrtf(R*R + G*G + B*B), 1e-6f); // Avoid division by zero.
+        float L = std::max(sqrtf(R*R + G*G + B*B), 1e-6f); // Avoid division by zero.
 
         r[i] = R / L;
         g[i] = G / L;
@@ -2709,7 +2708,7 @@ void Surface::binarize(int channel, float threshold, bool dither)
                     row1[1+x+1] += (1.0f / 16.0f) * diff;
                 }
 
-                swap(row0, row1);
+                std::swap(row0, row1);
                 memset(row1, 0, sizeof(float)*(w+2));
             }
         }
@@ -2913,7 +2912,7 @@ void Surface::reconstructNormals(NormalTransform xform)
             n.z = sqrtf(1 - std::clamp(n.x * n.x + n.y * n.y, 0.0f, 1.0f));
         }
         else if (xform == NormalTransform_Stereographic) {
-            float denom = 2.0f / (1 + nv::clamp(n.x * n.x + n.y * n.y, 0.0f, 1.0f));
+            float denom = 2.0f / (1 + std::clamp(n.x * n.x + n.y * n.y, 0.0f, 1.0f));
             n.x *= denom;
             n.y *= denom;
             n.z = denom - 1;
@@ -3463,11 +3462,11 @@ nvtt::Surface nvtt::histogram(const Surface & img, float minRange, float maxRang
             // Tone mapping:
             fc /= exposure;
             //fc /= (fc + 1);             // Reindhart tone mapping.
-            fc = 1 - exp2f(-fc);        // Halo2 tone mapping.
+            fc = 1 - std::exp2(-fc);        // Halo2 tone mapping.
 
             // Gamma space conversion:
             //fc = sqrtf(fc);
-            fc = powf(fc, 1.0f/2.2f);
+            fc = std::pow(fc, 1.0f/2.2f);
             //fc = toSrgb(fc);
 
             //fc = (fc - 0.5f) * 8; // zoom in
@@ -3476,7 +3475,7 @@ nvtt::Surface nvtt::histogram(const Surface & img, float minRange, float maxRang
             //printf("%f\n", fc);
 
             int c = ftoi_round(fc * (width - 1) / 1);
-            c = clamp(c, 0, width - 1);
+            c = std::clamp(c, 0, width - 1);
 
             buckets[c] += 1;
         }

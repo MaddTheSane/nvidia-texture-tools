@@ -40,7 +40,10 @@
 
 #include "nvcore/Utils.h" // swap
 
+#include <cmath>
+#include <math.h>
 #include <string.h> // memset
+#include <algorithm>
 
 using namespace nv;
 using namespace simd;
@@ -50,12 +53,12 @@ namespace
     // Sinc function.
     inline static float sincf(const float x)
     {
-        if (fabs(x) < NV_EPSILON) {
+        if (std::abs(x) < NV_EPSILON) {
             //return 1.0;
             return 1.0f + x*x*(-1.0f/6.0f + x*x*1.0f/120.0f);
         }
         else {
-            return sinf(x) / x;
+            return std::sin(x) / x;
         }
     }
 
@@ -160,7 +163,7 @@ BoxFilter::BoxFilter(float width) : Filter(width) {}
 
 float BoxFilter::evaluate(float x) const
 {
-    if (fabsf(x) <= m_width) return 1.0f;
+    if (std::abs(x) <= m_width) return 1.0f;
     else return 0.0f;
 }
 
@@ -170,7 +173,7 @@ TriangleFilter::TriangleFilter(float width) : Filter(width) {}
 
 float TriangleFilter::evaluate(float x) const
 {
-    x = fabsf(x);
+    x = std::abs(x);
     if( x < m_width ) return m_width - x;
     return 0.0f;
 }
@@ -180,7 +183,7 @@ QuadraticFilter::QuadraticFilter() : Filter(1.5f) {}
 
 float QuadraticFilter::evaluate(float x) const
 {
-    x = fabsf(x);
+    x = std::abs(x);
     if( x < 0.5f ) return 0.75f - x * x;
     if( x < 1.5f ) { 
         float t = x - 1.5f;
@@ -195,7 +198,7 @@ CubicFilter::CubicFilter() : Filter(1.0f) {}
 float CubicFilter::evaluate(float x) const
 {
     // f(t) = 2|t|^3 - 3|t|^2 + 1, -1 <= t <= 1
-    x = fabsf(x);
+    x = std::abs(x);
     if( x < 1.0f ) return((2.0f * x - 3.0f) * x * x + 1.0f);
     return 0.0f;
 }
@@ -205,7 +208,7 @@ BSplineFilter::BSplineFilter() : Filter(2.0f) {}
 
 float BSplineFilter::evaluate(float x) const
 {
-    x = fabsf(x);
+    x = std::abs(x);
     if( x < 1.0f ) return (4.0f + x * x * (-6.0f + x * 3.0f)) / 6.0f;
     if( x < 2.0f ) { 
         float t = 2.0f - x;
@@ -219,7 +222,7 @@ MitchellFilter::MitchellFilter() : Filter(2.0f) { setParameters(1.0f/3.0f, 1.0f/
 
 float MitchellFilter::evaluate(float x) const
 {
-    x = fabsf(x);
+    x = std::abs(x);
     if( x < 1.0f ) return p0 + x * x * (p2 + x * p3);
     if( x < 2.0f ) return q0 + x * (q1 + x * (q2 + x * q3));
     return 0.0f;
@@ -241,7 +244,7 @@ LanczosFilter::LanczosFilter() : Filter(3.0f) {}
 
 float LanczosFilter::evaluate(float x) const
 {
-    x = fabsf(x);
+    x = std::abs(x);
     if( x < 3.0f ) return sincf(PI * x) * sincf(PI * x / 3.0f);
     return 0.0f;
 }
@@ -276,7 +279,7 @@ GaussianFilter::GaussianFilter(float w) : Filter(w) { setParameters(1); }
 float GaussianFilter::evaluate(float x) const
 {
     // variance = sigma^2
-    return (1.0f / sqrtf(2 * PI * variance)) * expf(-x*x / (2 * variance));
+    return (1.0f / sqrtf(2 * PI * variance)) * std::exp(-x*x / (2 * variance));
 }
 
 void GaussianFilter::setParameters(float variance)
@@ -294,7 +297,7 @@ Kernel1::Kernel1(const Filter & f, int iscale, int samples/*= 32*/)
     const float scale = 1.0f / iscale;
 
     m_width = f.width() * iscale;
-    m_windowSize = (int)ceilf(2 * m_width);
+    m_windowSize = (int)std::ceil(2 * m_width);
     m_data = new float[m_windowSize];
 
     const float offset = float(m_windowSize) / 2;
@@ -360,7 +363,7 @@ void Kernel2::normalize()
 {
     float total = 0.0f;
     for(uint i = 0; i < m_windowSize*m_windowSize; i++) {
-        total += fabsf(m_data[i]);
+        total += std::abs(m_data[i]);
     }
 
     float inv = 1.0f / total;
@@ -374,7 +377,7 @@ void Kernel2::transpose()
 {
     for(uint i = 0; i < m_windowSize; i++) {
         for(uint j = i+1; j < m_windowSize; j++) {
-            swap(m_data[i*m_windowSize + j], m_data[j*m_windowSize + i]);
+            std::swap(m_data[i*m_windowSize + j], m_data[j*m_windowSize + i]);
         }
     }
 }
@@ -576,7 +579,7 @@ PolyphaseKernel::PolyphaseKernel(const Filter & f, uint srcLength, uint dstLengt
 
     m_length = dstLength;
     m_width = f.width() * iscale;
-    m_windowSize = (int)ceilf(m_width * 2) + 1;
+    m_windowSize = (int)std::ceil(m_width * 2) + 1;
 
     m_data = new float[m_windowSize * m_length];
     memset(m_data, 0, sizeof(float) * m_windowSize * m_length);
@@ -585,8 +588,8 @@ PolyphaseKernel::PolyphaseKernel(const Filter & f, uint srcLength, uint dstLengt
     {
         const float center = (0.5f + i) * iscale;
 
-        const int left = (int)floorf(center - m_width);
-        const int right = (int)ceilf(center + m_width);
+        const int left = (int)std::floor(center - m_width);
+        const int right = (int)std::ceil(center + m_width);
         nvDebugCheck(right - left <= m_windowSize);
 
         float total = 0.0f;

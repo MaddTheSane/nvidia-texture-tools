@@ -270,7 +270,7 @@ float Utils::norm(const float3 &a, const float3 &b)
 #endif
 #ifdef	NORM_ABS
 	float3 err = a - b;
-	return fabs(err.x) + fabs(err.y) + fabs(err.z);
+	return std::abs(err.x) + std::abs(err.y) + std::abs(err.z);
 #endif
 }
 

@@ -1467,7 +1467,7 @@ void FloatImage::scaleAlphaToCoverage(float desiredCoverage, float alphaRef, int
     for (int i = 0; i < 10; i++) {
         float currentCoverage = alphaTestCoverage(alphaRef, alphaChannel, alphaScale);
 
-        float error = fabsf(currentCoverage - desiredCoverage);
+        float error = std::abs(currentCoverage - desiredCoverage);
         if (error < bestError) {
             bestError = error;
             bestAlphaScale = alphaScale;

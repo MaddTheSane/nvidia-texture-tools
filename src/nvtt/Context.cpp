@@ -203,9 +203,9 @@ int Compressor::estimateSize(int w, int h, int d, int mipmapCount, const Compres
         size += computeImageSize(w, h, d, bitCount, pitchAlignment, format);
 
         // Compute extents of next mipmap:
-        w = max(1, w / 2);
-        h = max(1, h / 2);
-        d = max(1, d / 2);
+        w = std::max(1, w / 2);
+        h = std::max(1, h / 2);
+        d = std::max(1, d / 2);
     }
 
     return size;

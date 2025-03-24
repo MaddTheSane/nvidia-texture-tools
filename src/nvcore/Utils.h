@@ -7,6 +7,7 @@
 #include <NVCore/Debug.h> // nvDebugCheck
 
 #include <new> // for placement new
+#include <algorithm>
 
 
 // Just in case. Grrr.
@@ -168,7 +169,7 @@ namespace nv
 	//inline const T & max4(const T & a, const T & b, const T & c)
 	inline T max4(const T & a, const T & b, const T & c, const T & d)
 	{
-		return max(max(a, b), max(c, d));
+		return std::max({a, b, c, d});
 	}
 
     /// Return the maximum of the three arguments.
@@ -176,7 +177,7 @@ namespace nv
     //inline const T & max3(const T & a, const T & b, const T & c)
     inline T max3(const T & a, const T & b, const T & c)
     {
-        return max(a, max(b, c));
+        return std::max({a, b, c});
     }
 
     /// Return the minimum of two values.
@@ -192,7 +193,7 @@ namespace nv
     //inline const T & min3(const T & a, const T & b, const T & c)
     inline T min3(const T & a, const T & b, const T & c)
     {
-        return min(a, min(b, c));
+        return std::min({a, b, c});
     }
 
     /// Clamp between two values.

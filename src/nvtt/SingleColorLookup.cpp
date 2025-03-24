@@ -4,6 +4,7 @@
 #include "nvcore/Debug.h"
 
 #include <stdlib.h> // abs
+#include <cstdlib>
 
 // Globals
 uint8 OMatch5[256][2];
@@ -45,15 +46,15 @@ static void PrepareOptTable(uint8 * table, const uint8 * expand, int size, bool 
 				int maxe = expand[max];
 
 				int err;
-                if (alpha_mode) err = abs((maxe + mine)/2 - i);
-                else err = abs(Lerp13(maxe, mine) - i);
+                if (alpha_mode) err = std::abs((maxe + mine)/2 - i);
+                else err = std::abs(Lerp13(maxe, mine) - i);
                 err *= 100;
 
                 // DX10 spec says that interpolation must be within 3% of "correct" result,
                 // add this as error term. (normally we'd expect a random distribution of
                 // +-1.5% error, but nowhere in the spec does it say that the error has to be
                 // unbiased - better safe than sorry).
-				err += abs(max - min) * 3;
+				err += std::abs(max - min) * 3;
 
 				if (err < bestErr)
 				{
@@ -87,4 +88,3 @@ void initSingleColorLookup()
     PrepareOptTable(&OMatchAlpha5[0][0], expand5, 32, true);
 	PrepareOptTable(&OMatchAlpha6[0][0], expand6, 64, true);
 }
-

@@ -7,6 +7,7 @@
 #include "nvmath/Vector.inl"
 
 #include <float.h> // FLT_MAX
+#include <algorithm>
 
 using namespace nv;
 using simd::float3;
@@ -97,9 +98,9 @@ float nv::averageColorError(const FloatImage * ref, const FloatImage * img, bool
         float b1 = ref->pixel(i + count * 2);
         float a1 = ref->pixel(i + count * 3);
 
-        float r = fabsf(r0 - r1);
-        float g = fabsf(g0 - g1);
-        float b = fabsf(b0 - b1);
+        float r = std::abs(r0 - r1);
+        float g = std::abs(g0 - g1);
+        float b = std::abs(b0 - b1);
 
         float a = 1;
         if (alphaWeight) a = a1;
@@ -129,7 +130,7 @@ float nv::averageAlphaError(const FloatImage * ref, const FloatImage * img)
 
         float a = a0 - a1;
 
-        mae += fabsf(a);
+        mae += std::abs(a);
     }
 
     return float(mae / count);
@@ -213,13 +214,13 @@ static float3 xyzToRgb(const float3 & c)
 
 static float toLinear(float f)
 {
-    return powf(f, 2.2f);
+    return std::pow(f, 2.2f);
 }
 
 static float toGamma(float f)
 {
     // @@ Use sRGB space?
-    return powf(f, 1.0f/2.2f);
+    return std::pow(f, 1.0f/2.2f);
 }
 
 static float3 toLinear(const float3 & c)
@@ -234,20 +235,20 @@ static float3 toGamma(const float3 & c)
 
 static float f(float t)
 {
-    const float epsilon = powf(6.0f/29.0f, 3);
+    const float epsilon = std::pow(6.0f/29.0f, 3);
 
     if (t > epsilon) {
-        return powf(t, 1.0f/3.0f);
+        return std::pow(t, 1.0f/3.0f);
     }
     else {
-        return 1.0f/3.0f * powf(29.0f/6.0f, 2) * t + 4.0f / 29.0f;
+        return 1.0f/3.0f * std::pow(29.0f/6.0f, 2) * t + 4.0f / 29.0f;
     }
 }
 
 static float finv(float t)
 {
     if (t > 6.0f / 29.0f) {
-        return 3.0f * powf(6.0f / 29.0f, 2) * (t - 4.0f / 29.0f);
+        return 3.0f * std::pow(6.0f / 29.0f, 2) * (t - 4.0f / 29.0f);
     }
     else {
         return powf(t, 3.0f);
@@ -284,7 +285,7 @@ static float3 rgbToCieLab(const float3 & c)
 // h is hue-angle in radians
 static float3 cieLabToLCh(const float3 & c)
 {
-    return make_float3(c.x, sqrtf(c.y*c.y + c.z*c.z), atan2f(c.y, c.z));
+    return make_float3(c.x, sqrtf(c.y*c.y + c.z*c.z), std::atan2(c.y, c.z));
 }
 
 static void rgbToCieLab(const FloatImage * rgbImage, FloatImage * LabImage)
@@ -385,12 +386,12 @@ float nv::cieLab94Error(const FloatImage * img0, const FloatImage * img1)
         float3 labDelta = lab0 - lab1;
         float3 lchDelta = lch0 - lch1;
 
-        double deltaLsq = powf(lchDelta.x / (kL*sL), 2);
-        double deltaCsq = powf(lchDelta.y / (kC*sC), 2);
+        double deltaLsq = std::pow(lchDelta.x / (kL*sL), 2);
+        double deltaCsq = std::pow(lchDelta.y / (kC*sC), 2);
 
         // avoid possible sqrt of negative value by computing (deltaH/(kH*sH))^2
-        double deltaHsq = powf(labDelta.y, 2) + powf(labDelta.z, 2) - powf(lchDelta.y, 2);
-        deltaHsq /= powf(kH*sH, 2);
+        double deltaHsq = std::pow(labDelta.y, 2) + std::pow(labDelta.z, 2) - std::pow(lchDelta.y, 2);
+        deltaHsq /= std::pow(kH*sH, 2);
 
         error += sqrt(deltaLsq + deltaCsq + deltaHsq);
     }
@@ -470,7 +471,7 @@ float nv::averageAngularError(const FloatImage * img0, const FloatImage * img1)
         n0 = normalizeSafe(n0, make_float3(0), 0.0f);
         n1 = normalizeSafe(n1, make_float3(0), 0.0f);
 
-        error += acos(clamp(dot(n0, n1), -1.0f, 1.0f));
+        error += acos(std::clamp(dot(n0, n1), -1.0f, 1.0f));
     }
 
     return float(error / count);
@@ -508,7 +509,7 @@ float nv::rmsAngularError(const FloatImage * img0, const FloatImage * img1)
         n0 = normalizeSafe(n0, make_float3(0), 0.0f);
         n1 = normalizeSafe(n1, make_float3(0), 0.0f);
 
-        float angle = acosf(clamp(dot(n0, n1), -1.0f, 1.0f));
+        float angle = acosf(std::clamp(dot(n0, n1), -1.0f, 1.0f));
         error += angle * angle;
     }
 

@@ -5,6 +5,7 @@
 #include "nvmath/Matrix.inl"
 #include "nvmath/Color.inl"
 #include "nvcore/Utils.h"    // clamp
+#include <algorithm>         // clamp
 
 //#define HAVE_RGETC 0
 //#define HAVE_ETCPACK 0 // Only enable in OSX for debugging.
@@ -12,8 +13,6 @@
 #if HAVE_RGETC
 #include "rg_etc1.h"
 #endif
-
-#include <algorithm>
 
 #if HAVE_ETCPACK
 // From etcpack.cxx
@@ -1319,14 +1318,14 @@ static int select_table_index(const float3 & base_color, const float4 input_colo
             int idx = flip ? x*4 + y : y*4 + x;
             float lum_delta = dot(base_color, float3(1.0f/3)) - dot(input_colors[idx].xyz, float3(1.0f/3));
             //min_lum_delta = min(min_lum_delta, lum_delta);
-            max_lum_delta = max(max_lum_delta, fabsf(lum_delta));
+            max_lum_delta = std::max(max_lum_delta, std::abs(lum_delta));
         }
     }
 
     int best_range = -1;
     float best_error = NV_FLOAT_MAX;
     for (int i = 0; i < 8; i++) {
-        float error = fabsf(etc_intensity_range[i] - 255 * max_lum_delta);
+        float error = std::abs(etc_intensity_range[i] - 255 * max_lum_delta);
         if (error < best_error) {
             best_error = error;
             best_range = i;
@@ -1940,7 +1939,7 @@ static void process_input_alphas(float4 input_colors[16], int input_channel) {
 static void process_input_weights(float input_weights[16]) {
     float max_weight = 0.0f;
     for (int i = 0; i < 16; i++) {
-        max_weight = nv::max(max_weight, input_weights[i]);
+        max_weight = std::max(max_weight, input_weights[i]);
     }
     
     const float min_weight = 0.0001f;
@@ -1954,7 +1953,7 @@ static void process_input_weights(float input_weights[16]) {
     else {
         for (int i = 0; i < 16; i++) {
             // Clamp to positive.
-            input_weights[i] = nv::max(input_weights[i], 0.0f);
+            input_weights[i] = std::max(input_weights[i], 0.0f);
 
             // Flush to zero.
             if (input_weights[i] < min_weight) input_weights[i] = 0.0f;
@@ -2057,8 +2056,8 @@ float compress_eac_range_search(float4 input_colors[16], float input_weights[16]
     float max_a = 0.0f;
     for (uint i = 0; i < 16; i++) {
         float a = input_colors[i][input_channel];
-        min_a = nv::min(min_a, a);
-        max_a = nv::max(max_a, a);
+        min_a = std::min(min_a, a);
+        max_a = std::max(max_a, a);
     }
     const float range_a = max_a - min_a;
 
@@ -2076,8 +2075,8 @@ float compress_eac_range_search(float4 input_colors[16], float input_weights[16]
         const float fCenterRatio = fTableEntryCenter / fTableEntryRange;
     
         const int center = ftoi_round(255.0f * (min_a + fCenterRatio * range_a));
-        const int min_base = max(0, center - options.search_radius);
-        const int max_base = min(center + options.search_radius, 255);
+        const int min_base = std::max(0, center - options.search_radius);
+        const int max_base = std::min(center + options.search_radius, 255);
     
         for (int base = min_base; base <= max_base; base++) {
             int range_multiplier = ftoi_round(255 * range_a / fTableEntryRange);

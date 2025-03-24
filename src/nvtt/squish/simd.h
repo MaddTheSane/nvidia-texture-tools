@@ -44,14 +44,14 @@ namespace nvsquish {
 #define VEC4_CONST( X ) simd::make_float4( X )
 
 	typedef simd::float4 Vec4;
-	//! Returns a*b + c
-    SIMD_INLINE inline Vec4 MultiplyAdd( Vec4 const & a, Vec4 const & b, Vec4 const & c )
+	//! Returns `a*b + c`
+	NV_FORCEINLINE Vec4 MultiplyAdd( Vec4 const & a, Vec4 const & b, Vec4 const & c )
 	{
 		return a*b + c;
 	}
 
-	//! Returns -( a*b - c )
-    inline Vec4 NegativeMultiplySubtract( Vec4 const & a, Vec4 const & b, Vec4 const & c )
+	//! Returns `-( a*b - c )`
+	NV_FORCEINLINE Vec4 NegativeMultiplySubtract( Vec4 const & a, Vec4 const & b, Vec4 const & c )
 	{
 		return  -( a * b - c );
 	}
@@ -66,12 +66,12 @@ namespace nvsquish {
 		return diff * estimate + estimate;
 	}
 
-	SIMD_INLINE inline Vec4 Truncate( Vec4 const & v )
+	NV_FORCEINLINE Vec4 Truncate( Vec4 const & v )
 	{
         return simd::trunc(v);
 	}
 
-	SIMD_INLINE inline bool CompareAnyLessThan( Vec4 const & left, Vec4 const & right )
+	NV_FORCEINLINE bool CompareAnyLessThan( Vec4 const & left, Vec4 const & right )
 	{
 		simd::int4 bits = left < right;
 		return simd::any( bits );

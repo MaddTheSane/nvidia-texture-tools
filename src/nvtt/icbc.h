@@ -7,6 +7,10 @@
 #ifndef ICBC_H
 #define ICBC_H
 
+#include <cmath>
+#include <math.h>
+#include <algorithm>
+
 namespace icbc {
 
     enum Decoder {
@@ -319,7 +323,7 @@ inline float lengthSquared(Vector3 v) {
 inline bool equal(float a, float b, float epsilon = 0.0001) {
     // http://realtimecollisiondetection.net/blog/?p=89
     //return fabsf(a - b) < epsilon * max(1.0f, max(fabsf(a), fabsf(b)));
-    return fabsf(a - b) < epsilon;
+    return std::abs(a - b) < epsilon;
 }
 
 inline bool equal(Vector3 a, Vector3 b, float epsilon) {

@@ -120,7 +120,7 @@ Vec3 ComputePrincipleComponent( Sym3x3 const& matrix )
 		float y = v.X() * matrix[1] + v.Y() * matrix[3] + v.Z() * matrix[4];
 		float z = v.X() * matrix[2] + v.Y() * matrix[4] + v.Z() * matrix[5];
 		
-		float norm = std::max(std::max(x, y), z);
+		float norm = std::max({x, y, z});
 		float iv = 1.0f / norm;
 		if (norm == 0.0f) {		// @@ I think this is not necessary in this case!!
 			return Vec3(0.0f);

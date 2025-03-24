@@ -44,7 +44,7 @@ FloatR11G11B10 nv::vector3_to_r11g11b10(const simd::float3 & v) {
 // https://cbloomrants.blogspot.com/2020/06/widespread-error-in-radiance-hdr-rgbe.html
 FloatRGBE8 nv::vector3_to_rgbe8(const simd::float3 & v) {
 
-    float m = max3(v.x, v.y, v.z);
+    float m = std::max({v.x, v.y, v.z});
 
     FloatRGBE8 rgbe;
 

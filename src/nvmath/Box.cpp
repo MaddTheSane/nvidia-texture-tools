@@ -117,4 +117,3 @@ bool nv::intersect(const Box & box, const float3 & p, const float3 & id, float *
 
     return true;
 }
-

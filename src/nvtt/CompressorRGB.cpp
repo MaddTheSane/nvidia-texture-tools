@@ -243,15 +243,15 @@ namespace
         const float sharedexp_max = float((1 << N) - 1) / (1 << N) * (1 << (Emax-B));   // 65408
 
         // Clamp color components.
-        r = max(0.0f, min(sharedexp_max, r));
-        g = max(0.0f, min(sharedexp_max, g));
-        b = max(0.0f, min(sharedexp_max, b));
+        r = std::clamp(r, 0.0f, sharedexp_max);
+        g = std::clamp(g, 0.0f, sharedexp_max);
+        b = std::clamp(b, 0.0f, sharedexp_max);
 
         // Get max component.
-        float max_c = max3(r, g, b);
+        float max_c = std::max({r, g, b});
 
         // Compute shared exponent.
-        int exp_shared_p = max(-B-1, ftoi_floor(log2f(max_c))) + 1 + B;
+        int exp_shared_p = std::max(-B-1, ftoi_floor(std::log2(max_c))) + 1 + B;
         nvDebugCheck(exp_shared_p <= Emax);
         nvDebugCheck(exp_shared_p >= 0);
 
@@ -281,7 +281,7 @@ namespace
     // These are based on: http://www.graphics.cornell.edu/~bjw/rgbe/rgbe.c
     uint toRGBE(float r, float g, float b)
     {
-        float v = max3(r, g, b);
+        float v = std::max({r, g, b});
 
         uint rgbe = 0;
 
@@ -290,7 +290,7 @@ namespace
         }
         else {
             int e;
-            float scale = frexpf(v, &e) * 256.0f / v;
+            float scale = std::frexp(v, &e) * 256.0f / v;
             //Float754 f;
             //f.value = v;
             //float scale = f.field.biasedexponent * 256.0f / v;
@@ -312,7 +312,7 @@ namespace
         uint e = (rgbe >> 24);
 
         if (e != 0) {
-            float scale = ldexpf(1.0f, e-(int)(128+8));             // +8 to divide by 256. @@ Shouldn't we divide by 255 instead?
+            float scale = std::ldexp(1.0f, e-(int)(128+8));             // +8 to divide by 256. @@ Shouldn't we divide by 255 instead?
             return scale * make_float3(float(r), float(g), float(b));
         }
         
@@ -403,10 +403,10 @@ void PixelFormatConverter::compress(nvtt::AlphaMode /*alphaMode*/, uint w, uint 
     nvDebugCheck (compressionOptions.format == nvtt::Format_RGBA);
 
     uint bitCount;
-    uint rmask, rshift, rsize;
-    uint gmask, gshift, gsize;
-    uint bmask, bshift, bsize;
-    uint amask, ashift, asize;
+    uint rmask, rshift=0, rsize;
+    uint gmask, gshift=0, gsize;
+    uint bmask, bshift=0, bsize;
+    uint amask, ashift=0, asize;
 
     if (compressionOptions.pixelType == nvtt::PixelType_Float)
     {
@@ -531,20 +531,20 @@ void PixelFormatConverter::compress(nvtt::AlphaMode /*alphaMode*/, uint w, uint 
 
                     int ir, ig, ib, ia;
                     if (compressionOptions.pixelType == nvtt::PixelType_UnsignedNorm) {
-                        ir = iround(clamp(r * 65535.0f, 0.0f, 65535.0f));
-                        ig = iround(clamp(g * 65535.0f, 0.0f, 65535.0f));
-                        ib = iround(clamp(b * 65535.0f, 0.0f, 65535.0f));
-                        ia = iround(clamp(a * 65535.0f, 0.0f, 65535.0f));
+                        ir = iround(std::clamp(r * 65535.0f, 0.0f, 65535.0f));
+                        ig = iround(std::clamp(g * 65535.0f, 0.0f, 65535.0f));
+                        ib = iround(std::clamp(b * 65535.0f, 0.0f, 65535.0f));
+                        ia = iround(std::clamp(a * 65535.0f, 0.0f, 65535.0f));
                     }
                     else if (compressionOptions.pixelType == nvtt::PixelType_SignedNorm) {
                         // @@
                         ir = ig = ib = ia = 0;
                     }
                     else if (compressionOptions.pixelType == nvtt::PixelType_UnsignedInt) {
-                        ir = iround(clamp(r, 0.0f, 65535.0f));
-                        ig = iround(clamp(g, 0.0f, 65535.0f));
-                        ib = iround(clamp(b, 0.0f, 65535.0f));
-                        ia = iround(clamp(a, 0.0f, 65535.0f));
+                        ir = iround(std::clamp(r, 0.0f, 65535.0f));
+                        ig = iround(std::clamp(g, 0.0f, 65535.0f));
+                        ib = iround(std::clamp(b, 0.0f, 65535.0f));
+                        ia = iround(std::clamp(a, 0.0f, 65535.0f));
                     }
                     else if (compressionOptions.pixelType == nvtt::PixelType_SignedInt) {
                         // @@

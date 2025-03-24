@@ -716,7 +716,7 @@ static void EigenSolver4_Tridiagonal(float mat[4][4], float * diag, float * subd
 		float r = sqrtf(0.5f * (alpha*alpha - A(k+1,k)*alpha));
 
 		// If r is zero, skip this column - already in tridiagonal form
-		if (fabsf(r) < epsilon)
+		if (std::abs(r) < epsilon)
 			continue;
 
 		float v[n] = {};

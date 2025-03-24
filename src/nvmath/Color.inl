@@ -12,8 +12,8 @@
 namespace nv
 {
     // for Color16 & Color16_4444 bitfields
-    NV_FORCEINLINE uint32 U32round(float f) { return uint32(floorf(f + 0.5f)); }
-    NV_FORCEINLINE uint16 U16round(float f) { return uint16(floorf(f + 0.5f)); }
+    NV_FORCEINLINE uint32 U32round(float f) { return uint32(std::floor(f + 0.5f)); }
+    NV_FORCEINLINE uint16 U16round(float f) { return uint16(std::floor(f + 0.5f)); }
     NV_FORCEINLINE uint16 toU4_in_U16(int x) { nvDebugCheck(x >= 0 && x <= 15u); return (uint16)x; }
     NV_FORCEINLINE uint16 toU5_in_U16(int x) { nvDebugCheck(x >= 0 && x <= 31u); return (uint16)x; }
     NV_FORCEINLINE uint16 toU6_in_U16(int x) { nvDebugCheck(x >= 0 && x <= 63u); return (uint16)x; }
@@ -179,15 +179,15 @@ namespace nv
 
     
     inline float hue(float r, float g, float b) {
-        float h = atan2f(sqrtf(3.0f)*(g-b), 2*r-g-b) * (1.0f / (2 * PI)) + 0.5f;
+        float h = std::atan2(sqrtf(3.0f)*(g-b), 2*r-g-b) * (1.0f / (2 * PI)) + 0.5f;
         return h;
     }
 
     inline float toSrgb(float f) {
-        if (nv::isNan(f))           f = 0.0f;
+        if (std::isnan(f))          f = 0.0f;
         else if (f <= 0.0f)         f = 0.0f;
         else if (f <= 0.0031308f)   f = 12.92f * f;
-        else if (f <= 1.0f)         f = (powf(f, 0.41666f) * 1.055f) - 0.055f;
+        else if (f <= 1.0f)         f = (std::pow(f, 0.41666f) * 1.055f) - 0.055f;
         else                        f = 1.0f;
         return f;
     }
@@ -195,7 +195,7 @@ namespace nv
     inline float fromSrgb(float f) {
         if (f < 0.0f)           f = 0.0f;
         else if (f < 0.04045f)  f = f / 12.92f;
-        else if (f <= 1.0f)     f = powf((f + 0.055f) / 1.055f, 2.4f);
+        else if (f <= 1.0f)     f = std::pow((f + 0.055f) / 1.055f, 2.4f);
         else                    f = 1.0f;
         return f;
     }

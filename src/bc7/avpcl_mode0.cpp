@@ -568,8 +568,8 @@ static float exhaustive(const float4 colors[], const float importance[], int np,
 	else if (orig_err > 1000.0*thr_scale)	{ adelta = (1 << aprec)/4; bdelta = (1 << bprec)/4; }
 	else if (orig_err > 200.0*thr_scale)	{ adelta = (1 << aprec)/8; bdelta = (1 << bprec)/8; }
 	else if (orig_err > 40.0*thr_scale)		{ adelta = (1 << aprec)/16; bdelta = (1 << bprec)/16; }
-	adelta = max(adelta, 3);
-	bdelta = max(bdelta, 3);
+	adelta = std::max(adelta, 3);
+	bdelta = std::max(bdelta, 3);
 
 #ifdef	DISABLE_EXHAUSTIVE
 	adelta = bdelta = 3;
@@ -578,10 +578,10 @@ static float exhaustive(const float4 colors[], const float importance[], int np,
 	temp_endpts = opt_endpts;
 
 	// ok figure out the range of A and B
-	int alow = max(0, opt_endpts.A[ch] - adelta);
-	int ahigh = min((1<<aprec)-1, opt_endpts.A[ch] + adelta);
-	int blow = max(0, opt_endpts.B[ch] - bdelta);
-	int bhigh = min((1<<bprec)-1, opt_endpts.B[ch] + bdelta);
+	int alow = std::max(0, opt_endpts.A[ch] - adelta);
+	int ahigh = std::min((1<<aprec)-1, opt_endpts.A[ch] + adelta);
+	int blow = std::max(0, opt_endpts.B[ch] - bdelta);
+	int bhigh = std::min((1<<bprec)-1, opt_endpts.B[ch] + bdelta);
 
 	// now there's no need to swap the ordering of A and B
 	//bool a_le_b = opt_endpts.A[ch] <= opt_endpts.B[ch];
@@ -612,7 +612,7 @@ static float exhaustive(const float4 colors[], const float importance[], int np,
 	{
 		// keep b <= a
 		for (int b = blow; b < bhigh; ++b)
-		for (int a = max(b, alow); a <= ahigh; ++a)
+		for (int a = std::max(b, alow); a <= ahigh; ++a)
 		{
 			temp_endpts.A[ch] = a;
 			temp_endpts.B[ch] = b;

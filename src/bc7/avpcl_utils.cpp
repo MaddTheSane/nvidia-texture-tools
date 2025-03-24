@@ -152,7 +152,7 @@ float Utils::metric3(const float3 & a, const float3 & b, int rotatemode)
 	// if nonuniform, select weights and weigh away
 	if (AVPCL::flag_nonuniform || AVPCL::flag_nonuniform_ati)
 	{
-		float rwt, gwt, bwt;
+		float rwt = 1.0f, gwt = 1.0f, bwt = 1.0f;
 		if (AVPCL::flag_nonuniform)
 		{
 			rwt = 0.299f; gwt = 0.587f; bwt = 0.114f;
@@ -188,7 +188,7 @@ float Utils::metric1(const float a, const float b, int rotatemode)
 	// if nonuniform, select weights and weigh away
 	if (AVPCL::flag_nonuniform || AVPCL::flag_nonuniform_ati)
 	{
-		float rwt, gwt, bwt, awt;
+		float rwt = 1.0f, gwt = 1.0f, bwt = 1.0f, awt = 1.0f;
 		if (AVPCL::flag_nonuniform)
 		{
 			rwt = 0.299f; gwt = 0.587f; bwt = 0.114f;
@@ -363,7 +363,7 @@ float Utils::metric1premult(float rgb0, float a0, float rgb1, float a1, int rota
 	// if nonuniform, select weights and weigh away
 	if (AVPCL::flag_nonuniform || AVPCL::flag_nonuniform_ati)
 	{
-		float rwt, gwt, bwt, awt;
+		float rwt = 1.0f, gwt = 1.0f, bwt = 1.0f, awt = 1.0f;
 		if (AVPCL::flag_nonuniform)
 		{
 			rwt = 0.299f; gwt = 0.587f; bwt = 0.114f;

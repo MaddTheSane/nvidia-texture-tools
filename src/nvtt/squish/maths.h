@@ -34,6 +34,7 @@
 #include <algorithm>
 #include <simd/simd.h>
 #include <NVTT/config.h>
+#include <NVCore/nvcore.h>
 
 #if NV_USE_ALTIVEC
 #define vector __vector
@@ -43,7 +44,8 @@ namespace nvsquish {
 
 typedef simd::float3 Vec3;
 
-inline float LengthSquared( const Vec3 &v )
+NV_FORCEINLINE float LengthSquared( const Vec3 &v ) NV_DEPRECATED;
+NV_FORCEINLINE float LengthSquared( const Vec3 &v )
 {
 	return simd::length_squared(v);
 }

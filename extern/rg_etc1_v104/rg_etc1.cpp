@@ -16,6 +16,7 @@
 #include <assert.h>
 //#include <stdio.h>
 #include <math.h>
+#include <algorithm>
 
 #pragma warning (disable: 4201) //  nonstandard extension used : nameless struct/union
 
@@ -50,10 +51,6 @@ typedef unsigned long uint64;
    template<typename T> inline T square(T value) { return value * value; }
    template<typename T> inline void zero_object(T& obj) { memset((void*)&obj, 0, sizeof(obj)); }
    template<typename T> inline void zero_this(T* pObj) { memset((void*)pObj, 0, sizeof(*pObj)); }
-
-   template<class T, size_t N> T decay_array_to_subtype(T (&a)[N]);   
-
-#define RG_ETC1_ARRAY_SIZE(X) (sizeof(X) / sizeof(decay_array_to_subtype(X)))
 
    enum eNoClamp { cNoClamp };
 
@@ -2290,19 +2287,19 @@ found_perfect_match:
                if (params.m_quality == cHighQuality)
                {
                   static const int s_scan_delta_0_to_4[] = { -4, -3, -2, -1, 0, 1, 2, 3, 4 };
-                  params.m_scan_delta_size = RG_ETC1_ARRAY_SIZE(s_scan_delta_0_to_4);
+                  params.m_scan_delta_size = std::size(s_scan_delta_0_to_4);
                   params.m_pScan_deltas = s_scan_delta_0_to_4;
                }
                else if (params.m_quality == cMediumQuality)
                {
                   static const int s_scan_delta_0_to_1[] = { -1, 0, 1 };
-                  params.m_scan_delta_size = RG_ETC1_ARRAY_SIZE(s_scan_delta_0_to_1);
+                  params.m_scan_delta_size = std::size(s_scan_delta_0_to_1);
                   params.m_pScan_deltas = s_scan_delta_0_to_1;
                }
                else
                {
                   static const int s_scan_delta_0[] = { 0 };
-                  params.m_scan_delta_size = RG_ETC1_ARRAY_SIZE(s_scan_delta_0);
+                  params.m_scan_delta_size = std::size(s_scan_delta_0);
                   params.m_pScan_deltas = s_scan_delta_0;
                }
                
@@ -2320,7 +2317,7 @@ found_perfect_match:
                      if (params.m_quality == cMediumQuality)
                      {
                         static const int s_scan_delta_2_to_3[] = { -3, -2, 2, 3 };
-                        params.m_scan_delta_size = RG_ETC1_ARRAY_SIZE(s_scan_delta_2_to_3);
+                        params.m_scan_delta_size = std::size(s_scan_delta_2_to_3);
                         params.m_pScan_deltas = s_scan_delta_2_to_3;
                      }
                      else
@@ -2329,12 +2326,12 @@ found_perfect_match:
                         static const int s_scan_delta_5_to_8[] = { -8, -7, -6, -5, 5, 6, 7, 8 };
                         if (results[subblock].m_error > refinement_error_thresh1)
                         {
-                           params.m_scan_delta_size = RG_ETC1_ARRAY_SIZE(s_scan_delta_5_to_8);
+                           params.m_scan_delta_size = std::size(s_scan_delta_5_to_8);
                            params.m_pScan_deltas = s_scan_delta_5_to_8;
                         }
                         else
                         {
-                           params.m_scan_delta_size = RG_ETC1_ARRAY_SIZE(s_scan_delta_5_to_5);
+                           params.m_scan_delta_size = std::size(s_scan_delta_5_to_5);
                            params.m_pScan_deltas = s_scan_delta_5_to_5;
                         }
                      }
