@@ -12,7 +12,7 @@ namespace nv
     {
     public:
         Filter(float width);
-        virtual ~Filter();
+        virtual ~Filter() = default;
 
         float width() const { return m_width; }
         float sampleDelta(float x, float scale) const;

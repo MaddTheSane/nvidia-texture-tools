@@ -107,10 +107,6 @@ Filter::Filter(float width) : m_width(width)
 {
 }
 
-/*virtual*/ Filter::~Filter()
-{
-}
-
 float Filter::sampleDelta(float x, float scale) const
 {
     return evaluate((x + 0.5f)* scale);

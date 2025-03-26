@@ -329,7 +329,7 @@ namespace nvtt
     // Output handler.
     struct OutputHandler
     {
-        virtual ~OutputHandler() {}
+        virtual ~OutputHandler() = default;
 
         // Indicate the start of a new compressed image that's part of the final texture.
         virtual void beginImage(int size, int width, int height, int depth, int face, int miplevel) = 0;
@@ -357,7 +357,7 @@ namespace nvtt
     // Error handler.
     struct ErrorHandler
     {
-        virtual ~ErrorHandler() {}
+        virtual ~ErrorHandler() = default;
 
         // Signal error.
         virtual void error(Error e) = 0;
@@ -404,7 +404,7 @@ namespace nvtt
     // (New in NVTT 2.1)
     struct TaskDispatcher
     {
-        virtual ~TaskDispatcher() {}
+        virtual ~TaskDispatcher() = default;
 
         virtual void dispatch(Task * task, void * context, int count) = 0;
     };

@@ -182,13 +182,13 @@ namespace nv
     // Message handler interface.
     struct MessageHandler {
         virtual void log(const char * str, va_list arg) = 0;
-        virtual ~MessageHandler() {}
+        virtual ~MessageHandler() = default;
     };
 
     // Assert handler interface.
     struct AssertHandler {
         virtual int assertion(const char *exp, const char *file, int line, const char *func, const char *msg, va_list arg) = 0;
-        virtual ~AssertHandler() {}
+        virtual ~AssertHandler() = default;
     };
 
 

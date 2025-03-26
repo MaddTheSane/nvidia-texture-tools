@@ -33,7 +33,7 @@ namespace nv
         Stream() : m_byteOrder(LittleEndian) { }
 
         /// Virtual destructor.
-        virtual ~Stream() {}
+        virtual ~Stream() = default;
 
         /// Set byte order.
         void setByteOrder(ByteOrder bo) { m_byteOrder = bo; }

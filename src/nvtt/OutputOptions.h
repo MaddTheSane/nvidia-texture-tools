@@ -39,7 +39,7 @@ namespace nvtt
         DefaultOutputHandler(const char * fileName) : stream(fileName) {}
         DefaultOutputHandler(FILE * fp) : stream(fp, false) {}
 
-        virtual ~DefaultOutputHandler() {}
+        virtual ~DefaultOutputHandler() = default;
 
         virtual void beginImage(int size, int width, int height, int depth, int face, int miplevel)
         {
