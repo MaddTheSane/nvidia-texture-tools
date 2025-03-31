@@ -602,8 +602,8 @@ void StringBuilder::acquire(char * str)
 
 // Swap strings.
 void nv::swap(StringBuilder & a, StringBuilder & b) {
-    swap(a.m_size, b.m_size);
-    swap(a.m_str, b.m_str);
+    std::swap(a.m_size, b.m_size);
+    std::swap(a.m_str, b.m_str);
 }
 
 

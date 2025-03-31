@@ -7,6 +7,7 @@
 #include <NVCore/Debug.h> // nvDebugCheck
 
 #include <new> // for placement new
+#include <cmath>
 #include <algorithm>
 
 
@@ -148,16 +149,11 @@ namespace nv
 
 
     /// Swap two values.
-    template <typename T> 
-    inline void swap(T & a, T & b)
-    {
-        T temp(a);
-        a = b; 
-        b = temp;
-    }
+    using std::swap;
 
     /// Return the maximum of the two arguments. For floating point values, it returns the second value if the first is NaN.
-    template <typename T> 
+    // TODO: check that using std::max also honors the below.
+    template <typename T>
     //inline const T & max(const T & a, const T & b)
     inline T max(const T & a, const T & b)
     {
@@ -169,7 +165,8 @@ namespace nv
 	//inline const T & max4(const T & a, const T & b, const T & c)
 	inline T max4(const T & a, const T & b, const T & c, const T & d)
 	{
-		return std::max({a, b, c, d});
+		//return std::max({a, b, c, d});
+		return max(max(a, b), max(c, d));
 	}
 
     /// Return the maximum of the three arguments.
@@ -177,16 +174,12 @@ namespace nv
     //inline const T & max3(const T & a, const T & b, const T & c)
     inline T max3(const T & a, const T & b, const T & c)
     {
-        return std::max({a, b, c});
+        //return std::max({a, b, c});
+        return max(a, max(b, c));
     }
 
     /// Return the minimum of two values.
-    template <typename T> 
-    //inline const T & min(const T & a, const T & b)
-    inline T min(const T & a, const T & b)
-    {
-        return (a < b) ? a : b;
-    }
+    using std::min;
 
     /// Return the maximum of the three arguments.
     template <typename T> 
@@ -197,12 +190,7 @@ namespace nv
     }
 
     /// Clamp between two values.
-    template <typename T> 
-    //inline const T & clamp(const T & x, const T & a, const T & b)
-    inline T clamp(const T & x, const T & a, const T & b)
-    {
-        return min(max(x, a), b);
-    }
+    using std::clamp;
 
     /** Return the next power of two. 
     * @see http://graphics.stanford.edu/~seander/bithacks.html

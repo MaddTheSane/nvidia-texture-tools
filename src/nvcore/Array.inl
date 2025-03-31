@@ -9,6 +9,7 @@
 #include <NVCore/Stream.h>
 #include <NVCore/Utils.h> // swap
 
+#include <algorithm>
 #include <string.h>	// memmove
 #include <new> // for placement new
 
@@ -427,9 +428,9 @@ namespace nv
     template <typename Typ>
     inline void swap(Array<Typ> & a, Array<Typ> & b)
     {
-        nv::swap(a.m_buffer, b.m_buffer);
-        nv::swap(a.m_capacity, b.m_capacity);
-        nv::swap(a.m_size, b.m_size);
+        std::swap(a.m_buffer, b.m_buffer);
+        std::swap(a.m_capacity, b.m_capacity);
+        std::swap(a.m_size, b.m_size);
     }
 
 
