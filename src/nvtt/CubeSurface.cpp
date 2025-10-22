@@ -652,7 +652,7 @@ float3 CubeSurface::Private::applyAngularFilter(const float3 & filterDir, float 
         float cosineFaceAngle = dot(filterDir, faceNormals[f]);
         float faceAngle = acosf(cosineFaceAngle);
 
-        if (faceAngle > coneAngle + atanf(sqrtf(2))) {
+        if (faceAngle > coneAngle + std::atan(sqrtf(2))) {
             // Skip face.
             continue;
         }
@@ -773,7 +773,7 @@ float3 CubeSurface::Private::applyCosinePowerFilter(const float3 & filterDir, fl
         float cosineFaceAngle = dot(filterDir, faceNormals[f]);
         float faceAngle = acosf(cosineFaceAngle);
 
-        if (faceAngle > coneAngle + atanf(sqrtf(2))) {
+        if (faceAngle > coneAngle + std::atan(sqrtf(2))) {
             // Skip face.
             continue;
         }

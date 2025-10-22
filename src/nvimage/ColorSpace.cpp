@@ -10,8 +10,8 @@ namespace nv
 {
 	void ColorSpace::RGBtoYCoCg_R(Image* img)
 	{
-		const uint w = img->width();
-		const uint h = img->height();
+		const uint w = img->width;
+		const uint h = img->height;
 		
 		for( uint y=0; y < h; y++ )
 		{
@@ -41,8 +41,8 @@ namespace nv
 	
 	void ColorSpace::YCoCg_RtoRGB(Image* img)
 	{
-		const uint w = img->width();
-		const uint h = img->height();
+		const uint w = img->width;
+		const uint h = img->height;
 		
 		for( uint y=0; y < h; y++ )
 		{

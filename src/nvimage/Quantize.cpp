@@ -205,7 +205,7 @@ void nv::Quantize::FloydSteinberg(Image * image, uint rsize, uint gsize, uint bs
 			image->pixel(x, y) = Color32(r, g, b, a);
 			
 			// Compute new error.
-			float4 diff(float(int(pixel.r) - r), float(int(pixel.g) - g), float(int(pixel.b) - b), float(int(pixel.a) - a));
+			float4 diff = simd::make_float4(float(int(pixel.r) - r), float(int(pixel.g) - g), float(int(pixel.b) - b), float(int(pixel.a) - a));
 			
 			// Propagate new error.
 			row0[1+x+1] += 7.0f / 16.0f * diff;

@@ -54,8 +54,8 @@ FloatRGBE8 nv::vector3_to_rgbe8(const simd::float3 & v) {
     }
     else {
         int e;
-        frexpf(m, &e);
-        float scale = ldexpf(1.0f, -e + 8);
+        std::frexp(m, &e);
+        float scale = std::ldexp(1.0f, -e + 8);
         rgbe.r = U8(v.x * scale);
         rgbe.g = U8(v.y * scale);
         rgbe.b = U8(v.z * scale);
@@ -68,10 +68,9 @@ FloatRGBE8 nv::vector3_to_rgbe8(const simd::float3 & v) {
 
 simd::float3 nv::rgbe8_to_vector3(FloatRGBE8 v) {
     if (v.e != 0) {
-        float scale = ldexpf(1.0f, (int)v.e-128+8);             // +8 to divide by 256.
+        float scale = std::ldexp(1.0f, (int)v.e-128+8);             // +8 to divide by 256.
         return scale * simd::make_float3(float(v.r + 0.5f), float(v.g + 0.5f), float(v.b + 0.5f));
     }
     
     return simd::float3(0);
 }
-
