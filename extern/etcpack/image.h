@@ -48,14 +48,14 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 
-bool fReadPPM(char *filename, int &width, int &height, unsigned char *&pixels, int targetbitrate);
-bool fWritePPM(char *filename, int width, int height, unsigned char *pixels, int bitrate, bool reverse_y);
+bool fReadPPM(const char *filename, int &width, int &height, unsigned char *&pixels, int targetbitrate);
+bool fWritePPM(const char *filename, int width, int height, unsigned char *pixels, int bitrate, bool reverse_y);
 
 bool fReadPFM(char *filename, int &width, int &height, float *&pixels);
 bool fWritePFM(char *filename, int width, int height, float *pixels,bool reverse_y);
 // write a grey scale image
-bool fWritePGM(char *filename, int width, int height, unsigned char *pixels,bool reverse_y, int bitdepth);
-int fReadPGM(char *filename, int &width, int &height, unsigned char *&pixels, int wantedBitDepth);
+bool fWritePGM(const char *filename, int width, int height, unsigned char *pixels,bool reverse_y, int bitdepth);
+int fReadPGM(const char *filename, int &width, int &height, unsigned char *&pixels, int wantedBitDepth);
 // write a TGA image with both RGB and alpha
 bool fWriteTGAfromRGBandA(char *filename, int width, int height, unsigned char *pixelsRGB, unsigned char *pixelsA, bool reverse_y);
 

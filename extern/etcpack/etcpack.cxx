@@ -159,10 +159,10 @@ static uint8 table58H[8] = {3,6,11,16,23,32,41,64};  // 3-bit table for the 58 b
 uint8 weight[3] = {1,1,1};			// Color weight
 
 // Enums
-static enum{PATTERN_H = 0, 
-			PATTERN_T = 1};
+enum{PATTERN_H = 0,
+	PATTERN_T = 1};
 
-static enum{MODE_ETC1, MODE_THUMB_T, MODE_THUMB_H, MODE_PLANAR};
+enum{MODE_ETC1, MODE_THUMB_T, MODE_THUMB_H, MODE_PLANAR};
 // The ETC2 package of codecs includes the following codecs:
 //
 // codec                                             enum
@@ -202,11 +202,11 @@ static enum{MODE_ETC1, MODE_THUMB_T, MODE_THUMB_H, MODE_PLANAR};
 // (GL_COMPRESSED_R11_EAC) and signed (GL_COMPRESSED_SIGNED_R11_EAC) version of 
 // the codec.
 // 
-static enum{ETC1_RGB_NO_MIPMAPS,ETC2PACKAGE_RGB_NO_MIPMAPS,ETC2PACKAGE_RGBA_NO_MIPMAPS_OLD,ETC2PACKAGE_RGBA_NO_MIPMAPS,ETC2PACKAGE_RGBA1_NO_MIPMAPS,ETC2PACKAGE_R_NO_MIPMAPS,ETC2PACKAGE_RG_NO_MIPMAPS,ETC2PACKAGE_R_SIGNED_NO_MIPMAPS,ETC2PACKAGE_RG_SIGNED_NO_MIPMAPS,ETC2PACKAGE_sRGB_NO_MIPMAPS,ETC2PACKAGE_sRGBA_NO_MIPMAPS,ETC2PACKAGE_sRGBA1_NO_MIPMAPS};
-static enum {MODE_COMPRESS, MODE_UNCOMPRESS, MODE_PSNR};
-static enum {SPEED_SLOW, SPEED_FAST, SPEED_MEDIUM};
-static enum {METRIC_PERCEPTUAL, METRIC_NONPERCEPTUAL};
-static enum {CODEC_ETC, CODEC_ETC2};
+enum{ETC1_RGB_NO_MIPMAPS,ETC2PACKAGE_RGB_NO_MIPMAPS,ETC2PACKAGE_RGBA_NO_MIPMAPS_OLD,ETC2PACKAGE_RGBA_NO_MIPMAPS,ETC2PACKAGE_RGBA1_NO_MIPMAPS,ETC2PACKAGE_R_NO_MIPMAPS,ETC2PACKAGE_RG_NO_MIPMAPS,ETC2PACKAGE_R_SIGNED_NO_MIPMAPS,ETC2PACKAGE_RG_SIGNED_NO_MIPMAPS,ETC2PACKAGE_sRGB_NO_MIPMAPS,ETC2PACKAGE_sRGBA_NO_MIPMAPS,ETC2PACKAGE_sRGBA1_NO_MIPMAPS};
+enum {MODE_COMPRESS, MODE_UNCOMPRESS, MODE_PSNR};
+enum {SPEED_SLOW, SPEED_FAST, SPEED_MEDIUM};
+enum {METRIC_PERCEPTUAL, METRIC_NONPERCEPTUAL};
+enum {CODEC_ETC, CODEC_ETC2};
 
 int mode = MODE_COMPRESS;
 int speed = SPEED_FAST;
@@ -244,7 +244,7 @@ KTX_header;
 #define KTX_ENDIAN_REF      (0x04030201)
 #define KTX_ENDIAN_REF_REV  (0x01020304)
 
-static enum {GL_R=0x1903,GL_RG=0x8227,GL_RGB=0x1907,GL_RGBA=0x1908};
+enum {GL_R=0x1903,GL_RG=0x8227,GL_RGB=0x1907,GL_RGBA=0x1908};
 #define GL_SRGB                                          0x8C40
 #define GL_SRGB8                                         0x8C41
 #define GL_SRGB8_ALPHA8                                  0x8C43
@@ -298,7 +298,7 @@ int indexConversion(int pixelIndices)
 
 // Tests if a file exists.
 // NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-bool fileExist(char *filename)
+bool fileExist(const char *filename)
 {
 	FILE *f=NULL;
 	if((f=fopen(filename,"rb"))!=NULL)
@@ -461,7 +461,7 @@ bool readSrcFile(char *filename,uint8 *&img,int &width,int &height, int &expande
 	// Delete temp file if it exists.
 	if(fileExist("tmp.ppm"))
 	{
-		sprintf(str, "del tmp.ppm\n");
+		snprintf(str, sizeof(str), "del tmp.ppm\n");
 		system(str);
 	}
 
@@ -469,7 +469,7 @@ bool readSrcFile(char *filename,uint8 *&img,int &width,int &height, int &expande
 	if(!strcmp(&filename[q],".ppm")) 
 	{
 		// Already a .ppm file. Just copy. 
-		sprintf(str,"copy %s tmp.ppm \n", filename);
+		snprintf(str, sizeof(str), "copy %s tmp.ppm \n", filename);
 		printf("Copying source file to tmp.ppm\n", filename);
 	}
 	else
@@ -482,7 +482,7 @@ bool readSrcFile(char *filename,uint8 *&img,int &width,int &height, int &expande
 		// 
 		// C:\imconv source.jpg dest.ppm
 		//
-		sprintf(str,"imconv %s tmp.ppm\n", filename);
+		snprintf(str, sizeof(str), "imconv %s tmp.ppm\n", filename);
 		printf("Converting source file from %s to .ppm\n", filename);
 	}
 	// Execute system call
@@ -559,7 +559,7 @@ bool readSrcFileNoExpand(char *filename,uint8 *&img,int &width,int &height)
 	// Delete temp file if it exists.
 	if(fileExist("tmp.ppm"))
 	{
-		sprintf(str, "del tmp.ppm\n");
+		snprintf(str, sizeof(str), "del tmp.ppm\n");
 		system(str);
 	}
 
@@ -568,7 +568,7 @@ bool readSrcFileNoExpand(char *filename,uint8 *&img,int &width,int &height)
 	if(!strcmp(&filename[q],".ppm")) 
 	{
 		// Already a .ppm file. Just copy. 
-		sprintf(str,"copy %s tmp.ppm \n", filename);
+		snprintf(str,sizeof(str),"copy %s tmp.ppm \n", filename);
 		printf("Copying source file to tmp.ppm\n", filename);
 	}
 	else
@@ -581,7 +581,7 @@ bool readSrcFileNoExpand(char *filename,uint8 *&img,int &width,int &height)
 		// 
 		// C:\imconv source.jpg dest.ppm
 		//
-		sprintf(str,"imconv %s tmp.ppm\n", filename);
+		snprintf(str,sizeof(str),"imconv %s tmp.ppm\n", filename);
 //		printf("Converting source file from %s to .ppm\n", filename);
 	}
 	// Execute system call
@@ -805,8 +805,9 @@ void readArguments(int argc,char *argv[],char* src,char *dst)
 		printf("ETC1 codec only supports RGB format\n");
 		exit(1);
 	}
-	else if(codec==CODEC_ETC)
+	else if(codec==CODEC_ETC) {
 		format=ETC1_RGB_NO_MIPMAPS;
+	}
 }
 
 static int compressParams[16][4];
@@ -1651,7 +1652,7 @@ void quantize444ColorCombined(float *avg_col_in, int *enc_color, uint8 *avg_colo
 		}
 	}
 
-  float drh = red_high-red_average;
+	float drh = red_high-red_average;
 	float dgh = green_high-green_average;
 	float dbh = blue_high-blue_average;
 
@@ -1826,7 +1827,7 @@ void quantize555ColorCombined(float *avg_col_in, int *enc_color, uint8 *avg_colo
 		}
 	}
 
-  float drh = red_high-red_average;
+	float drh = red_high-red_average;
 	float dgh = green_high-green_average;
 	float dbh = blue_high-blue_average;
 
@@ -1989,7 +1990,7 @@ void quantize444ColorCombinedPerceptual(float *avg_col_in, int *enc_color, uint8
 		}
 	}
 
-  float drh = red_high-red_average;
+	float drh = red_high-red_average;
 	float dgh = green_high-green_average;
 	float dbh = blue_high-blue_average;
 
@@ -2143,7 +2144,7 @@ void quantize555ColorCombinedPerceptual(float *avg_col_in, int *enc_color, uint8
 		}
 	}
 
-  float drh = red_high-red_average;
+    float drh = red_high-red_average;
 	float dgh = green_high-green_average;
 	float dbh = blue_high-blue_average;
 
@@ -6062,7 +6063,7 @@ unsigned int calculateError59Tperceptual1000(uint8* srcimg, int width, int start
 		   pixel_error, 
 		   best_pixel_error;
 	int diff[3];
-	uint8 best_sw;
+	uint8 best_sw = 0;
 	unsigned int pixel_colors;
 	uint8 colors[2][3];
 	uint8 possible_colors[4][3];
@@ -6148,7 +6149,7 @@ double calculateError59T(uint8* srcimg, int width, int startx, int starty, uint8
 				 pixel_error, 
 				 best_pixel_error;
 	int diff[3];
-	uint8 best_sw;
+	uint8 best_sw = 0;
 	unsigned int pixel_colors;
 	uint8 colors[2][3];
 	uint8 possible_colors[4][3];
@@ -7663,8 +7664,8 @@ void compressBlockDiffFlipFastPerceptual(uint8 *img, uint8 *imgdec,int width,int
 // NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 int compressBlockDifferentialWithAlpha(bool isTransparent, uint8* img, uint8* alphaimg, uint8* imgdec, int width, int height, int startx, int starty, unsigned int &etc1_word1, unsigned int &etc1_word2) 
 {
-	unsigned int compressed1_norm, compressed2_norm;
-	unsigned int compressed1_flip, compressed2_flip;
+	unsigned int compressed1_norm = 0, compressed2_norm = 0;
+	unsigned int compressed1_flip = 0, compressed2_flip =0;
 	unsigned int compressed1_temp, compressed2_temp;
 	uint8 avg_color_quant1[3], avg_color_quant2[3];
 
@@ -7693,7 +7694,9 @@ int compressBlockDifferentialWithAlpha(bool isTransparent, uint8* img, uint8* al
 					//transparent pixels are only barely figured into the average. This ensures that they DO matter if we have only
 					//transparent pixels in one half of the block, and not otherwise. A bit ugly perhaps.
 					if(alphaimg[index]<128)
+					{
 						fac=0.0001f;
+					}
 					float col = fac*img[index*3+c];
 					if( (flipbit==0&&x<2) || (flipbit==1&&y<2) ) 
 					{
@@ -7926,7 +7929,7 @@ double calculateError59TAlpha(uint8* srcimg, uint8* alpha,int width, int startx,
 		   pixel_error, 
 		   best_pixel_error;
 	int diff[3];
-	uint8 best_sw;
+	uint8 best_sw = 0;
 	unsigned int pixel_colors;
 	uint8 colors[2][3];
 	uint8 possible_colors[4][3];
@@ -7999,7 +8002,7 @@ double calculateError59TAlpha(uint8* srcimg, uint8* alpha,int width, int startx,
 			}
 		}
 		
-		if (sw == 1 && best_sw == 0) 
+		if (sw == 1 && best_sw == 0)
 		{
 			swapColors(colorsRGB444);
 		}
@@ -9105,13 +9108,13 @@ void uncompressFile(char *srcfile, uint8* &img, uint8 *&alphaimg, int& active_wi
 	FILE *f;
 	int width,height;
 	unsigned int block_part1, block_part2;
-	uint8 *newimg, *newalphaimg, *alphaimg2;
+	uint8 *newimg, *newalphaimg = NULL, *alphaimg2 = NULL;
 	unsigned short w, h;
 	int xx, yy;
 	unsigned char magic[4];
 	unsigned char version[2];
 	unsigned short texture_type;
-	if(f=fopen(srcfile,"rb"))
+	if((f=fopen(srcfile,"rb")))
 	{
 		// Load table
 		readCompressParams();
@@ -9472,7 +9475,7 @@ void writeOutputFile(char *dstfile, uint8* img, uint8* alphaimg, int width, int 
 	// Delete destination file if it exists
 	if(fileExist(dstfile))
 	{
-		sprintf(str, "del %s\n",dstfile);	
+		snprintf(str, sizeof(str), "del %s\n",dstfile);
 		system(str);
 	}
 
@@ -9480,7 +9483,7 @@ void writeOutputFile(char *dstfile, uint8* img, uint8* alphaimg, int width, int 
 	if(!strcmp(&dstfile[q],".ppm")&&format!=ETC2PACKAGE_R_NO_MIPMAPS) 
 	{
 		// Already a .ppm file. Just rename. 
-		sprintf(str,"move tmp.ppm %s\n",dstfile);
+		snprintf(str,sizeof(str),"move tmp.ppm %s\n",dstfile);
 		printf("Renaming destination file to %s\n",dstfile);
 	}
 	else
@@ -9508,16 +9511,16 @@ void writeOutputFile(char *dstfile, uint8* img, uint8* alphaimg, int width, int 
 			fWriteTGAfromRGBandA(dstfile, rw, rh, pixelsRGB, pixelsA, true);
             free(pixelsRGB);
             free(pixelsA);
-            sprintf(str,""); // Nothing to execute.
+            snprintf(str,sizeof(str),""); // Nothing to execute.
 		}
 		else if(format==ETC2PACKAGE_R_NO_MIPMAPS) 
 		{
-			sprintf(str,"imconv alphaout.pgm %s\n",dstfile);
+			snprintf(str,sizeof(str),"imconv alphaout.pgm %s\n",dstfile);
 			printf("Converting destination file from .pgm to %s\n",dstfile);
 		}
 		else 
 		{
-			sprintf(str,"imconv tmp.ppm %s\n",dstfile);
+			snprintf(str,sizeof(str),"imconv tmp.ppm %s\n",dstfile);
 			printf("Converting destination file from .ppm to %s\n",dstfile);
 		}
 	}
@@ -15552,7 +15555,7 @@ void compressImageFile(uint8 *img, uint8 *alphaimg,int width,int height,char *ds
 	unsigned char version[2];
 	unsigned short texture_type=format;
 	uint8 *imgdec;
-	uint8* alphaimg2;
+	uint8* alphaimg2 = nullptr;
 	imgdec = (unsigned char*) malloc(expandedwidth*expandedheight*3);
 	if(!imgdec)
 	{
@@ -15570,7 +15573,7 @@ void compressImageFile(uint8 *img, uint8 *alphaimg,int width,int height,char *ds
 		version[0] = '1'; version[1] = '0';
 	}
 
-	if(f=fopen(dstfile,"wb"))
+	if((f=fopen(dstfile,"wb")))
 	{
 		w=expandedwidth/4;  w*=4;
 		h=expandedheight/4; h*=4;

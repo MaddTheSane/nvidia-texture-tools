@@ -250,9 +250,11 @@ int formatSigned = 0;
 // NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 void setupAlphaTable() 
 {
-  if(alphaTableInitialized)
-    return;
-  alphaTableInitialized = 1;
+	if(alphaTableInitialized)
+	{
+		return;
+	}
+	alphaTableInitialized = 1;
 
 	//read table used for alpha compression
 	int buf;
@@ -1112,20 +1114,20 @@ void decompressBlockDifferentialWithAlphaC(unsigned int block_part1, unsigned in
 	int r,g,b;
 	int diffbit;
 	int flipbit;
-  int channelsA;
+	int channelsA;
 
-  if(channelsRGB == 3)
-  {
-    // We will decode the alpha data to a separate memory area. 
-    channelsA = 1;
-  }
-  else
-  {
-    // We will decode the RGB data and the alpha data to the same memory area, 
-    // interleaved as RGBA. 
-    channelsA = 4;
-    alpha = &img[0+3];
-  }
+	if(channelsRGB == 3)
+	{
+		// We will decode the alpha data to a separate memory area.
+		channelsA = 1;
+	}
+	else
+	{
+		// We will decode the RGB data and the alpha data to the same memory area,
+		// interleaved as RGBA.
+		channelsA = 4;
+		alpha = &img[0+3];
+	}
 
 	//the diffbit now encodes whether or not the entire alpha channel is 255.
 	diffbit = (GETBITSHIGH(block_part1, 1, 33));
@@ -1321,7 +1323,7 @@ void decompressBlockDifferentialWithAlphaC(unsigned int block_part1, unsigned in
 }
 void decompressBlockDifferentialWithAlpha(unsigned int block_part1, unsigned int block_part2, uint8* img, uint8* alpha, int width, int height, int startx, int starty)
 {
-  decompressBlockDifferentialWithAlphaC(block_part1, block_part2, img, alpha, width, height, startx, starty, 3);
+	decompressBlockDifferentialWithAlphaC(block_part1, block_part2, img, alpha, width, height, startx, starty, 3);
 }
 
 
@@ -1335,20 +1337,20 @@ void decompressBlockTHUMB59TAlphaC(unsigned int block_part1, unsigned int block_
 	uint8 paint_colors[4][3];
 	uint8 distance;
 	uint8 block_mask[4][4];
-  int channelsA;
+	int channelsA;
 
-  if(channelsRGB == 3)
-  {
-    // We will decode the alpha data to a separate memory area. 
-    channelsA = 1;
-  }
-  else
-  {
-    // We will decode the RGB data and the alpha data to the same memory area, 
-    // interleaved as RGBA. 
-    channelsA = 4;
-    alpha = &img[0+3];
-  }
+	if(channelsRGB == 3)
+	{
+		// We will decode the alpha data to a separate memory area.
+		channelsA = 1;
+	}
+	else
+	{
+		// We will decode the RGB data and the alpha data to the same memory area,
+		// interleaved as RGBA.
+		channelsA = 4;
+		alpha = &img[0+3];
+	}
 
 	// First decode left part of block.
 	colorsRGB444[0][R]= GETBITSHIGH(block_part1, 4, 58);
@@ -1407,20 +1409,20 @@ void decompressBlockTHUMB58HAlphaC(unsigned int block_part1, unsigned int block_
 	uint8 paint_colors[4][3];
 	uint8 distance;
 	uint8 block_mask[4][4];
-  int channelsA;	
-
-  if(channelsRGB == 3)
-  {
-    // We will decode the alpha data to a separate memory area. 
-    channelsA = 1;
-  }
-  else
-  {
-    // We will decode the RGB data and the alpha data to the same memory area, 
-    // interleaved as RGBA. 
-    channelsA = 4;
-    alpha = &img[0+3];
-  }
+	int channelsA;
+	
+	if(channelsRGB == 3)
+	{
+		// We will decode the alpha data to a separate memory area.
+		channelsA = 1;
+	}
+	else
+	{
+		// We will decode the RGB data and the alpha data to the same memory area,
+		// interleaved as RGBA.
+		channelsA = 4;
+		alpha = &img[0+3];
+	}
 
 	// First decode left part of block.
 	colorsRGB444[0][R]= GETBITSHIGH(block_part1, 4, 57);
@@ -1431,7 +1433,7 @@ void decompressBlockTHUMB58HAlphaC(unsigned int block_part1, unsigned int block_
 	colorsRGB444[1][G]= GETBITSHIGH(block_part1, 4, 41);
 	colorsRGB444[1][B]= GETBITSHIGH(block_part1, 4, 37);
 
-  distance = 0;
+	distance = 0;
 	distance = (GETBITSHIGH(block_part1, 2, 33)) << 1;
 
 	col0 = GETBITSHIGH(block_part1, 12, 57);
@@ -1476,7 +1478,7 @@ void decompressBlockTHUMB58HAlphaC(unsigned int block_part1, unsigned int block_
 }
 void decompressBlockTHUMB58HAlpha(unsigned int block_part1, unsigned int block_part2, uint8 *img, uint8* alpha, int width, int height, int startx, int starty)
 {
-  decompressBlockTHUMB58HAlphaC(block_part1, block_part2, img, alpha, width, height, startx, starty, 3);
+	decompressBlockTHUMB58HAlphaC(block_part1, block_part2, img, alpha, width, height, startx, starty, 3);
 }
 // Decompression function for ETC2_RGBA1 format.
 // NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
@@ -1486,20 +1488,20 @@ void decompressBlockETC21BitAlphaC(unsigned int block_part1, unsigned int block_
 	signed char color1[3];
 	signed char diff[3];
 	signed char red, green, blue;
-  int channelsA;	
-
-  if(channelsRGB == 3)
-  {
-    // We will decode the alpha data to a separate memory area. 
-    channelsA = 1;
-  }
-  else
-  {
-    // We will decode the RGB data and the alpha data to the same memory area, 
-    // interleaved as RGBA. 
-    channelsA = 4;
-    alphaimg = &img[0+3];
-  }
+	int channelsA;
+	
+	if(channelsRGB == 3)
+	{
+		// We will decode the alpha data to a separate memory area.
+		channelsA = 1;
+	}
+	else
+	{
+		// We will decode the RGB data and the alpha data to the same memory area,
+		// interleaved as RGBA.
+		channelsA = 4;
+		alphaimg = &img[0+3];
+	}
 
 	diffbit = (GETBITSHIGH(block_part1, 1, 33));
 
@@ -1612,12 +1614,14 @@ void decompressBlockETC21BitAlphaC(unsigned int block_part1, unsigned int block_
 			}
 		}
 		else
+		{
 			decompressBlockDifferentialWithAlphaC(block_part1, block_part2, img,alphaimg, width, height, startx, starty, channelsRGB);
+		}
 	}
 }
 void decompressBlockETC21BitAlpha(unsigned int block_part1, unsigned int block_part2, uint8 *img, uint8* alphaimg, int width, int height, int startx, int starty)
 {
-  decompressBlockETC21BitAlphaC(block_part1, block_part2, img, alphaimg, width, height, startx, starty, 3);
+	decompressBlockETC21BitAlphaC(block_part1, block_part2, img, alphaimg, width, height, startx, starty, 3);
 }
 //
 //	Utility functions used for alpha compression
@@ -1629,7 +1633,9 @@ uint8 getbit(uint8 input, int frompos, int topos)
 {
 	uint8 output=0;
 	if(frompos>topos)
+	{
 		return ((1<<frompos)&input)>>(frompos-topos);
+	}
 	return ((1<<frompos)&input)<<(topos-frompos);
 }
 
@@ -1638,9 +1644,13 @@ uint8 getbit(uint8 input, int frompos, int topos)
 int clamp(int val) 
 {
 	if(val<0)
+	{
 		val=0;
+	}
 	if(val>255)
+	{
 		val=255;
+	}
 	return val;
 }
 
@@ -1679,7 +1689,7 @@ void decompressBlockAlphaC(uint8* data, uint8* img, int width, int height, int i
 }
 void decompressBlockAlpha(uint8* data, uint8* img, int width, int height, int ix, int iy) 
 {
-  decompressBlockAlphaC(data, img, width, height, ix, iy, 1);
+	decompressBlockAlphaC(data, img, width, height, ix, iy, 1);
 }
 
 // Does decompression and then immediately converts from 11 bit signed to a 16-bit format.
@@ -1689,7 +1699,9 @@ int16 get16bits11signed(int base, int table, int mul, int index)
 {
 	int elevenbase = base-128;
 	if(elevenbase==-128)
+	{
 		elevenbase=-127;
+	}
 	elevenbase*=8;
 	//i want the positive value here
 	int tabVal = -alphaBase[table][3-index%4]-1;
@@ -1697,26 +1709,38 @@ int16 get16bits11signed(int base, int table, int mul, int index)
 	int sign = 1-(index/4);
 	
 	if(sign)
+	{
 		tabVal=tabVal+1;
+	}
 	int elevenTabVal = tabVal*8;
 
 	if(mul!=0)
+	{
 		elevenTabVal*=mul;
+	}
 	else
+	{
 		elevenTabVal/=8;
+	}
 
 	if(sign)
+	{
 		elevenTabVal=-elevenTabVal;
+	}
 
 	//calculate sum
 	int elevenbits = elevenbase+elevenTabVal;
 
 	//clamp..
 	if(elevenbits>=1024)
+	{
 		elevenbits=1023;
+	}
 	else if(elevenbits<-1023)
+	{
 		elevenbits=-1023;
-	//this is the value we would actually output.. 
+	}
+	//this is the value we would actually output..
 	//but there aren't any good 11-bit file or uncompressed GL formats
 	//so we extend to 15 bits signed.
 	sign = elevenbits<0;
@@ -1725,7 +1749,9 @@ int16 get16bits11signed(int base, int table, int mul, int index)
 	int16 sixteenbits=fifteenbits;
 
 	if(sign)
+	{
 		sixteenbits=-sixteenbits;
+	}
 	
 	return sixteenbits;
 }
@@ -1743,25 +1769,37 @@ uint16 get16bits11bits(int base, int table, int mul, int index)
 	int sign = 1-(index/4);
 	
 	if(sign)
+	{
 		tabVal=tabVal+1;
+	}
 	int elevenTabVal = tabVal*8;
 
 	if(mul!=0)
+	{
 		elevenTabVal*=mul;
+	}
 	else
+	{
 		elevenTabVal/=8;
+	}
 
 	if(sign)
+	{
 		elevenTabVal=-elevenTabVal;
+	}
 
 	//calculate sum
 	int elevenbits = elevenbase+elevenTabVal;
 
 	//clamp..
 	if(elevenbits>=256*8)
+	{
 		elevenbits=256*8-1;
+	}
 	else if(elevenbits<0)
+	{
 		elevenbits=0;
+	}
 	//elevenbits now contains the 11 bit alpha value as defined in the spec.
 
 	//extend to 16 bits before returning, since we don't have any good 11-bit file formats.
@@ -1838,5 +1876,5 @@ void decompressBlockAlpha16bitC(uint8* data, uint8* img, int width, int height, 
 
 void decompressBlockAlpha16bit(uint8* data, uint8* img, int width, int height, int ix, int iy)
 {
-  decompressBlockAlpha16bitC(data, img, width, height, ix, iy, 1);
+	decompressBlockAlpha16bitC(data, img, width, height, ix, iy, 1);
 }

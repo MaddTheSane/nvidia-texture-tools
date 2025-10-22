@@ -100,7 +100,7 @@ void removeSpaces(FILE *f1)
 // after that follows RGBRGBRGB...
 // 
 // NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-bool fReadPPM(char *filename, int &width, int &height, unsigned char *&pixels, int targetbitrate)
+bool fReadPPM(const char *filename, int &width, int &height, unsigned char *&pixels, int targetbitrate)
 {
 	FILE *f1;
 	int maximum;
@@ -118,7 +118,7 @@ bool fReadPPM(char *filename, int &width, int &height, unsigned char *&pixels, i
 
 		if(strcmp(line, "P6")!=0)
 		{
-			printf("Error: %s is not binary\n");
+			printf("Error: %s is not binary\n", filename);
 			printf("(Binary .ppm files start with P6).\n");
 			fclose(f1);
 			return false;
@@ -150,12 +150,16 @@ bool fReadPPM(char *filename, int &width, int &height, unsigned char *&pixels, i
 		//printf("maximum is %d\n",maximum);
 		int bitrate=8;
 		if(maximum!=255)
+		{
 			bitrate=16;
+		}
 
 		// We need to remove the newline.
 		char c = 0;
 		while(c != '\n')
+		{
 			fscanf(f1, "%c", &c);
+		}
 		
 		unsigned char* readbuffer = (unsigned char*) malloc(3*width*height*bitrate/8);
 		if(!readbuffer)
@@ -177,8 +181,10 @@ bool fReadPPM(char *filename, int &width, int &height, unsigned char *&pixels, i
 
 		//now, convert it to the target bitrate
 		if(targetbitrate==bitrate)
+		{
 			pixels=readbuffer;
-		else 
+		}
+		else
 		{
 			pixels = (unsigned char*) malloc(3*width*height*targetbitrate/8);
 			if(targetbitrate<bitrate) 
@@ -226,7 +232,7 @@ bool fReadPPM(char *filename, int &width, int &height, unsigned char *&pixels, i
 
 // Write PPM 
 // NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-bool fWritePPM(char *filename, int width, int height, unsigned char *pixels, int bitrate, bool reverse_y)
+bool fWritePPM(const char *filename, int width, int height, unsigned char *pixels, int bitrate, bool reverse_y)
 {
 	FILE *fsave;
 	fsave = fopen(filename, "wb");
@@ -239,10 +245,14 @@ bool fWritePPM(char *filename, int width, int height, unsigned char *pixels, int
 		for(q = 0; q< height; q++)
 		{
 			unsigned char *adr;
-			if(reverse_y) 
+			if(reverse_y)
+			{
 				adr = pixels+3*width*(height-1-q)*fac;
+			}
 			else
+			{
 				adr = pixels+3*width*q*fac;
+			}
 			fwrite(adr, 3*width*fac, 1, fsave);
 		}
 		fclose(fsave);
@@ -257,32 +267,33 @@ bool fWritePPM(char *filename, int width, int height, unsigned char *pixels, int
 
 // WritePGM
 // NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-bool fWritePGM(char *filename, int width, int height, unsigned char *pixels,bool reverse_y, int bitdepth)
+bool fWritePGM(const char *filename, int width, int height, unsigned char *pixels,bool reverse_y, int bitdepth)
 {
-   FILE *f;
-   f=fopen(filename,"wb");
-   if(f)
-   {
-      int q;
-	  int max = (1<<bitdepth)-1;
-      fprintf(f,"P5\n%d %d\n%d\n",width,height,max);
-	  if(bitdepth==16)
-		  width*=2; //ugly way of doubling the number of bytes to write, since we write one line at a time..
-      for(q=0;q<height;q++)
-      {
-		 unsigned char *adr;	 
-		 if(reverse_y) adr=pixels+width*(height-1-q);
-		 else adr=pixels+width*q;
-		 fwrite(adr,width,1,f);
-      }
-      fclose(f);
-      return true;
-   }
-   else
-   {
-      printf("Error: could not open file <%s>.\n",filename);
-      return false;
-   }
+	FILE *f;
+	f=fopen(filename,"wb");
+	if(f)
+	{
+		int q;
+		int max = (1<<bitdepth)-1;
+		fprintf(f,"P5\n%d %d\n%d\n",width,height,max);
+		if(bitdepth==16) {
+			width*=2; //ugly way of doubling the number of bytes to write, since we write one line at a time..
+		}
+		for(q=0;q<height;q++)
+		{
+			unsigned char *adr;
+			if(reverse_y) adr=pixels+width*(height-1-q);
+			else adr=pixels+width*q;
+			fwrite(adr,width,1,f);
+		}
+		fclose(f);
+		return true;
+	}
+	else
+	{
+		printf("Error: could not open file <%s>.\n",filename);
+		return false;
+	}
 }
 
 /* reads a ppm file with the P6 header (means raw RGB), puts data into pixel pointer and returns bit depth (8 or 16 bpp) */
@@ -296,7 +307,7 @@ bool fWritePGM(char *filename, int width, int height, unsigned char *pixels,bool
  * then follows RGBRGBRGBRGBRGB...
  */
 // NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-int fReadPGM(char *filename, int &width, int &height, unsigned char *&pixels, int wantedBitDepth)
+int fReadPGM(const char *filename, int &width, int &height, unsigned char *&pixels, int wantedBitDepth)
 {
 	FILE *f;
 	int colres;
@@ -338,19 +349,19 @@ int fReadPGM(char *filename, int &width, int &height, unsigned char *&pixels, in
 		}
 		if(colres==65535)
 			bitdepth=16;
-
+		
 		/* gotta eat the newline too */
 		char ch=0;
 		while(ch!='\n') fscanf(f,"%c",&ch);
-
+		
 		pixels=(unsigned char*)malloc(width*height*bitdepth/8);
 		if(!pixels)
 		{
 			printf("Error: could not allocate memory for the pixels of the texture. File: %s\n",filename);
 			fclose(f);
-			return 0;	 
+			return 0;
 		}
-      
+		
 		if(fread(pixels,width*height*bitdepth/8,1,f)!=1)
 		{
 			printf("Error: could not read %d bytes of pixel info. File: %s\n",width*height*bitdepth/8,filename);
@@ -360,21 +371,21 @@ int fReadPGM(char *filename, int &width, int &height, unsigned char *&pixels, in
 		}
 		fclose(f);
 		printf("read %d-bit alpha channel",bitdepth);
-		if(bitdepth!=wantedBitDepth) 
+		if(bitdepth!=wantedBitDepth)
 		{
 			printf(", converting to %d-bit!",wantedBitDepth);
 			unsigned char* newpixels = (unsigned char*)malloc(width*height*wantedBitDepth/8);
-			for(int x=0; x<width; x++) 
+			for(int x=0; x<width; x++)
 			{
-				for(int y=0; y<height; y++) 
+				for(int y=0; y<height; y++)
 				{
-					if(bitdepth<wantedBitDepth) 
+					if(bitdepth<wantedBitDepth)
 					{
 						//do bit-replication to get 2-bytes per pixel
 						newpixels[2*(x+y*width)]=pixels[x+y*width];
 						newpixels[2*(x+y*width)+1]=pixels[x+y*width];
 					}
-					else 
+					else
 					{
 						//simply truncate the extra data..
 						newpixels[(x+y*width)]=pixels[2*(x+y*width)];
@@ -391,7 +402,7 @@ int fReadPGM(char *filename, int &width, int &height, unsigned char *&pixels, in
 	{
 		printf("Error: could not open %s.\n",filename);
 		return 0;
-	}   
+	}
 }
 /* writes a .tga file from two arrays --- one RGB array and one alpha-array */
 /* */
@@ -399,38 +410,38 @@ int fReadPGM(char *filename, int &width, int &height, unsigned char *&pixels, in
 bool fWriteTGAfromRGBandA(char *filename, int width, int height, unsigned char *pixelsRGB, unsigned char *pixelsA, bool reverse_y)
 {
 	FILE *f1;
-
+	
 	if( (f1 = fopen(filename,"wb")) == NULL)
 	{
 		return false;
 	}
-
+	
 	// First write header
-    unsigned char myByteVal;
-    short myShortVal;
-    myByteVal = 0;
-    fwrite(&myByteVal, 1, 1, f1); // ID field (0)
-    fwrite(&myByteVal, 1, 1, f1); // Palette? (no=0)
-    myByteVal = 2; 
-    fwrite(&myByteVal, 1, 1, f1); // Image type (rgb=2)
-    myShortVal = 0;
-    fwrite(&myShortVal, 2, 1, f1); // Palette stuff... 0
-    fwrite(&myShortVal, 2, 1, f1); // Palette stuff... 0
-    myByteVal = 0;
-    fwrite(&myByteVal, 1, 1, f1); // Palette stuff... 0
-    myShortVal = 0;
-    fwrite(&myShortVal, 2, 1, f1); // x-origin
-    myShortVal = 0;
-    fwrite(&myShortVal, 2, 1, f1); // y-origin
-    myShortVal = width;
-    fwrite(&myShortVal, 2, 1, f1); // width
-    myShortVal = height;
-    fwrite(&myShortVal, 2, 1, f1); // height
-    myByteVal = 32;
-    fwrite(&myByteVal, 1, 1, f1); // Bits per pixel = 32
-    myByteVal = 8;
-    fwrite(&myByteVal, 1, 1, f1); // flip bits = 8
-   
+	unsigned char myByteVal;
+	short myShortVal;
+	myByteVal = 0;
+	fwrite(&myByteVal, 1, 1, f1); // ID field (0)
+	fwrite(&myByteVal, 1, 1, f1); // Palette? (no=0)
+	myByteVal = 2;
+	fwrite(&myByteVal, 1, 1, f1); // Image type (rgb=2)
+	myShortVal = 0;
+	fwrite(&myShortVal, 2, 1, f1); // Palette stuff... 0
+	fwrite(&myShortVal, 2, 1, f1); // Palette stuff... 0
+	myByteVal = 0;
+	fwrite(&myByteVal, 1, 1, f1); // Palette stuff... 0
+	myShortVal = 0;
+	fwrite(&myShortVal, 2, 1, f1); // x-origin
+	myShortVal = 0;
+	fwrite(&myShortVal, 2, 1, f1); // y-origin
+	myShortVal = width;
+	fwrite(&myShortVal, 2, 1, f1); // width
+	myShortVal = height;
+	fwrite(&myShortVal, 2, 1, f1); // height
+	myByteVal = 32;
+	fwrite(&myByteVal, 1, 1, f1); // Bits per pixel = 32
+	myByteVal = 8;
+	fwrite(&myByteVal, 1, 1, f1); // flip bits = 8
+	
 	// Write pixels in BGRA format
 	if(reverse_y)
 	{
