@@ -1,0 +1,86 @@
+framework module NVCore {
+    requires cplusplus
+    header "nvcore.h"
+    
+    module nvconfig {
+        header "nvconfig.h"
+        export *
+    }
+    
+    module Debug {
+        header "Debug.h"
+        export *
+    }
+    
+    module Array {
+        header "Array.h"
+        header "Array.inl"
+        export *
+    }
+    
+    module FileSystem {
+        header "FileSystem.h"
+        export *
+    }
+    
+    module ForEach {
+        header "ForEach.h"
+        export *
+    }
+    
+    module Hash {
+        header "Hash.h"
+        export *
+    }
+
+    module Memory {
+        header "Memory.h"
+        export *
+    }
+    
+    module Ptr {
+        header "Ptr.h"
+        export *
+    }
+    
+    module RefCounted {
+        header "RefCounted.h"
+        export *
+    }
+    
+    module StdStream {
+        header "StdStream.h"
+        export *
+    }
+    
+    
+    module Stream {
+        header "Stream.h"
+        export *
+    }
+    
+    
+    module StrLib {
+        header "StrLib.h"
+        export *
+    }
+    
+    
+    module TextWriter {
+        header "TextWriter.h"
+        export *
+    }
+    
+    
+    module Timer {
+        header "Timer.h"
+        export *
+    }
+    
+    module Utils {
+        header "Utils.h"
+        export *
+    }
+
+    export *
+}

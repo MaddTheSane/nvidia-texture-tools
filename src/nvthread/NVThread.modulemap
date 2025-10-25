@@ -1,0 +1,36 @@
+framework module NVThread {
+    requires cplusplus
+    header "nvthread.h"
+    
+    module Atomic {
+        header "Atomic.h"
+        export *
+    }
+    
+    module Event {
+        header "Event.h"
+        export *
+    }
+    
+    module Mutex {
+        header "Mutex.h"
+        export *
+    }
+    
+    module ParallelFor {
+        header "ParallelFor.h"
+        export *
+    }
+    
+    module Thread {
+        header "Thread.h"
+        export *
+    }
+    
+    module ThreadPool {
+        header "ThreadPool.h"
+        export *
+    }
+
+    export *
+}

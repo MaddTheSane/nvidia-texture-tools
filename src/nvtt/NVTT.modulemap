@@ -1,0 +1,66 @@
+framework module NVTT {
+    requires cplusplus
+    header "nvtt.h"
+    
+    module BlockDXT {
+        header "BlockDXT.h"
+        export *
+    }
+    
+    module ColorBlock {
+        header "ColorBlock.h"
+        export *
+    }
+    
+    module DirectDrawSurface {
+        header "DirectDrawSurface.h"
+        export *
+    }
+    
+    module ErrorMetric {
+        header "ErrorMetric.h"
+        export *
+    }
+    
+    module Filter {
+        header "Filter.h"
+        export *
+    }
+    
+    module FloatImage {
+        header "FloatImage.h"
+        export *
+    }
+
+    module Image {
+        header "Image.h"
+        export *
+    }
+    
+    module ImageIO {
+        header "ImageIO.h"
+        export *
+    }
+    
+    module NormalMap {
+        header "NormalMap.h"
+        export *
+    }
+    
+    module PixelFormat {
+        header "PixelFormat.h"
+        export *
+    }
+    
+    module ColorSpace {
+        header "ColorSpace.h"
+        export *
+    }
+
+    module Quantize {
+        header "Quantize.h"
+        export *
+    }
+
+    export *
+}

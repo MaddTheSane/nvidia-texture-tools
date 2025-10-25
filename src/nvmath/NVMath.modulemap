@@ -1,0 +1,66 @@
+framework module NVMath {
+    requires cplusplus
+    header "nvmath.h"
+    
+    module Gamma {
+        header "Gamma.h"
+        export *
+    }
+    
+    module PackedFloat {
+        header "PackedFloat.h"
+        export *
+    }
+    
+    module ftoi {
+        header "ftoi.h"
+        export *
+    }
+    
+    module Box {
+        header "Box.h"
+        header "Box.inl"
+        export *
+    }
+    
+    module Color {
+        header "Color.h"
+        header "Color.inl"
+        export *
+    }
+    
+    module Fitting {
+        header "Fitting.h"
+        export *
+    }
+
+    module Half {
+        header "Half.h"
+        export *
+    }
+    
+    module Matrix {
+        header "Matrix.h"
+        header "Matrix.inl"
+        export *
+    }
+    
+    module Plane {
+        header "Plane.h"
+        header "Plane.inl"
+        export *
+    }
+    
+    module Vector {
+        header "Vector.h"
+        header "Vector.inl"
+        export *
+    }
+    
+    module SphericalHarmonic {
+        header "SphericalHarmonic.h"
+        export *
+    }
+    
+    export *
+}
